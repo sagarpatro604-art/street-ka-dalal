@@ -1,12 +1,12 @@
 // Firebase web config (Firebase console → Project settings → Your apps → Web app). Safe to publish.
 // While projectId is empty the site runs in local demo mode: a pretend sign-in, posts kept in this browser.
 export const firebaseConfig = {
-  apiKey: '',
-  authDomain: '',
-  projectId: '',
-  storageBucket: '',
-  messagingSenderId: '',
-  appId: '',
+  apiKey: 'AIzaSyBGckFlwyHPxrgfAJlAiHA1NtMi4UQjXHY',
+  authDomain: 'street-ka-dalal.firebaseapp.com',
+  projectId: 'street-ka-dalal',
+  storageBucket: 'street-ka-dalal.firebasestorage.app',
+  messagingSenderId: '649908482337',
+  appId: '1:649908482337:web:8d027a288487ff6c07ce60',
 };
 
 // Only these Google accounts see the admin terminal (publisher, members, login log). The Firestore
