@@ -1,0 +1,26 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function admin() {
+      return signedIn() && request.auth.token.email_verified == true
+        && request.auth.token.email in ['sagarpatro604@gmail.com'];
+    }
+    // one record per member; members write only their own, the admin reads everyone
+    match /users/{uid} {
+      allow read: if admin() || (signedIn() && request.auth.uid == uid);
+      allow create, update: if signedIn() && request.auth.uid == uid && request.resource.data.email == request.auth.token.email;
+      allow delete: if admin();
+    }
+    // login log: a member adds their own visit; only the admin reads it
+    match /logins/{id} {
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow read, delete: if admin();
+    }
+    // insights: members read published posts; only the admin writes
+    match /posts/{id} {
+      allow read: if admin() || (signedIn() && resource.data.status == 'published');
+      allow write: if admin();
+    }
+  }
+}
