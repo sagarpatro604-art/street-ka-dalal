@@ -345,16 +345,7 @@ main { max-width: 1240px; margin: 0 auto; padding: 26px 24px 40px; outline: none
 }
 
 /* ---------- Dalal, the AI buddy ---------- */
-.dalal-btn { position: fixed; right: 20px; bottom: 20px; z-index: 45; display: flex; align-items: center; gap: 10px; padding: 6px 16px 6px 6px; border-radius: 999px; border: 1px solid #c9b896; background: var(--green); color: #fdf8ee; font: 700 15px var(--sans); cursor: pointer; box-shadow: 0 10px 30px rgba(31, 77, 58, 0.35); }
-.dalal-btn .dalal-face { width: 46px; height: 46px; border-radius: 50%; border: 2px solid var(--gold); background: #fff; }
-.dalal-btn:hover { background: var(--green-2); }
-.dalal-btn.on span { display: none; }
-.dalal-btn.on { padding: 6px; }
-@media (prefers-reduced-motion: no-preference) {
-  .dalal-btn { animation: dalal-hop 0.9s ease-out 1.2s 2; }
-  @keyframes dalal-hop { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-8px); } 70% { transform: translateY(0); } 85% { transform: translateY(-3px); } }
-}
-.dalal-panel { position: fixed; right: 20px; bottom: 86px; z-index: 46; width: min(400px, calc(100vw - 24px)); height: min(620px, calc(100dvh - 110px)); display: flex; flex-direction: column; background: var(--paper); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 24px 60px rgba(31, 46, 36, 0.25); overflow: hidden; }
+.dalal-panel { position: fixed; right: 20px; bottom: 20px; z-index: 46; width: min(400px, calc(100vw - 24px)); height: min(620px, calc(100dvh - 110px)); display: flex; flex-direction: column; background: var(--paper); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 24px 60px rgba(31, 46, 36, 0.25); overflow: hidden; }
 .dalal-panel[hidden] { display: none; }
 .dalal-panel header { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--green); color: #fdf8ee; }
 .dalal-panel header .dalal-face { width: 42px; height: 42px; border-radius: 50%; border: 2px solid var(--gold); background: #fff; flex: none; }
@@ -397,10 +388,31 @@ main { max-width: 1240px; margin: 0 auto; padding: 26px 24px 40px; outline: none
 .dalal-panel footer { display: flex; justify-content: space-between; gap: 8px; padding: 6px 12px 9px; font-size: 11px; color: var(--muted); background: var(--paper); }
 .ans summary { cursor: pointer; color: var(--green-2); font-size: 12.5px; font-weight: 600; margin-top: 4px; }
 .prose.sm { font-size: 13.5px; line-height: 1.55; margin-top: 6px; }
-body.signed-out .dalal-btn, body.signed-out .dalal-panel { display: none !important; }
+body.signed-out .dalal-peek, body.signed-out .dalal-panel { display: none !important; }
 @media (max-width: 760px) {
-  .dalal-btn { right: 14px; bottom: 14px; padding: 5px 13px 5px 5px; font-size: 14px; }
-  .dalal-btn .dalal-face { width: 40px; height: 40px; }
   .dalal-panel { right: 0; left: 0; bottom: 0; width: 100%; height: 88dvh; border-radius: 20px 20px 0 0; }
   .foot { padding-bottom: 70px; }
+}
+
+/* Dalal peeking from the right edge of the screen (the image's right side is the "wall" he holds) */
+.dalal-peek { position: fixed; right: 0; bottom: 0; z-index: 45; border: 0; padding: 0; background: none; cursor: pointer; display: block; transform: translateX(105%); transition: transform 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.2); -webkit-tap-highlight-color: transparent; }
+.dalal-peek[hidden] { display: none; }
+.dalal-peek img { display: block; height: min(300px, 38vh); width: auto; filter: drop-shadow(-6px 6px 10px rgba(31, 46, 36, 0.18)); pointer-events: none; }
+.dalal-peek.in { transform: translateX(0); }
+.dalal-peek.in:hover, .dalal-peek.in:focus-visible { transform: translateX(-8px) rotate(-1.5deg); }
+.dalal-peek.on { transform: translateX(105%) !important; }
+.dalal-peek.on .peek-say { opacity: 0 !important; }
+.peek-say { position: absolute; right: 92%; top: 2%; width: max-content; max-width: 170px; padding: 9px 13px; border-radius: 16px 16px 4px 16px; background: var(--paper); border: 1px solid var(--line); box-shadow: 0 10px 24px rgba(31, 46, 36, 0.16); font: 600 13px/1.35 var(--sans); color: var(--ink); text-align: left; opacity: 0; transform: translateY(6px) scale(0.96); transform-origin: bottom right; transition: opacity 0.25s, transform 0.25s; pointer-events: none; }
+.peek-say b { display: block; color: var(--green); font-size: 12px; margin-top: 2px; }
+.dalal-peek.in.say .peek-say, .dalal-peek.in:hover .peek-say, .dalal-peek.in:focus-visible .peek-say { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .dalal-peek.in img { animation: dalal-sway 5s ease-in-out 1.5s infinite; transform-origin: 100% 60%; }
+  @keyframes dalal-sway { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-1.2deg); } }
+}
+@media (prefers-reduced-motion: reduce) { .dalal-peek { transition: none; } }
+.dalal-face { object-fit: cover; }
+@media (max-width: 760px) {
+  .dalal-peek img { height: 230px; }
+  .dalal-peek { bottom: -70px; }
+  .peek-say { top: 4%; right: 94%; font-size: 12.5px; }
 }

@@ -4,23 +4,7 @@ import * as A from './auth.js';
 import { SOCIAL, DALAL_API } from './config.js';
 
 // The mascot: a cheerful street-smart broker — green cap with a gold band, round specs, big moustache.
-export const DALAL_FACE = `<svg class="dalal-face" viewBox="0 0 64 64" aria-hidden="true">
-  <circle cx="32" cy="32" r="32" fill="#DFE9D6"/>
-  <path d="M12 64c2-12 10-17 20-17s18 5 20 17z" fill="#1F4D3A"/>
-  <path d="M27.5 47.5 32 56l4.5-8.5z" fill="#C9A96E"/>
-  <ellipse cx="18.6" cy="34" rx="2.6" ry="3.6" fill="#E3AE83"/><ellipse cx="45.4" cy="34" rx="2.6" ry="3.6" fill="#E3AE83"/>
-  <ellipse cx="32" cy="34" rx="13.2" ry="14.2" fill="#F2C9A0"/>
-  <path d="M18.4 26.5C19 17.8 24.8 12.5 32 12.5s13 5.3 13.6 14z" fill="#1F4D3A"/>
-  <rect x="17.6" y="24" width="28.8" height="4" rx="2" fill="#C9A96E"/>
-  <path d="M44.5 26.2c4 .2 7.2 1 8.6 2.2-2.4.9-5.6 1.1-9.2.9z" fill="#173d2d"/>
-  <circle cx="26.6" cy="33" r="4.2" fill="#fff" fill-opacity=".55" stroke="#1D2A23" stroke-width="1.6"/>
-  <circle cx="37.4" cy="33" r="4.2" fill="#fff" fill-opacity=".55" stroke="#1D2A23" stroke-width="1.6"/>
-  <path d="M30.8 33h2.4" stroke="#1D2A23" stroke-width="1.6"/>
-  <circle class="dalal-eye" cx="27" cy="33.4" r="1.5" fill="#1D2A23"/><circle class="dalal-eye" cx="37.8" cy="33.4" r="1.5" fill="#1D2A23"/>
-  <path d="M23.5 41.2c2.6-2.4 5.6-2.6 8.5-.6 2.9-2 5.9-1.8 8.5.6-2.3 1.2-5.2 1.6-8.5.4-3.3 1.2-6.2.8-8.5-.4z" fill="#2A1E14"/>
-  <path d="M28.6 44.6c2.1 1.4 4.7 1.4 6.8 0" stroke="#8A4B2F" stroke-width="1.4" fill="none" stroke-linecap="round"/>
-  <circle cx="22.5" cy="38.5" r="2" fill="#E89A8A" fill-opacity=".45"/><circle cx="41.5" cy="38.5" r="2" fill="#E89A8A" fill-opacity=".45"/>
-</svg>`;
+export const DALAL_FACE = `<img class="dalal-face" src="icons/dalal-head.webp" alt="" width="80" height="80">`;
 
 const SOCIAL_META = {
   whatsapp: ['WhatsApp community', '#25D366', '<path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.5l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.3 2.2 2.2 0 0 0 .1-1.3c0-.1-.2-.2-.5-.3Z"/>'],
@@ -136,7 +120,7 @@ export function mountDalal(helpers) {
   msgs = load();
   const wrap = document.createElement('div');
   wrap.innerHTML = `
-    <button id="dalalBtn" class="dalal-btn" aria-label="Ask Dalal, the AI buddy">${DALAL_FACE}<span>Ask Dalal</span></button>
+    <button id="dalalBtn" class="dalal-peek" aria-label="Ask Dalal, the AI buddy"><span class="peek-say">Kuch poochna hai? 👀<b>Ask Dalal</b></span><img src="icons/dalal-peek.webp" alt="" width="265" height="720"></button>
     <section id="dalalPanel" class="dalal-panel" hidden aria-label="Dalal chat">
       <header>${DALAL_FACE}<div><b>Dalal</b><span>AI market buddy · Street ka Dalal</span></div><button class="dclose" data-dalal-close aria-label="Close">✕</button></header>
       <div id="dalalMsgs" class="dmsgs" aria-live="polite"></div>
@@ -146,6 +130,11 @@ export function mountDalal(helpers) {
   document.body.append(...wrap.children);
   $('#dalalBtn').hidden = !A.state.user;
   $('#dalalBtn').addEventListener('click', () => toggle());
+  setTimeout(() => $('#dalalBtn').classList.add('in'), 1200);
+  let said = false;
+  try { said = sessionStorage.getItem('skd.dalal.said') === '1'; } catch {}
+  if (!said) setTimeout(() => { if (!open) { $('#dalalBtn').classList.add('say'); setTimeout(() => $('#dalalBtn').classList.remove('say'), 6000); } try { sessionStorage.setItem('skd.dalal.said', '1'); } catch {} }, 2600);
+  setInterval(() => { const b = $('#dalalBtn'); if (open || !b || document.hidden) return; b.classList.remove('in'); setTimeout(() => b.classList.add('in'), 1400); }, 45000);
   document.addEventListener('click', (e) => {
     if (e.target.closest('[data-dalal-close]')) toggle(false);
     const s = e.target.closest('[data-dalal-ask]');
