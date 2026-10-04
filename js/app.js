@@ -994,7 +994,7 @@ const ACTS = {
       const r = await fetch(url, { headers: { Authorization: `Bearer ${t}` } });
       const d = await r.json();
       const h = d.health || {};
-      box.innerHTML = `<dl class="kv wide"><dt>Gemini key</dt><dd>${h.key ? chip('set', 'good') : chip('missing', 'warn')}</dd><dt>Daily-limit store</dt><dd>${h.kv ? chip('connected', 'good') : chip('missing', 'warn')}</dd><dt>Gemini</dt><dd>${esc(h.gemini || '—')}</dd><dt>Models</dt><dd>${esc(h.models || '—')}</dd><dt>Your questions left</dt><dd>${d.left ?? '—'} / ${d.limit ?? '—'}</dd></dl>`;
+      box.innerHTML = `<dl class="kv wide"><dt>Gemini key</dt><dd>${h.key ? chip('set', 'good') : chip('missing', 'warn')}</dd><dt>Daily-limit store</dt><dd>${h.kv ? chip(`connected${h.store ? ' · ' + h.store : ''}`, 'good') : chip('missing', 'warn')}</dd><dt>Gemini</dt><dd>${esc(h.gemini || '—')}</dd><dt>Models</dt><dd>${esc(h.models || '—')}</dd><dt>Your questions left</dt><dd>${d.left ?? '—'} / ${d.limit ?? '—'}</dd></dl>`;
     } catch (e) { box.textContent = 'Could not reach Dalal: ' + e.message; }
   },
   adminTab: (el) => { ui.admin.tab = el.dataset.v; ui.edit = null; render(); },

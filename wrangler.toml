@@ -12,3 +12,9 @@ id = "2114a16217274c82be7d87229bc63670"
 [vars]
 DALAL_DAILY_LIMIT = "10"
 FIREBASE_PROJECT_ID = "street-ka-dalal"
+
+# Dalal's daily question counter and small caches (free: 100,000 writes / 5M reads a day)
+[[d1_databases]]
+binding = "DALAL_DB"
+database_name = "dalal-db"
+database_id = "05998346-45bd-47a3-8830-b670e970a390"

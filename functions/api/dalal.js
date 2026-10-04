@@ -2,7 +2,7 @@
 //
 // The Gemini key never reaches the browser: it lives in this function as the secret GEMINI_API_KEY.
 // Each request must carry the member's Firebase ID token (signed-in members only). Every member gets
-// DALAL_DAILY_LIMIT questions a day (default 10), counted in the KV namespace bound as DALAL_KV.
+// DALAL_DAILY_LIMIT questions a day (default 10), counted in the D1 database bound as DALAL_DB (KV DALAL_KV as fallback).
 // The answer is built from the site's own published data (data/*.json, listed in data/meta.json, so new
 // sections are picked up automatically) plus the published Insights; Gemini may add Google Search.
 //
@@ -24,6 +24,51 @@ const cors = (origin) => ({
 const json = (obj, status, origin) => new Response(JSON.stringify(obj), { status, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', ...cors(origin) } });
 const istDate = () => new Date(Date.now() + 330 * 60000).toISOString().slice(0, 10);
 const clip = (s, n) => (s == null ? '' : String(s).length > n ? String(s).slice(0, n) + '…' : String(s));
+
+/* ------------------------------------------------------------ storage: D1 (KV only as a fallback) */
+// D1 free tier: 100,000 writes and 5 million reads a day (KV's free tier allows only 1,000 writes a day,
+// which 200 members asking 5 questions each would use up). Two small tables, created on first use:
+//   counts(k = uid:day, n, day)   questions asked per member per IST day; rows older than 3 days are cleared
+//   cache(k, v, exp)              short-lived values: model list, "no web search" flags, published posts
+let dbReady = null;
+function db(env) {
+  if (!env.DALAL_DB) return Promise.resolve(null);
+  dbReady ||= env.DALAL_DB.batch([
+    env.DALAL_DB.prepare('CREATE TABLE IF NOT EXISTS counts (k TEXT PRIMARY KEY, n INTEGER NOT NULL, day TEXT NOT NULL)'),
+    env.DALAL_DB.prepare('CREATE TABLE IF NOT EXISTS cache (k TEXT PRIMARY KEY, v TEXT, exp INTEGER NOT NULL)'),
+  ]).then(() => env.DALAL_DB).catch((e) => { dbReady = null; console.warn('D1', e.message); return null; });
+  return dbReady;
+}
+async function cacheGet(env, k) {
+  const d = await db(env);
+  if (d) { try { const r = await d.prepare('SELECT v FROM cache WHERE k = ? AND exp > ?').bind(k, Date.now()).first(); return r ? r.v : null; } catch { return null; } }
+  return env.DALAL_KV ? env.DALAL_KV.get(k) : null;
+}
+async function cachePut(env, k, v, ttlSec) {
+  const d = await db(env);
+  if (d) { try { await d.prepare('INSERT INTO cache (k, v, exp) VALUES (?, ?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v, exp = excluded.exp').bind(k, v, Date.now() + ttlSec * 1000).run(); } catch {} return; }
+  if (env.DALAL_KV) await env.DALAL_KV.put(k, v, { expirationTtl: Math.max(60, ttlSec) }).catch(() => {});
+}
+async function cacheDel(env, k) {
+  const d = await db(env);
+  if (d) { try { await d.prepare('DELETE FROM cache WHERE k = ?').bind(k).run(); } catch {} return; }
+  if (env.DALAL_KV) await env.DALAL_KV.delete(k).catch(() => {});
+}
+async function getUsed(env, uid) {
+  const d = await db(env);
+  if (d) { try { const r = await d.prepare('SELECT n FROM counts WHERE k = ?').bind(`${uid}:${istDate()}`).first(); return r ? r.n : 0; } catch { return 0; } }
+  return env.DALAL_KV ? +((await env.DALAL_KV.get(`n:${uid}:${istDate()}`)) || 0) : 0;
+}
+async function addUsed(env, uid, used) {
+  const day = istDate();
+  const d = await db(env);
+  if (d) {
+    await d.prepare('INSERT INTO counts (k, n, day) VALUES (?, 1, ?) ON CONFLICT(k) DO UPDATE SET n = n + 1').bind(`${uid}:${day}`, day).run();
+    if (Math.random() < 0.03) await d.prepare('DELETE FROM counts WHERE day < ?').bind(new Date(Date.now() + 330 * 60000 - 3 * 86400000).toISOString().slice(0, 10)).run();
+    return;
+  }
+  if (env.DALAL_KV) await env.DALAL_KV.put(`n:${uid}:${day}`, String(used + 1), { expirationTtl: 60 * 60 * 48 });
+}
 
 /* ------------------------------------------------------------ Firebase ID token check */
 let JWKS = null, JWKS_AT = 0;
@@ -72,7 +117,15 @@ function fsPlain(v) {
   if ('arrayValue' in v) return (v.arrayValue.values || []).map(fsPlain);
   return null;
 }
-async function publishedPosts(projectId, token) {
+// Published insights change rarely: keep a 10-minute copy,
+// so Firestore is read about once per 10 minutes instead of once per question (copy kept in D1).
+async function publishedPosts(env, projectId, token) {
+  try { const hit = await cacheGet(env, 'posts'); if (hit) return JSON.parse(hit); } catch {}
+  const fresh = await fetchPosts(projectId, token);
+  await cachePut(env, 'posts', JSON.stringify(fresh), 600);
+  return fresh;
+}
+async function fetchPosts(projectId, token) {
   try {
     const r = await fetch(`https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents:runQuery`, {
       method: 'POST',
@@ -345,7 +398,7 @@ const vnum = (n) => parseFloat((n.match(/gemini-(\d+(?:\.\d+)?)/) || [])[1] || '
 async function pickModels(env) {
   const wanted = (env.GEMINI_MODELS || '').split(',').map((x) => x.trim()).filter(Boolean);
   let found = null;
-  try { found = env.DALAL_KV && JSON.parse((await env.DALAL_KV.get('models')) || 'null'); } catch {}
+  try { found = JSON.parse((await cacheGet(env, 'models')) || 'null'); } catch {}
   if (!found) {
     try {
       const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200', { headers: { 'x-goog-api-key': env.GEMINI_API_KEY } });
@@ -356,7 +409,7 @@ async function pickModels(env) {
           .map((m) => m.name.replace(/^models\//, ''))
           .filter((n) => /^gemini-[\d.]+-flash/.test(n) && !/image|tts|audio|live|embed|thinking|exp|computer|robotics/.test(n));
         found.sort((a, b) => (/lite/.test(a) - /lite/.test(b)) || (/preview/.test(a) - /preview/.test(b)) || vnum(b) - vnum(a) || a.length - b.length);
-        if (found.length && env.DALAL_KV) await env.DALAL_KV.put('models', JSON.stringify(found), { expirationTtl: 21600 });
+        if (found.length) await cachePut(env, 'models', JSON.stringify(found), 21600);
       }
     } catch {}
   }
@@ -371,7 +424,7 @@ async function pickModels(env) {
 // without search for the next 6 hours (remembered in KV), from the site's own data.
 async function askGemini(env, models, sys, contents, only) {
   const noSearch = new Set();
-  if (env.DALAL_KV) for (const m of models) if (await env.DALAL_KV.get(`ns:${m}`)) noSearch.add(m);
+  for (const m of models) if (await cacheGet(env, `ns:${m}`)) noSearch.add(m);
   const attempts = [];
   for (const m of models) if (!noSearch.has(m)) attempts.push([m, true]);
   if (!only || noSearch.size) for (const m of models) attempts.push([m, false]);
@@ -402,8 +455,8 @@ async function askGemini(env, models, sys, contents, only) {
     const errText = await r.text();
     lastErr += ` | ${model}${search ? '' : ' (no search)'}: ${r.status} ${errText.replace(/\s+/g, ' ').slice(0, 140)}`;
     if (r.status === 400 && think && /thinking/i.test(errText)) { attempts.splice(i + 1, 0, [model, search, true]); continue; }
-    if (r.status === 429 && search && env.DALAL_KV) await env.DALAL_KV.put(`ns:${model}`, '1', { expirationTtl: 21600 }).catch(() => {});
-    if (r.status === 404 && env.DALAL_KV) await env.DALAL_KV.delete('models').catch(() => {}); // a retired model: refresh the list next time
+    if (r.status === 429 && search) await cachePut(env, `ns:${model}`, '1', 21600);
+    if (r.status === 404) await cacheDel(env, 'models'); // a retired model: refresh the list next time
     if (![429, 500, 503, 404, 400, 403].includes(r.status)) break;
   }
   throw new Error(lastErr.replace(/^ \| /, '') || 'no model answered');
@@ -421,10 +474,10 @@ export async function onRequestGet({ request, env }) {
   const user = await verifyToken((request.headers.get('Authorization') || '').replace(/^Bearer\s+/i, ''), projectId);
   if (!user) return json({ error: 'signin' }, 401, origin);
   const limit = +(env.DALAL_DAILY_LIMIT || 10);
-  const used = env.DALAL_KV ? +((await env.DALAL_KV.get(`n:${user.uid}:${istDate()}`)) || 0) : 0;
+  const used = await getUsed(env, user.uid);
   const out = { left: Math.max(0, limit - used), limit };
   if (ADMIN_EMAILS.includes(user.email.toLowerCase()) && new URL(request.url).searchParams.has('health')) {
-    out.health = { key: !!env.GEMINI_API_KEY, kv: !!env.DALAL_KV, models: (await pickModels(env)).join(', ') };
+    out.health = { key: !!env.GEMINI_API_KEY, kv: !!(await db(env)) || !!env.DALAL_KV, store: env.DALAL_DB ? ((await db(env)) ? 'D1' : 'D1 error') : env.DALAL_KV ? 'KV' : 'none', models: (await pickModels(env)).join(', ') };
     if (env.GEMINI_API_KEY) {
       // test each model on its own, with web search on (as real questions use it), and time it
       const res = [];
@@ -455,7 +508,7 @@ export async function onRequestPost({ request, env }) {
   const limit = +(env.DALAL_DAILY_LIMIT || 10);
   const isAdmin = ADMIN_EMAILS.includes(user.email.toLowerCase());
   const key = `n:${user.uid}:${istDate()}`;
-  const used = env.DALAL_KV ? +((await env.DALAL_KV.get(key)) || 0) : 0;
+  const used = await getUsed(env, user.uid);
   if (!isAdmin && used >= limit) return json({ error: 'limit', message: `You've used all ${limit} questions for today. Dalal will be back tomorrow morning! 🙏`, left: 0 }, 429, origin);
 
   // the site's knowledge: every data file the publisher lists, plus published insights
@@ -475,7 +528,7 @@ export async function onRequestPost({ request, env }) {
     all.stkDaily = {};
     got.forEach((g) => { if (g) { Object.assign(all.stkDaily, g.rows || {}); all.stkAsOf = g.as_of; all.stkFundAsOf = g.fund_as_of; } });
   }
-  const [posts, news] = await Promise.all([publishedPosts(projectId, token), newsFor(env, selfOrigin, q, focus, all).catch(() => null)]);
+  const [posts, news] = await Promise.all([publishedPosts(env, projectId, token), newsFor(env, selfOrigin, q, focus, all).catch(() => null)]);
   const context = buildContext(q, all, posts, extra, focus, news);
 
   const history = (Array.isArray(body.history) ? body.history : []).slice(-6)
@@ -486,7 +539,7 @@ export async function onRequestPost({ request, env }) {
   try {
     const models = await pickModels(env);
     const r = await askGemini(env, models, SYSTEM(meta?.as_of, istDate()), contents);
-    if (env.DALAL_KV && !isAdmin) await env.DALAL_KV.put(key, String(used + 1), { expirationTtl: 60 * 60 * 48 });
+    if (!isAdmin) await addUsed(env, user.uid, used);
     // when Gemini did not search the web itself, show the news links Dalal read
     const newsLinks = [...Object.values(news?.by_stock || {}).flat(), ...(news?.topic || [])].filter((x) => x.link).slice(0, 4).map((x) => ({ title: `${x.source}: ${x.title}`.slice(0, 90), uri: x.link }));
     return json({ answer: r.text, sources: r.sources?.length ? r.sources : newsLinks, web: r.web || !!newsLinks.length, model: r.model, asOf: meta?.as_of, left: isAdmin ? limit : Math.max(0, limit - used - 1) }, 200, origin);
