@@ -150,28 +150,64 @@ function compactNews(n, focus) {
   };
 }
 
-// Stocks named in the question: symbols that appear anywhere in today's data.
+// Stocks named in the question: matched against every NSE stock (symbol, company name or a common
+// nickname), at most 5. When only a first word matches ("reliance"), the biggest companies come first.
+const NOT_SYMBOLS = new Set(['THE', 'AND', 'FOR', 'ARE', 'ITS', 'BUY', 'NEW', 'ONE', 'TOP', 'LOW', 'HIGH', 'AAJ', 'HAI', 'KYA', 'KOI', 'KAB', 'KAR', 'NOT', 'ALL', 'ANY', 'WHO', 'WHY', 'HOW', 'WAS', 'HAS', 'YOU', 'CAN', 'GET', 'DAY', 'IPO', 'NSE', 'BSE', 'SIP', 'FII', 'DII', 'AMC', 'EPS', 'ROE', 'GDP', 'RBI', 'PSU', 'WHAT', 'WHEN', 'SELL', 'HOLD', 'STOCK', 'SHARE', 'PRICE', 'TODAY', 'MARKET', 'NIFTY', 'SECTOR', 'FUND', 'FUNDS', 'NEWS', 'BEST', 'GOOD', 'KAISA', 'LISTED', 'INDIA', 'BANK', 'GOLD', 'POWER', 'RESULT', 'RESULTS', 'ORDER', 'ORDERS', 'MONTH', 'YEAR', 'WEEK', 'SAAL', 'RETURN']);
+const ALIAS = { sbi: 'SBIN', 'state bank': 'SBIN', hul: 'HINDUNILVR', 'l&t': 'LT', 'larsen': 'LT', 'm&m': 'M&M', mahindra: 'M&M', airtel: 'BHARTIARTL', hdfc: 'HDFCBANK', icici: 'ICICIBANK', kotak: 'KOTAKBANK', axis: 'AXISBANK', 'bajaj finance': 'BAJFINANCE', 'maruti': 'MARUTI', 'sun pharma': 'SUNPHARMA', 'asian paints': 'ASIANPAINT', 'ultratech': 'ULTRACEMCO', 'adani ports': 'ADANIPORTS', 'power grid': 'POWERGRID', 'coal india': 'COALINDIA', 'hindalco': 'HINDALCO', 'zomato': 'ETERNAL', 'paytm': 'PAYTM', 'nykaa': 'NYKAA', 'hal': 'HAL', 'bel': 'BEL', 'irctc': 'IRCTC', 'lic': 'LICI' };
+const STOP = new Set(['of', 'and', '&', 'the', 'for', 'in']);
+const LEGAL = / (limited|ltd|the)$/;
+function nameKey(name) {
+  let n = String(name).toLowerCase().replace(/[^a-z0-9& ]+/g, ' ').replace(/\s+/g, ' ').trim();
+  for (let i = 0; i < 2; i++) n = n.replace(LEGAL, '');
+  const parts = n.split(' ');
+  // first two meaningful words, keeping linking words in between ("bank of baroda", "bank of india")
+  const out = [];
+  let meaningful = 0;
+  for (const w of parts) { out.push(w); if (!STOP.has(w)) meaningful++; if (meaningful >= 2) break; }
+  return { key: out.join(' '), first: parts[0], full: meaningful >= 2 };
+}
 function findStocks(q, all) {
+  const info = all.stkInfo?.stocks || {};
   const syms = new Map();
   const add = (sym, name) => { if (sym && !syms.has(sym)) syms.set(sym, name || ''); };
+  for (const [sym, x] of Object.entries(info)) add(sym, x.n);
   (all.market?.gainers || []).concat(all.market?.losers || []).forEach((x) => add(x.sym, x.name));
-  (all.screeners?.patterns || []).forEach((p) => (p.rows || []).forEach((r) => add(r.sym, r.name)));
-  Object.values(all.screeners?.leadership || {}).forEach((v) => Array.isArray(v) && v.forEach((r) => add(r.sym, r.name)));
   (all.news?.filings || []).forEach((r) => add(r.sym, r.name));
-  (all.funds?.accumulation || []).concat(all.funds?.entries || []).forEach((r) => add(r.sym, r.name));
-  const words = new Set(q.toUpperCase().match(/[A-Z0-9&-]{2,20}/g) || []);
-  const low = q.toLowerCase();
-  const hit = new Set();
+  const words = new Set((q.match(/[A-Za-z0-9&-]{3,20}/g) || []).map((w) => w.toUpperCase()).filter((w) => !NOT_SYMBOLS.has(w)));
+  const low = ` ${q.toLowerCase().replace(/[^a-z0-9& ]+/g, ' ').replace(/\s+/g, ' ')} `;
+  const size = (s) => info[s]?.mc || 0;
+  const exact = [], byName = [], byFirst = [];
+  for (const [nick, sym] of Object.entries(ALIAS)) if (low.includes(` ${nick} `) && syms.has(sym)) exact.push(sym);
   for (const [sym, name] of syms) {
-    if (words.has(sym)) hit.add(sym);
-    else if (name) { const first = name.toLowerCase().replace(/ (limited|ltd\.?|india)$/g, '').split(' ').slice(0, 2).join(' '); if (first.length > 4 && low.includes(first)) hit.add(sym); }
+    if (words.has(sym)) { exact.push(sym); continue; }
+    if (!name) continue;
+    const k = nameKey(name);
+    if (k.full && k.key.length >= 6 && low.includes(` ${k.key} `)) byName.push([sym, k.key.length, k.first]);
+    else if (k.first.length >= 6 && !STOP.has(k.first) && low.includes(` ${k.first} `)) byFirst.push([sym, size(sym), k.first]);
   }
-  return hit;
+  // "Canara Bank" matched by its full name wins over "Canara HSBC Life" matched only by "canara";
+  // a bare first word ("reliance") keeps the two biggest companies that share it
+  const firsts = new Set([...byName.map((h) => h[2]), ...exact.map((s) => nameKey(syms.get(s) || '').first)]);
+  const seen = {};
+  const loose = byFirst.filter((h) => !firsts.has(h[2])).sort((a, b) => b[1] - a[1]).filter((h) => (seen[h[2]] = (seen[h[2]] || 0) + 1) <= 2);
+  const hits = [...exact, ...byName.sort((a, b) => b[1] - a[1]).map((h) => h[0]), ...loose.map((h) => h[0])];
+  return new Set([...new Set(hits)].slice(0, 5));
 }
 function stockFacts(focus, all) {
   const out = {};
   for (const sym of focus) {
     const f = {};
+    const inf = all.stkInfo?.stocks?.[sym];
+    if (inf) f.company = { name: inf.n, sector: inf.sec, industry: inf.ind, listed_on_nse: inf.ld, isin: inf.isin, face_value: inf.fv };
+    const d = all.stkDaily?.[sym];
+    if (d) {
+      const [r1d, r1w, r1m, r3m, r6m, r12m] = d.r || [];
+      f.price = { close: d.p, as_of: all.stkAsOf, return_pct: { '1D': r1d, '1W': r1w, '1M': r1m, '3M': r3m, '6M': r6m, '12M': r12m },
+        from_52w_high_pct: d.hi, new_52w_high: !!d.nh, new_52w_low: !!d.nl, above_dma: d.dma ? { '20': !!d.dma[0], '50': !!d.dma[1], '200': !!d.dma[2] } : undefined,
+        relative_strength_0_100: d.rs, last_24_closes: d.sp };
+      f.valuation = { market_cap_cr: d.mc, pe: d.pe, pb: d.pb, roe_pct: d.roe, debt_to_equity_pct: d.de, dividend_yield_pct: d.dy, revenue_growth_pct: d.rg, earnings_growth_pct: d.eg, as_of: all.stkFundAsOf };
+      if (d.mf) f.mutual_fund_buying = { months_bought: d.mf[0], of_months: (all.funds?.months || []).length, total_cr: d.mf[1], trend: d.mf[2] };
+    }
     const g = (all.market?.gainers || []).concat(all.market?.losers || []).find((x) => x.sym === sym);
     if (g) f.today = { ret_pct: g.ret, last: g.last };
     const pats = (all.screeners?.patterns || []).filter((p) => (p.rows || []).some((r) => r.sym === sym)).map((p) => ({ screen: p.title, row: p.rows.find((r) => r.sym === sym) }));
@@ -186,8 +222,7 @@ function stockFacts(focus, all) {
   return out;
 }
 
-function buildContext(q, all, posts, extra) {
-  const focus = findStocks(q, all);
+function buildContext(q, all, posts, extra, focus) {
   const ql = q.toLowerCase();
   const ctx = { data_as_of_close: all.meta?.as_of, published_at: all.meta?.published_at, market: compactMarket(all.market) };
   const wantSectors = has(ql, /sector|industr|theme|rotation|leading|lagging|bank|pharma|auto|metal|\bit\b|fmcg|realty|defen|energy|power|psu|cement|chemical|infra|capital good|nbfc|insurance|telecom|consum|media|market/);
@@ -348,8 +383,17 @@ export async function onRequestPost({ request, env }) {
   const all = { meta };
   const extra = {};
   files.forEach((f, i) => { if (['market', 'sectors', 'screeners', 'funds', 'news'].includes(f)) all[f] = loaded[i]; else if (loaded[i]) extra[f] = loaded[i]; });
+  // every NSE stock: who it is (one file) and the day's numbers (one small file per first letter)
+  all.stkInfo = await asset(env, selfOrigin, 'data/stk/info.json');
+  const focus = findStocks(q, all);
+  if (focus.size) {
+    const shards = [...new Set([...focus].map((x) => (/^[A-Z]/.test(x[0]) ? x[0] : '0')))];
+    const got = await Promise.all(shards.map((c) => asset(env, selfOrigin, `data/stk/d/${c}.json`)));
+    all.stkDaily = {};
+    got.forEach((g) => { if (g) { Object.assign(all.stkDaily, g.rows || {}); all.stkAsOf = g.as_of; all.stkFundAsOf = g.fund_as_of; } });
+  }
   const posts = await publishedPosts(projectId, token);
-  const context = buildContext(q, all, posts, extra);
+  const context = buildContext(q, all, posts, extra, focus);
 
   const history = (Array.isArray(body.history) ? body.history : []).slice(-6)
     .filter((h) => h && h.text && (h.role === 'user' || h.role === 'model'))

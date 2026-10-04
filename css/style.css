@@ -496,3 +496,20 @@ ul.plain .sub { display: inline; }
   .chart-tools select { flex: 1 1 45%; }
   .tabs.pad { padding: 0 14px; }
 }
+
+/* ---------- stocks ---------- */
+a.sym { font-weight: 700; color: var(--green); text-decoration: none; }
+a.sym:hover { text-decoration: underline; }
+.crumb { margin: 0 0 8px; font-size: 13.5px; }
+.crumb a { text-decoration: none; font-weight: 600; }
+.more { text-align: center; margin: -6px 0 18px; }
+.stk-price { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+.stk-price b { font: 600 34px var(--serif); color: var(--ink); }
+.stk-price span { font-weight: 700; }
+.ret-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 6px; margin: 10px 0; }
+.ret-grid div { background: var(--paper-2); border-radius: 10px; padding: 7px 9px; display: flex; flex-direction: column; }
+.ret-grid span { font-size: 11.5px; color: var(--muted); font-weight: 600; }
+.ret-grid b { font-size: 15px; }
+h3.mt { margin-top: 14px; margin-bottom: 4px; }
+.sub.inline { display: inline; }
+.card .spark { width: 100%; height: auto; }
