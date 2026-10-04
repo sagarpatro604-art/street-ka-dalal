@@ -1,0 +1,15 @@
+# Cloudflare Pages settings for Street ka Dalal. The site is plain files (no build step).
+# The Gemini key is NOT here: it is an encrypted secret (GEMINI_API_KEY) set in the Cloudflare dashboard.
+name = "street-ka-dalal"
+pages_build_output_dir = "."
+compatibility_date = "2026-10-01"
+
+# Dalal's per-member daily question counter
+[[kv_namespaces]]
+binding = "DALAL_KV"
+id = "2114a16217274c82be7d87229bc63670"
+
+[vars]
+DALAL_DAILY_LIMIT = "10"
+GEMINI_MODELS = "gemini-2.5-flash,gemini-2.5-flash-lite"
+FIREBASE_PROJECT_ID = "street-ka-dalal"
