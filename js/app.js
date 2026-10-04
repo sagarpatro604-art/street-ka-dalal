@@ -1061,6 +1061,36 @@ document.addEventListener('change', (e) => {
 window.addEventListener('hashchange', () => { ui.edit = null; render(); });
 window.addEventListener('beforeunload', (e) => { if (ui.edit?.dirty) { e.preventDefault(); e.returnValue = ''; } });
 
+/* ---------------- stay up to date ---------------- */
+// A tab left open for days (common on phones) never reloads on its own. When the reader comes back to
+// the tab, and every 10 minutes while it is open: new site code -> reload (unless they are typing);
+// new evening data -> redraw the page with it.
+const CODE = ['./', 'js/app.js', 'js/auth.js', 'js/dalal.js', 'js/charts.js', 'js/config.js', 'css/style.css'];
+let codeSig = null;
+async function codeVersion() {
+  const tags = await Promise.all(CODE.map((f) => fetch(f, { method: 'HEAD', cache: 'no-store' }).then((r) => (r.ok ? r.headers.get('etag') || r.headers.get('last-modified') : '')).catch(() => '')));
+  return tags.every(Boolean) ? tags.join('|') : null; // a failed check never triggers a reload
+}
+let checking = false;
+async function checkFresh() {
+  if (document.hidden || checking) return;
+  checking = true;
+  try {
+    const v = await codeVersion();
+    if (v && codeSig && v !== codeSig) {
+      const typing = ui.edit?.dirty || document.activeElement?.matches?.('input, textarea, select');
+      if (!typing) { location.reload(); return; }
+    } else if (v && !codeSig) codeSig = v;
+    const before = meta?.published_at;
+    const m = await loadMeta(true);
+    if (before && m?.published_at && m.published_at !== before && A.state.user) { await render(); toast('Fresh market data loaded'); }
+  } catch {} finally { checking = false; }
+}
+codeVersion().then((v) => { codeSig = v; });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checkFresh(); });
+window.addEventListener('focus', checkFresh);
+setInterval(checkFresh, 10 * 60 * 1000);
+
 A.onChange(render);
 render();
 A.init();
