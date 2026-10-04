@@ -105,7 +105,9 @@ async function ask(q) {
         left = d.left;
         A.logAsk({ q, a: d.answer, web: d.web, model: d.model }).catch(() => {});
       } else {
-        msgs.push({ role: 'bot', err: true, text: d.message || 'Dalal could not answer just now. Please try again.' });
+        msgs.push({ role: 'bot', err: true, text: (d.message || 'Dalal could not answer just now. Please try again.') + (A.isAdmin() && d.detail ? `
+
+(admin only) ${d.detail}` : '') });
         if (d.left != null) left = d.left;
       }
     }

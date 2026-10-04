@@ -236,10 +236,10 @@ async function pickModels(env) {
   return [...new Set(list)].slice(0, 3);
 }
 
-async function askGemini(env, models, sys, contents) {
+async function askGemini(env, models, sys, contents, only) {
   const attempts = [];
   for (const m of models) attempts.push([m, true]);
-  attempts.push([models[models.length - 1], false]); // last resort: no web search
+  if (!only) attempts.push([models[models.length - 1], false]); // last resort: no web search
   let lastErr = '';
   for (let i = 0; i < attempts.length; i++) {
     const [model, search, plain] = attempts[i];
@@ -258,19 +258,19 @@ async function askGemini(env, models, sys, contents) {
       const d = await r.json();
       const c = d.candidates?.[0];
       const text = (c?.content?.parts || []).map((p) => p.text || '').join('').trim();
-      if (!text) { lastErr = c?.finishReason || 'empty answer'; continue; }
+      if (!text) { lastErr += ` | ${model}: ${c?.finishReason || 'empty answer'}`; continue; }
       const gm = c.groundingMetadata || {};
       const seen = new Set();
       const sources = (gm.groundingChunks || []).map((g) => g.web).filter((w) => w && w.uri && !seen.has(w.title) && seen.add(w.title)).slice(0, 5).map((w) => ({ title: w.title, uri: w.uri }));
       return { text, sources, web: !!(gm.webSearchQueries && gm.webSearchQueries.length), model };
     }
     const errText = await r.text();
-    lastErr = `${model}: ${r.status} ${errText.slice(0, 160)}`;
+    lastErr += ` | ${model}${search ? '' : ' (no search)'}: ${r.status} ${errText.replace(/\s+/g, ' ').slice(0, 140)}`;
     if (r.status === 400 && think && /thinking/i.test(errText)) { attempts.splice(i + 1, 0, [model, search, true]); continue; }
     if (r.status === 404 && env.DALAL_KV) await env.DALAL_KV.delete('models').catch(() => {}); // a retired model: refresh the list next time
-    if (![429, 500, 503, 404, 400].includes(r.status)) break;
+    if (![429, 500, 503, 404, 400, 403].includes(r.status)) break;
   }
-  throw new Error(lastErr || 'no model answered');
+  throw new Error(lastErr.replace(/^ \| /, '') || 'no model answered');
 }
 
 /* ------------------------------------------------------------ handlers */
@@ -290,8 +290,14 @@ export async function onRequestGet({ request, env }) {
   if (ADMIN_EMAILS.includes(user.email.toLowerCase()) && new URL(request.url).searchParams.has('health')) {
     out.health = { key: !!env.GEMINI_API_KEY, kv: !!env.DALAL_KV, models: (await pickModels(env)).join(', ') };
     if (env.GEMINI_API_KEY) {
-      try { const r = await askGemini(env, out.health.models.split(',').map((s) => s.trim()), 'Reply with the single word OK.', [{ role: 'user', parts: [{ text: 'ping' }] }]); out.health.gemini = `ok (${r.model})`; }
-      catch (e) { out.health.gemini = 'error: ' + clip(e.message, 160); }
+      // test each model on its own, with web search on (as real questions use it), and time it
+      const res = [];
+      for (const m of out.health.models.split(',').map((x) => x.trim())) {
+        const t0 = Date.now();
+        try { await askGemini(env, [m], 'Reply with the single word OK.', [{ role: 'user', parts: [{ text: 'ping' }] }], true); res.push(`${m}: ok ${((Date.now() - t0) / 1000).toFixed(1)}s`); }
+        catch (e) { res.push(`${m}: ${clip(e.message, 140)}`); }
+      }
+      out.health.gemini = res.join(' | ');
     }
   }
   return json(out, 200, origin);
@@ -339,6 +345,6 @@ export async function onRequestPost({ request, env }) {
     return json({ answer: r.text, sources: r.sources, web: r.web, model: r.model, asOf: meta?.as_of, left: isAdmin ? limit : Math.max(0, limit - used - 1) }, 200, origin);
   } catch (e) {
     const busy = /429|RESOURCE_EXHAUSTED|quota/i.test(e.message);
-    return json({ error: busy ? 'busy' : 'ai', message: busy ? 'Dalal is getting a lot of questions right now. Please try again in a minute. 🙏' : 'Dalal could not answer just now. Please try again.', detail: clip(e.message, 200) }, busy ? 429 : 502, origin);
+    return json({ error: busy ? 'busy' : 'ai', message: busy ? 'Dalal is getting a lot of questions right now. Please try again in a minute. 🙏' : 'Dalal could not answer just now. Please try again.', detail: clip(e.message, 600) }, busy ? 429 : 502, origin);
   }
 }
