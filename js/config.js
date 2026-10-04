@@ -13,6 +13,17 @@ export const firebaseConfig = {
 // rules enforce the same list, so editing it here alone does not grant access.
 export const ADMIN_EMAILS = ['sagarpatro604@gmail.com'];
 
+// Community links Dalal shares when he greets members. Leave a link empty to hide that button.
+export const SOCIAL = {
+  whatsapp: 'https://chat.whatsapp.com/DUdUxpofHqE9auMNtDyZYr',
+  instagram: 'https://www.instagram.com/sagarpatro604/',
+  linkedin: 'https://www.linkedin.com/in/sagarpps',
+  telegram: '',
+};
+
+// Where Dalal's server lives (a Cloudflare Pages Function). The github.io copy of the site calls it there.
+export const DALAL_API = 'https://street-ka-dalal.pages.dev/api/dalal';
+
 export const SITE = {
   name: 'Street ka Dalal',
   tagline: 'Screeners, sector views and market intelligence for our community.',

@@ -170,6 +170,47 @@ export async function deletePost(id) {
   await fb.fs.deleteDoc(fb.fs.doc(fb.db, 'posts', id));
 }
 
+/* ---------- Dalal (the AI buddy) ---------- */
+export async function idToken() {
+  if (state.demo || !fb?.a.currentUser) return null;
+  return fb.a.currentUser.getIdToken();
+}
+
+// What members ask Dalal: kept for the admin (question + a short copy of the answer).
+export async function logAsk({ q, a, web, model }) {
+  const u = state.user;
+  if (!u) return;
+  const rec = { uid: u.uid, name: u.name || '', email: u.email || '', q: String(q).slice(0, 900), a: String(a || '').slice(0, 1500), web: !!web, model: model || '' };
+  if (state.demo) { LS('skd.demo.asks', [{ ...rec, at: new Date().toISOString() }, ...(LS('skd.demo.asks') || [])].slice(0, 300)); return; }
+  await fb.fs.addDoc(fb.fs.collection(fb.db, 'asks'), { ...rec, at: fb.fs.serverTimestamp() });
+}
+
+export async function listAsks(n = 200) {
+  if (state.demo) return (LS('skd.demo.asks') || []).slice(0, n);
+  const { fs, db } = fb;
+  const s = await fs.getDocs(fs.query(fs.collection(db, 'asks'), fs.orderBy('at', 'desc'), fs.limit(n)));
+  const out = [];
+  s.forEach((d) => { const x = d.data(); out.push({ ...x, id: d.id, at: ts(x.at) }); });
+  return out;
+}
+
+// Housekeeping (admin only): login rows and Dalal questions older than `days` are removed so the free
+// database never fills up. Members and posts are never touched. A few hundred per visit at most.
+export async function purgeOld(days = 90) {
+  if (state.demo || !isAdmin()) return 0;
+  const { fs, db } = fb;
+  const cutoff = fs.Timestamp.fromDate(new Date(Date.now() - days * 86400000));
+  let removed = 0;
+  for (const col of ['logins', 'asks']) {
+    const s = await fs.getDocs(fs.query(fs.collection(db, col), fs.where('at', '<', cutoff), fs.limit(200)));
+    if (s.empty) continue;
+    const b = fs.writeBatch(db);
+    s.forEach((d) => { b.delete(d.ref); removed++; });
+    await b.commit();
+  }
+  return removed;
+}
+
 /* ---------- admin: members and login log ---------- */
 export async function listMembers() {
   if (state.demo) return demo.users();

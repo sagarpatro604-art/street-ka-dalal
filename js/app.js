@@ -1,5 +1,6 @@
 import * as A from './auth.js';
-import { SITE } from './config.js';
+import { SITE, DALAL_API } from './config.js';
+import { mountDalal } from './dalal.js';
 
 /* ---------------- helpers ---------------- */
 const $ = (s, r = document) => r.querySelector(s);
@@ -359,7 +360,8 @@ async function viewPost(id) {
 async function viewAdmin() {
   if (!A.isAdmin()) return '<div class="empty card">This area is for the admin.</div>';
   const t = ui.admin.tab;
-  const tabs = [['publisher', 'Publisher'], ['members', 'Members'], ['logins', 'Login log'], ['status', 'Data status']];
+  const tabs = [['publisher', 'Publisher'], ['members', 'Members'], ['logins', 'Login log'], ['asks', 'Dalal questions'], ['status', 'Data status']];
+  if (!ui.purged) { ui.purged = true; A.purgeOld(90).then((n) => n && toast(`Cleaned ${n} records older than 90 days`)).catch(() => {}); }
   let body = '';
   if (t === 'publisher') {
     if (ui.edit) body = editorHTML();
@@ -386,6 +388,16 @@ async function viewAdmin() {
       { k: 'firstSeen', label: 'Joined', fmt: (m) => fDT(m.firstSeen) }, { k: 'lastSeen', label: 'Last seen', fmt: (m) => `${fDT(m.lastSeen)}<span class="sub">${ago(m.lastSeen)}</span>` },
       { k: 'visits', label: 'Visits', cls: 'r' }, { k: 'device', label: 'Device', fmt: (m) => esc(m.device || '—') },
     ], 'No members yet.')}</section>`;
+  } else if (t === 'asks') {
+    const qs = await A.listAsks(200);
+    const day = Date.now() - 86400000;
+    body = `<div class="stats big"><div><b>${qs.filter((x) => x.at && new Date(x.at) > day).length}</b><span>questions today</span></div><div><b>${qs.length}</b><span>in the last 200</span></div><div><b>${new Set(qs.map((x) => x.uid)).size}</b><span>members asking</span></div><div><b>${qs.filter((x) => x.web).length}</b><span>used web search</span></div></div>
+    <p class="sub">What members ask Dalal, newest first. Good for spotting what to write about next. Kept for 90 days.</p>
+    <section class="card flush">${table('asks', qs, [
+      { k: 'at', label: 'When', fmt: (x) => `${fDT(x.at)}<span class="sub">${ago(x.at)}</span>` },
+      { k: 'name', label: 'Member', fmt: (x) => `<b>${esc(x.name)}</b><span class="sub">${esc(x.email)}</span>` },
+      { k: 'q', label: 'Question → answer', fmt: (x) => `<b>${esc(x.q)}</b><details class="ans"><summary>Dalal's answer${x.web ? ' · used web' : ''}</summary><div class="prose sm">${md(x.a)}</div></details>` },
+    ], 'No questions yet.')}</section>`;
   } else if (t === 'logins') {
     const ls = await A.listLogins(300);
     body = `<p class="sub">Every visit by a signed-in member, newest first (last 300).</p><section class="card flush">${table('logins', ls, [
@@ -398,6 +410,9 @@ async function viewAdmin() {
       <dl class="kv wide"><dt>Last published</dt><dd>${fDT(m?.published_at)} (${ago(m?.published_at)})</dd><dt>Market data as of</dt><dd>${fDay(m?.as_of)}</dd><dt>Took</dt><dd>${m?.took_s ?? '—'} s</dd>
       ${Object.entries(m?.sections || {}).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v === true ? chip('OK', 'good') : esc(String(v))}</dd>`).join('')}</dl>
       ${stale ? '<p class="notice">Data is more than a day old. Check that your PC and Sector Scope were on after the close (task "SectorScope SKD Publish").</p>' : '<p class="sub">Publishes automatically on weekdays at 5:15 PM and 8:45 PM from your PC.</p>'}
+    </section>
+    <section class="card"><div class="card-head"><h2>Dalal (AI buddy)</h2><button class="btn sm" data-act="dalalHealth">Check Dalal</button></div>
+      <div id="dalalHealth" class="sub">Checks the Gemini key, the daily-limit store and that Gemini answers.</div>
     </section>`;
   }
   return `${pageHead('Admin terminal', 'Street ka Dalal · control room')}
@@ -449,6 +464,7 @@ let renderSeq = 0;
 async function render() {
   const view = $('#view');
   shell();
+  mountDalal({ md, esc });
   if (!A.state.ready) { view.innerHTML = '<div class="loading">Loading…</div>'; return; }
   if (!A.state.user) { view.innerHTML = viewSignIn(); document.title = SITE.name; return; }
   const r = route();
@@ -485,6 +501,18 @@ const ACTS = {
   secPeriod: (el) => { ui.sec.period = el.dataset.v; ui.sort.sectors = { k: 'ret', dir: -1 }; render(); },
   newsType: (el) => { ui.news.type = el.dataset.v; render(); },
   insKind: (el) => { ui.ins.kind = el.dataset.v; render(); },
+  dalalHealth: async () => {
+    const box = $('#dalalHealth');
+    box.textContent = 'Checking…';
+    try {
+      const t = await A.idToken();
+      const url = location.hostname.endsWith('pages.dev') ? '/api/dalal?health=1' : DALAL_API + '?health=1';
+      const r = await fetch(url, { headers: { Authorization: `Bearer ${t}` } });
+      const d = await r.json();
+      const h = d.health || {};
+      box.innerHTML = `<dl class="kv wide"><dt>Gemini key</dt><dd>${h.key ? chip('set', 'good') : chip('missing', 'warn')}</dd><dt>Daily-limit store</dt><dd>${h.kv ? chip('connected', 'good') : chip('missing', 'warn')}</dd><dt>Gemini</dt><dd>${esc(h.gemini || '—')}</dd><dt>Models</dt><dd>${esc(h.models || '—')}</dd><dt>Your questions left</dt><dd>${d.left ?? '—'} / ${d.limit ?? '—'}</dd></dl>`;
+    } catch (e) { box.textContent = 'Could not reach Dalal: ' + e.message; }
+  },
   adminTab: (el) => { ui.admin.tab = el.dataset.v; ui.edit = null; render(); },
   newPost: async () => { await data('sectors').catch(() => {}); ui.edit = { title: '', kind: 'blog', sector: '', cover: '', summary: '', body: '', status: 'draft' }; render(); },
   editPost: async (el) => { await data('sectors').catch(() => {}); const p = await A.getPost(el.dataset.id); if (p) { ui.edit = { ...p }; render(); } },

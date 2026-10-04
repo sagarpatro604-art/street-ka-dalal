@@ -22,5 +22,12 @@ service cloud.firestore {
       allow read: if admin() || (signedIn() && resource.data.status == 'published');
       allow write: if admin();
     }
+    // Dalal questions: a member logs their own question + answer; only the admin reads or clears them
+    match /asks/{id} {
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid
+        && request.resource.data.q is string && request.resource.data.q.size() < 1000
+        && request.resource.data.a is string && request.resource.data.a.size() < 2000;
+      allow read, delete: if admin();
+    }
   }
 }

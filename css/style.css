@@ -343,3 +343,64 @@ main { max-width: 1240px; margin: 0 auto; padding: 26px 24px 40px; outline: none
   .idx .spark { height: 30px; }
   .idx-meta { flex-wrap: wrap; gap: 2px 8px; font-size: 11.5px; }
 }
+
+/* ---------- Dalal, the AI buddy ---------- */
+.dalal-btn { position: fixed; right: 20px; bottom: 20px; z-index: 45; display: flex; align-items: center; gap: 10px; padding: 6px 16px 6px 6px; border-radius: 999px; border: 1px solid #c9b896; background: var(--green); color: #fdf8ee; font: 700 15px var(--sans); cursor: pointer; box-shadow: 0 10px 30px rgba(31, 77, 58, 0.35); }
+.dalal-btn .dalal-face { width: 46px; height: 46px; border-radius: 50%; border: 2px solid var(--gold); background: #fff; }
+.dalal-btn:hover { background: var(--green-2); }
+.dalal-btn.on span { display: none; }
+.dalal-btn.on { padding: 6px; }
+@media (prefers-reduced-motion: no-preference) {
+  .dalal-btn { animation: dalal-hop 0.9s ease-out 1.2s 2; }
+  @keyframes dalal-hop { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-8px); } 70% { transform: translateY(0); } 85% { transform: translateY(-3px); } }
+}
+.dalal-panel { position: fixed; right: 20px; bottom: 86px; z-index: 46; width: min(400px, calc(100vw - 24px)); height: min(620px, calc(100dvh - 110px)); display: flex; flex-direction: column; background: var(--paper); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 24px 60px rgba(31, 46, 36, 0.25); overflow: hidden; }
+.dalal-panel[hidden] { display: none; }
+.dalal-panel header { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--green); color: #fdf8ee; }
+.dalal-panel header .dalal-face { width: 42px; height: 42px; border-radius: 50%; border: 2px solid var(--gold); background: #fff; flex: none; }
+.dalal-panel header div { flex: 1; min-width: 0; }
+.dalal-panel header b { display: block; font: 600 18px var(--serif); }
+.dalal-panel header span { font-size: 12px; opacity: 0.85; }
+.dclose { border: 0; background: rgba(255, 255, 255, 0.12); color: #fdf8ee; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 14px; }
+.dmsgs { flex: 1; overflow-y: auto; padding: 14px; display: grid; gap: 12px; align-content: start; background: var(--bg); }
+.dmsg { display: flex; gap: 8px; align-items: flex-end; }
+.dmsg .dalal-face { width: 30px; height: 30px; flex: none; border-radius: 50%; }
+.dmsg .bubble { max-width: 86%; padding: 10px 13px; border-radius: 16px 16px 16px 4px; background: var(--paper); border: 1px solid var(--line); font-size: 14px; line-height: 1.55; overflow-wrap: anywhere; }
+.dmsg .bubble p { margin: 0 0 7px; }
+.dmsg .bubble p:last-child { margin-bottom: 0; }
+.dmsg .bubble ul { margin: 4px 0 8px; padding-left: 18px; }
+.dmsg .bubble h2, .dmsg .bubble h3 { font-size: 15px; margin: 6px 0 4px; }
+.dmsgs .dmsg.me { display: flex; justify-content: flex-end; width: auto; height: auto; border: 0; border-radius: 0; padding: 0; background: none; cursor: auto; overflow: visible; }
+.dmsg.me .bubble { background: var(--green); color: #fdf8ee; border-color: var(--green); border-radius: 16px 16px 4px 16px; white-space: pre-wrap; }
+.dmsg.err .bubble { background: var(--gold-soft); border-color: #e8d7b4; }
+.greet .bubble { max-width: 92%; }
+.join { font-weight: 700; color: var(--green); margin-top: 8px !important; }
+.socs { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 10px; }
+.soc { display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px; border-radius: 999px; background: color-mix(in srgb, var(--c) 12%, #fff); color: var(--c); border: 1px solid color-mix(in srgb, var(--c) 30%, #fff); font-weight: 700; font-size: 12.5px; text-decoration: none; }
+.soc:hover { background: var(--c); color: #fff; }
+.sugs { display: flex; flex-wrap: wrap; gap: 6px; }
+.sug { border: 1px dashed #bfae8a; background: var(--paper-2); color: var(--ink); border-radius: 999px; padding: 6px 11px; font: 600 12.5px var(--sans); cursor: pointer; text-align: left; }
+.sug:hover { border-style: solid; border-color: var(--green-2); color: var(--green); }
+.srcs { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; margin-top: 8px; font-size: 12px; }
+.srcs span { color: var(--muted); font-weight: 600; }
+.srcs a { padding: 2px 8px; border-radius: 999px; background: var(--sage-2); text-decoration: none; font-weight: 600; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dtag { display: block; margin-top: 8px; font-size: 11px; color: var(--muted); font-weight: 600; }
+.typing { display: flex; align-items: center; gap: 4px; color: var(--muted); }
+.typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--green-2); animation: blink 1s infinite ease-in-out; }
+.typing i:nth-child(2) { animation-delay: 0.15s; }
+.typing i:nth-child(3) { animation-delay: 0.3s; }
+.typing span { margin-left: 6px; font-size: 13px; }
+.dform { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--line); background: var(--paper); }
+.dform textarea { flex: 1; resize: none; font: 15px/1.4 var(--sans); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; max-height: 120px; }
+.dform textarea:focus { outline: none; border-color: var(--green-2); }
+.dform button { width: 44px; border-radius: 14px; border: 0; background: var(--green); color: #fdf8ee; font-size: 16px; cursor: pointer; }
+.dalal-panel footer { display: flex; justify-content: space-between; gap: 8px; padding: 6px 12px 9px; font-size: 11px; color: var(--muted); background: var(--paper); }
+.ans summary { cursor: pointer; color: var(--green-2); font-size: 12.5px; font-weight: 600; margin-top: 4px; }
+.prose.sm { font-size: 13.5px; line-height: 1.55; margin-top: 6px; }
+body.signed-out .dalal-btn, body.signed-out .dalal-panel { display: none !important; }
+@media (max-width: 760px) {
+  .dalal-btn { right: 14px; bottom: 14px; padding: 5px 13px 5px 5px; font-size: 14px; }
+  .dalal-btn .dalal-face { width: 40px; height: 40px; }
+  .dalal-panel { right: 0; left: 0; bottom: 0; width: 100%; height: 88dvh; border-radius: 20px 20px 0 0; }
+  .foot { padding-bottom: 70px; }
+}
