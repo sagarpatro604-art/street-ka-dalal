@@ -241,11 +241,14 @@ async function askGemini(env, models, sys, contents) {
   for (const m of models) attempts.push([m, true]);
   attempts.push([models[models.length - 1], false]); // last resort: no web search
   let lastErr = '';
-  for (const [model, search] of attempts) {
+  for (let i = 0; i < attempts.length; i++) {
+    const [model, search, plain] = attempts[i];
+    // Keep "thinking" short so answers come fast (2.5: budget 0; 3.x and newer: low). Dropped if a model refuses it.
+    const think = plain ? null : /^gemini-2\.5-flash/.test(model) ? { thinkingBudget: 0 } : vnum(model) >= 3 ? { thinkingLevel: 'low' } : null;
     const body = {
       systemInstruction: { parts: [{ text: sys }] },
       contents,
-      generationConfig: { temperature: 0.3, maxOutputTokens: 1200, ...(/^gemini-2\.5-flash/.test(model) ? { thinkingConfig: { thinkingBudget: 0 } } : {}) },
+      generationConfig: { temperature: 0.3, maxOutputTokens: 1200, ...(think ? { thinkingConfig: think } : {}) },
       ...(search ? { tools: [{ google_search: {} }] } : {}),
     };
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
@@ -261,7 +264,9 @@ async function askGemini(env, models, sys, contents) {
       const sources = (gm.groundingChunks || []).map((g) => g.web).filter((w) => w && w.uri && !seen.has(w.title) && seen.add(w.title)).slice(0, 5).map((w) => ({ title: w.title, uri: w.uri }));
       return { text, sources, web: !!(gm.webSearchQueries && gm.webSearchQueries.length), model };
     }
-    lastErr = `${model}: ${r.status} ${(await r.text()).slice(0, 160)}`;
+    const errText = await r.text();
+    lastErr = `${model}: ${r.status} ${errText.slice(0, 160)}`;
+    if (r.status === 400 && think && /thinking/i.test(errText)) { attempts.splice(i + 1, 0, [model, search, true]); continue; }
     if (r.status === 404 && env.DALAL_KV) await env.DALAL_KV.delete('models').catch(() => {}); // a retired model: refresh the list next time
     if (![429, 500, 503, 404, 400].includes(r.status)) break;
   }
