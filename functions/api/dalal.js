@@ -98,6 +98,10 @@ function compactMarket(m) {
     gainers: (m.gainers || []).slice(0, 6).map(mover), losers: (m.losers || []).slice(0, 6).map(mover),
     alerts: (m.alerts || []).map((a) => a.detail),
     sectoral_indices: (m.sectoral || []).map((s) => ({ name: s.name, r1d: s.returns?.['1D'], r1w: s.returns?.['1W'], r1m: s.returns?.['1M'], quadrant: s.quadrant })),
+    // history (official NSE index closes since 2005, daily breadth, FII/DII by month)
+    index_returns_pct: (m.index_table || []).map((r) => ({ name: r.name, last: r.last, '1M': r['1M'], '3M': r['3M'], '1Y': r['1Y'], YTD: r.YTD, cagr_3y: r['3Y'], cagr_5y: r['5Y'], cagr_10y: r['10Y'], from_52w_high: r.from_high })),
+    breadth_trend: m.breadth_trend, fii_dii_by_month_cr: m.flows?.months, fii_streak: m.flows?.fii_streak,
+    sector_heat: (m.sector_heat || []).slice(0, 12),
   };
 }
 function compactSectors(s) {
@@ -127,6 +131,12 @@ function compactFunds(f) {
     sector_shift: (f.rotation?.sectors || []).map((s) => ({ sector: s.sector, share_now: s.share, change_pts: s.delta })),
     persistent_buying: (f.accumulation || []).slice(0, 30).map((x) => ({ sym: x.sym, name: x.name, sector: x.sector, months_bought: x.months, total_cr: x.total_cr, last_month_cr: x.last_cr, pattern: x.signal })),
     new_entries: (f.entries || []).slice(0, 25).map((x) => ({ sym: x.sym, name: x.name, value_cr: x.value, one_off: x.one_off })),
+    monthly_total_cr: (f.month_total || []).map((x) => ({ month: x.month, total_ex_one_offs: x.total_ex, smallcap_pct: x.sc_pct })),
+    sectors_by_month_cr: (f.sectors || []).slice(0, 15).map((g) => ({ sector: g.name, monthly: g.ex, trend: g.trend })),
+    themes_by_month_cr: (f.themes || []).slice(0, 12).map((g) => ({ theme: g.name, monthly: g.ex, trend: g.trend })),
+    bought_every_month: (f.streaks || []).slice(0, 25).map((x) => ({ sym: x.sym, name: x.name, streak_months: x.streak, total_cr: x.total })),
+    biggest_jumps: (f.jumps || []).slice(0, 10).map((x) => ({ sym: x.sym, name: x.name, prev_cr: x.prev, latest_cr: x.latest })),
+    not_bought_again: (f.exits || []).slice(0, 15).map((x) => ({ sym: x.sym, name: x.name, prev_month_cr: x.value })),
   };
 }
 function compactNews(n, focus) {

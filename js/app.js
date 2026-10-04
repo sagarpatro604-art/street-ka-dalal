@@ -1,6 +1,7 @@
 import * as A from './auth.js';
 import { SITE, DALAL_API } from './config.js';
 import { mountDalal } from './dalal.js';
+import * as CH from './charts.js';
 
 /* ---------------- helpers ---------------- */
 const $ = (s, r = document) => r.querySelector(s);
@@ -94,6 +95,8 @@ async function data(name) {
 const ui = {
   scr: { tab: 'flag_pole', q: '', sector: 'all' },
   sec: { period: '1D' },
+  mkt: { idx: 'Nifty 50', cmp: '', range: '1Y', itab: 'broad' },
+  mf: { grp: 'sectors', sel: null, tab: 'streaks', q: '', sector: 'all', stock: '' },
   news: { type: 'all', q: '' },
   ins: { kind: 'all' },
   admin: { tab: 'publisher', q: '' },
@@ -152,6 +155,102 @@ function viewSignIn() {
   </section>`;
 }
 
+/* ---------------- history files (data/hist/*) and charts ---------------- */
+async function hist(name) {
+  const m = await loadMeta();
+  const v = m?.published_at || Date.now();
+  const key = 'h:' + name;
+  if (cache[key]?.v === v) return cache[key].d;
+  const r = await fetch(`data/${name}.json?v=${encodeURIComponent(v)}`);
+  if (!r.ok) throw new Error(`${name} not published yet`);
+  const d = await r.json();
+  cache[key] = { v, d };
+  return d;
+}
+const after = []; // charts drawn once the page's HTML is on screen
+const BROAD = ['Nifty 50', 'Nifty Next 50', 'Nifty 100', 'Nifty 200', 'Nifty 500', 'Nifty Midcap 150', 'Nifty Smallcap 250', 'Nifty Midsmallcap 400', 'Nifty LargeMidcap 250', 'Nifty Microcap 250', 'Nifty Total Market'];
+const RANGES = [['1M', 30], ['3M', 91], ['6M', 182], ['1Y', 365], ['3Y', 1096], ['5Y', 1826], ['10Y', 3652], ['Max', 0]];
+const addDays = (s, n) => { const d = pd(s); d.setDate(d.getDate() + n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+
+async function idxPoints(name, range) {
+  const rec = await hist('hist/idx_recent');
+  const vals = rec.s?.[name] || [];
+  let pts = rec.d.map((t, i) => ({ time: t, value: vals[i] })).filter((p) => p.value != null);
+  const days = (RANGES.find(([k]) => k === range) || [, 365])[1];
+  if (!days || days > 380) {
+    const cat = await hist('hist/idx_catalog');
+    const it = (cat.indices || []).find((x) => x.name === name);
+    if (it) {
+      try {
+        const a = await hist(`hist/idx/${it.slug}`);
+        const first = pts[0]?.time || '9999';
+        pts = a.d.map((t, i) => ({ time: t, value: a.c[i] })).filter((p) => p.time < first).concat(pts);
+      } catch {}
+    }
+  }
+  if (days && pts.length) { const from = addDays(pts[pts.length - 1].time, -days); pts = pts.filter((p) => p.time >= from); }
+  return pts;
+}
+
+async function drawIdxChart() {
+  const el = $('#idxChart');
+  if (!el) return;
+  const { idx, cmp, range } = ui.mkt;
+  const a = await idxPoints(idx, range);
+  const stats = $('#idxStats');
+  if (!a.length) { el.innerHTML = '<div class="chart-err">No history for this index.</div>'; return; }
+  const first = a[0].value, last = a[a.length - 1].value;
+  const hi = Math.max(...a.map((p) => p.value)), lo = Math.min(...a.map((p) => p.value));
+  const ch = ((last / first) - 1) * 100;
+  if (stats) stats.innerHTML = `<div><span>Change (${range})</span><b class="${tone(ch)}">${pct(ch, 1)}</b></div><div><span>Last</span><b>${num(last, 2)}</b></div><div><span>High in period</span><b>${num(hi, 0)}</b></div><div><span>Low in period</span><b>${num(lo, 0)}</b></div><div><span>Below the high</span><b class="down">${pct(((last / hi) - 1) * 100, 1)}</b></div>`;
+  const leg = $('#idxLegend');
+  if (cmp && cmp !== idx) {
+    const b = await idxPoints(cmp, range);
+    const norm = (pts) => { const f = pts[0]?.value; return pts.map((p) => ({ time: p.time, value: ((p.value / f) - 1) * 100 })); };
+    if (leg) leg.innerHTML = `<span><i style="background:${CH.C.green2}"></i>${esc(idx)}</span><span><i style="background:${CH.C.gold}"></i>${esc(cmp)}</span><span class="lg-date">% change over ${range}</span>`;
+    await CH.timeChart(el, [{ name: idx, type: 'line', color: CH.C.green2, data: norm(a) }, { name: cmp, type: 'line', color: CH.C.gold, data: norm(b) }], { percent: true, legend: leg });
+  } else {
+    if (leg) leg.innerHTML = `<span><i style="background:${ch >= 0 ? CH.C.up : CH.C.down}"></i>${esc(idx)}</span><span class="lg-date">hover the chart for a date</span>`;
+    await CH.timeChart(el, [{ name: idx, type: 'area', color: ch >= 0 ? CH.C.up : CH.C.down, data: a }], { legend: leg });
+  }
+}
+
+async function drawBreadth() {
+  const el = $('#brChart');
+  if (!el) return;
+  const h = await hist('hist/breadth');
+  const ser = (k) => h.d.map((t, i) => ({ time: t, value: h[k]?.[i] }));
+  const n500 = (await idxPoints('Nifty 500', '1Y')).filter((p) => p.time >= h.d[0]);
+  await CH.timeChart(el, [
+    { name: '% above 200-DMA', type: 'line', color: CH.C.green2, data: ser('a200'), fmt: (v) => `${v.toFixed(1)}%` },
+    { name: '% above 50-DMA', type: 'line', color: CH.C.gold, data: ser('a50'), fmt: (v) => `${v.toFixed(1)}%` },
+    { name: 'Nifty 500', type: 'line', color: '#8a8f86', dashed: true, width: 1, scale: 'left', data: n500, fmt: (v) => num(v, 0) },
+  ], { percent: true, legend: $('#brLegend') });
+  const nh = $('#nhChart');
+  if (nh) await CH.timeChart(nh, [{ name: 'Net new highs', type: 'hist', axis: (v) => num(v), data: h.d.map((t, i) => ({ time: t, value: h.nnh?.[i], color: (h.nnh?.[i] || 0) >= 0 ? CH.C.up : CH.C.down })), fmt: (v) => num(v) }], { legend: $('#nhLegend') });
+}
+
+async function drawFlows() {
+  const box = $('#fiiBars');
+  if (!box) return;
+  const h = await hist('hist/fiidii');
+  const n = 40, d = h.d.slice(-n);
+  box.innerHTML = CH.divBars({ labels: d, series: [{ name: 'FII net', values: h.fii.slice(-n), color: CH.C.down }, { name: 'DII net', values: h.dii.slice(-n), color: CH.C.green2 }] });
+  const el = $('#fiiCum');
+  if (!el) return;
+  let f = 0, di = 0;
+  const cf = [], cd = [];
+  h.d.forEach((t, i) => { f += h.fii[i] || 0; di += h.dii[i] || 0; cf.push({ time: t, value: f }); cd.push({ time: t, value: di }); });
+  await CH.timeChart(el, [{ name: 'FII running total', type: 'line', color: CH.C.down, data: cf, fmt: (v) => `₹${num(v)} cr` }, { name: 'DII running total', type: 'line', color: CH.C.green2, data: cd, fmt: (v) => `₹${num(v)} cr` }], { legend: $('#fiiLegend') });
+}
+
+const heat = (v, span = 12) => {
+  if (v == null) return '';
+  const a = Math.min(1, Math.abs(v) / span) * 0.55;
+  return `background:${v >= 0 ? `rgba(35,121,79,${a.toFixed(2)})` : `rgba(180,68,47,${a.toFixed(2)})`}`;
+};
+const ymLabel = (ym) => { const [y, m] = String(ym).split('-').map(Number); return m ? `${MON[m - 1]} ${y}` : ym; };
+
 async function viewMarket() {
   const [m, s] = await Promise.all([data('market'), data('sectors')]);
   let posts = [];
@@ -162,33 +261,91 @@ async function viewMarket() {
   const maxAbs = Math.max(0.01, ...sec.map((x) => Math.abs(x.returns['1D'])));
   const bar = (x) => `<div class="hbar"><span class="hbar-l">${esc(x.name)}</span><span class="hbar-t"><i class="${tone(x.returns['1D'])}" style="width:${(Math.abs(x.returns['1D']) * 100) / maxAbs}%"></i></span><b class="${tone(x.returns['1D'])}">${pct(x.returns['1D'])}</b></div>`;
   const f = m.fiidii || {};
+  const fl = m.flows || {};
+  const bt = m.breadth_trend || {};
+  const md2 = m.mood_detail || {};
   const mover = (x) => `<li><span class="mv-name"><b>${esc(x.sym)}</b><span class="sub">${esc(x.sector || '')}</span></span>${spark(x.spark, 70, 24)}<span class="mv-num"><b class="${tone(x.ret)}">${pct(x.ret)}</b><span class="sub">₹${num(x.last, 2)}</span></span></li>`;
-  return `${pageHead('Market intelligence', 'Market today', `<span class="mood ${b.state === 'Risk-on' ? 'up' : b.state === 'Risk-off' ? 'down' : ''}">Mood: ${esc(b.state || '—')}</span>`)}
+  const it = m.index_table || [];
+  const names = it.map((r) => r.name);
+  const opt = (sel) => `<optgroup label="Broad market">${names.filter((n) => BROAD.includes(n)).map((n) => `<option ${n === sel ? 'selected' : ''}>${esc(n)}</option>`).join('')}</optgroup><optgroup label="Sectors and themes">${names.filter((n) => !BROAD.includes(n)).map((n) => `<option ${n === sel ? 'selected' : ''}>${esc(n)}</option>`).join('')}</optgroup>`;
+  const P = ['1D', '1W', '1M', '3M', '6M', '1Y', 'YTD', '3Y', '5Y', '10Y'];
+  const rows = it.filter((r) => (ui.mkt.itab === 'broad' ? BROAD.includes(r.name) : ui.mkt.itab === 'sector' ? !BROAD.includes(r.name) : true));
+  const icols = [{ k: 'name', label: 'Index', fmt: (r) => `<button class="linkbtn" data-act="pickIdx" data-v="${esc(r.name)}">${esc(r.name)}</button>` }, { k: 'last', label: 'Last', fmt: (r) => num(r.last, 0), cls: 'r' },
+    ...P.map((k) => ({ k, label: ['3Y', '5Y', '10Y'].includes(k) ? `${k} a.y.` : k, cls: 'r heat', fmt: (r) => `<span style="${heat(r[k], ['1D', '1W'].includes(k) ? 3 : ['1M', '3M'].includes(k) ? 10 : 25)}">${pct(r[k], 1)}</span>` })),
+    { k: 'from_high', label: 'From 52W high', fmt: (r) => `<span class="${r.from_high < -10 ? 'down' : ''}">${pct(r.from_high, 1)}</span>`, cls: 'r' }];
+  const streak = fl.fii_streak || {};
+  const heatList = (m.sector_heat || []).slice().sort((a, c) => (c.score ?? 0) - (a.score ?? 0));
+  after.push(drawIdxChart, drawBreadth, drawFlows);
+  const delta = (o) => (o && o.now != null && o['1m_ago'] != null ? o.now - o['1m_ago'] : null);
+  return `${pageHead('Market intelligence', 'Market today', `<span class="mood ${b.state === 'Risk-on' ? 'up' : b.state === 'Risk-off' ? 'down' : ''}" title="${esc(String(md2.note || '').replace(/�/g, '—'))}">Mood: ${esc(b.state || '—')}</span>`)}
   ${dataNote(m)}
-  <section class="idx-grid">${(m.indices || []).map((i) => `<article class="card idx">
+  <section class="idx-grid">${(m.indices || []).map((i) => `<button class="card idx" data-act="pickIdx" data-v="${esc(i.name === 'NIFTY 50' ? 'Nifty 50' : i.name === 'NIFTY 500' ? 'Nifty 500' : i.name === 'NIFTY MIDCAP 150' ? 'Nifty Midcap 150' : i.name === 'NIFTY SMALLCAP 250' ? 'Nifty Smallcap 250' : i.name)}">
     <p class="idx-name">${esc(i.name)}</p>
     <p class="idx-last">${num(i.last, 2)}</p>
     <p class="${tone(i.returns?.['1D'])} idx-chg">${pct(i.returns?.['1D'])} <span class="sub">today</span></p>
     ${spark(i.spark, 160, 40)}
     <p class="idx-meta"><span>1W <b class="${tone(i.returns?.['1W'])}">${pct(i.returns?.['1W'], 1)}</b></span><span>1M <b class="${tone(i.returns?.['1M'])}">${pct(i.returns?.['1M'], 1)}</b></span><span>1Y <b class="${tone(i.returns?.['12M'])}">${pct(i.returns?.['12M'], 1)}</b></span></p>
-  </article>`).join('')}</section>
+  </button>`).join('')}</section>
+
+  <section class="card" id="idxCard">
+    <div class="card-head"><h2>Index chart</h2><span class="sub">Official NSE closes since 2005 · 42 indices</span></div>
+    <div class="chart-tools">
+      <select data-change="mktIdx" aria-label="Index">${opt(ui.mkt.idx)}</select>
+      <select data-change="mktCmp" aria-label="Compare with"><option value="">Compare with…</option>${opt(ui.mkt.cmp)}</select>
+      <div class="seg">${RANGES.map(([k]) => `<button class="${k === ui.mkt.range ? 'on' : ''}" data-act="mktRange" data-v="${k}">${k}</button>`).join('')}</div>
+    </div>
+    <div class="chart-stats" id="idxStats"></div>
+    <div class="chart-legend" id="idxLegend"></div>
+    <div class="chart-box" id="idxChart"><div class="loading"><span class="dots"><i></i><i></i><i></i></span></div></div>
+  </section>
 
   <div class="grid3">
     <article class="card"><h2>Market breadth</h2>
       <div class="adbar"><i class="up" style="width:${((b.advances || 0) * 100) / total}%"></i><i class="flat" style="width:${((b.unchanged || 0) * 100) / total}%"></i><i class="down" style="width:${((b.declines || 0) * 100) / total}%"></i></div>
       <p class="adlbl"><span class="up">${num(b.advances)} advanced</span><span class="down">${num(b.declines)} declined</span></p>
-      <dl class="kv"><dt>New 52-week highs</dt><dd class="up">${num(b.new_highs)}</dd><dt>New 52-week lows</dt><dd class="down">${num(b.new_lows)}</dd><dt>Stocks above 50-DMA</dt><dd>${num(b.above_50, 1)}%</dd><dt>Stocks above 200-DMA</dt><dd>${num(b.above_200, 1)}%</dd></dl>
-      <p class="sub">${num(b.n)} NSE stocks counted</p>
+      <dl class="kv"><dt>New 52-week highs</dt><dd class="up">${num(b.new_highs)}</dd><dt>New 52-week lows</dt><dd class="down">${num(b.new_lows)}</dd>
+        <dt>Stocks above 50-DMA</dt><dd>${num(b.above_50, 1)}% ${delta(bt.above_50) != null ? `<small class="${tone(delta(bt.above_50))}">${delta(bt.above_50) > 0 ? '▲' : '▼'} ${num(Math.abs(delta(bt.above_50)), 1)} in 1M</small>` : ''}</dd>
+        <dt>Stocks above 200-DMA</dt><dd>${num(b.above_200, 1)}% ${delta(bt.above_200) != null ? `<small class="${tone(delta(bt.above_200))}">${delta(bt.above_200) > 0 ? '▲' : '▼'} ${num(Math.abs(delta(bt.above_200)), 1)} in 1M</small>` : ''}</dd></dl>
+      <p class="sub">${num(b.n)} NSE stocks counted${md2.note ? ` · ${esc(String(md2.note).replace(/�/g, '—'))}` : ''}</p>
     </article>
-    <article class="card"><h2>FII / DII flows</h2>
+    <article class="card"><h2>FII / DII today</h2>
       <p class="sub">Cash market, ₹ crore · ${fDate(f.date)}</p>
       <div class="flows"><div><span>FII net</span><b class="${tone(f.fii_net)}">${num(f.fii_net, 0)}</b></div><div><span>DII net</span><b class="${tone(f.dii_net)}">${num(f.dii_net, 0)}</b></div></div>
-      <dl class="kv"><dt>FII this month</dt><dd class="${tone(f.fii_cum)}">${num(f.fii_cum, 0)}</dd><dt>DII this month</dt><dd class="${tone(f.dii_cum)}">${num(f.dii_cum, 0)}</dd><dt>Combined today</dt><dd class="${tone(f.combined)}">${num(f.combined, 0)}</dd></dl>
+      <dl class="kv"><dt>FII this month</dt><dd class="${tone(f.fii_cum)}">${num(f.fii_cum, 0)}</dd><dt>DII this month</dt><dd class="${tone(f.dii_cum)}">${num(f.dii_cum, 0)}</dd></dl>
+      ${streak.days > 1 ? `<p class="streak ${streak.side === 'sell' ? 'down' : 'up'}">FIIs have been net ${streak.side === 'sell' ? 'sellers' : 'buyers'} for <b>${streak.days} sessions in a row</b></p>` : ''}
     </article>
     <article class="card"><h2>What changed</h2>
       <ul class="alerts">${(m.alerts || []).slice(0, 5).map((a) => `<li class="${a.level === 'bearish' ? 'down' : a.level === 'bullish' ? 'up' : ''}"><b>${esc(a.type)}</b><span>${esc(a.detail)}</span></li>`).join('') || '<li>No notable shifts today.</li>'}</ul>
     </article>
   </div>
+
+  <section class="card">
+    <div class="card-head"><h2>Breadth: how many stocks are in uptrends</h2><span class="sub">last 12 months · dashed line = Nifty 500 (left scale)</span></div>
+    <p class="sub">When the index rises but fewer stocks stay above their 200-day average, the rally is narrow. A healthy market lifts most stocks.</p>
+    <div class="chart-legend" id="brLegend"><span><i style="background:${CH.C.green2}"></i>% above 200-DMA</span><span><i style="background:${CH.C.gold}"></i>% above 50-DMA</span><span><i style="background:#8a8f86"></i>Nifty 500</span></div>
+    <div class="chart-box" id="brChart"></div>
+    <div class="card-head" style="margin-top:14px"><h3>Net new 52-week highs</h3><span class="sub">new highs minus new lows, each day</span></div>
+    <div class="chart-legend" id="nhLegend"></div>
+    <div class="chart-box short" id="nhChart"></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><h2>FII / DII flows</h2><span class="sub">cash market, ₹ crore · since ${fDate(fl.from)}</span></div>
+    <div id="fiiBars" class="svgbox"></div>
+    <div class="grid2 tight">
+      <div><h3>Running total</h3><div class="chart-legend" id="fiiLegend"><span><i style="background:${CH.C.down}"></i>FII</span><span><i style="background:${CH.C.green2}"></i>DII</span></div><div class="chart-box short" id="fiiCum"></div></div>
+      <div><h3>Month by month</h3>
+        <div class="tbl-wrap"><table class="tbl compact"><thead><tr><th><button>Month</button></th><th class="r"><button>FII net</button></th><th class="r"><button>DII net</button></th><th class="r"><button>FII sell days</button></th></tr></thead>
+        <tbody>${(fl.months || []).slice().reverse().map((x) => `<tr><td>${ymLabel(x.month)}</td><td class="r ${tone(x.fii)}">${num(x.fii)}</td><td class="r ${tone(x.dii)}">${num(x.dii)}</td><td class="r">${x.fii_sell_days}/${x.days}</td></tr>`).join('')}</tbody></table></div>
+        <p class="sub">History grows by one day every evening.</p></div>
+    </div>
+  </section>
+
+  <section class="card flush">
+    <div class="card-head pad"><h2>Index returns</h2><span class="sub">tap an index to chart it · 3Y/5Y/10Y are yearly averages (CAGR)</span></div>
+    <div class="tabs pad">${[['broad', 'Broad market'], ['sector', 'Sectors & themes'], ['all', 'All']].map(([k, l]) => `<button class="tab ${k === ui.mkt.itab ? 'on' : ''}" data-act="mktItab" data-v="${k}">${l}</button>`).join('')}</div>
+    ${table('idxret-' + ui.mkt.itab, rows, icols)}
+  </section>
 
   <div class="grid2">
     <article class="card"><div class="card-head"><h2>Sector pulse · today</h2><a href="#/sectors">All sectors →</a></div>
@@ -199,6 +356,9 @@ async function viewMarket() {
       <div class="movers"><div><h3 class="up">Gainers</h3><ul>${(m.gainers || []).slice(0, 6).map(mover).join('')}</ul></div><div><h3 class="down">Losers</h3><ul>${(m.losers || []).slice(0, 6).map(mover).join('')}</ul></div></div>
     </article>
   </div>
+
+  ${heatList.length ? `<section class="card"><div class="card-head"><h2>Sector heat</h2><span class="sub">strength score 0–100 · trend · % of stocks above 50-DMA</span></div>
+    <div class="heat-grid">${heatList.map((x) => `<div class="heat-cell" style="${heat((x.score ?? 50) - 50, 50)}"><b>${esc(x.sector)}</b><span>${num(x.score, 0)}</span><small>${esc(x.trend || '')} · ${num(x.breadth, 0)}% above 50-DMA</small></div>`).join('')}</div></section>` : ''}
 
   ${posts.length ? `<section class="card"><div class="card-head"><h2>Latest insights</h2><a href="#/insights">All insights →</a></div><div class="post-grid">${posts.map(postCard).join('')}</div></section>` : ''}`;
 }
@@ -275,28 +435,162 @@ async function viewSectors() {
   <section class="card flush"><div class="card-head pad"><h2>Sectoral indices</h2><span class="sub">NSE indices</span></div>${table('sidx', m.sectoral || [], icols)}</section>`;
 }
 
+/* ---------------- mutual funds ---------------- */
+const MF_TABS = [
+  ['streaks', 'Bought every month', 'Stocks mutual funds bought in each of the latest months without a break. The longer the streak, the steadier the buying.'],
+  ['accumulation', 'Steady accumulation', 'Ranked on how consistently funds kept adding and how big that buying is next to the company\'s size.'],
+  ['jumps', 'Big jumps this month', 'Stocks where fund buying rose the most from the month before.'],
+  ['fades', 'Slowing down', 'Stocks where fund buying dropped the most from the month before.'],
+  ['entries', 'New entries', 'Stocks funds bought for the first time in the stored months.'],
+  ['exits', 'Not bought again', 'Bought the month before, not bought in the latest month. The data has buys only, so this is not proof of selling.'],
+  ['top_buys', 'Largest buys', 'The biggest total buying across all the months.'],
+  ['smallcap', 'Small-cap favourites', 'Where small-cap buying went.'],
+  ['crowded', 'Most crowded', 'Stocks taking the largest share of a month\'s total buying.'],
+];
+const mfStock = (r) => `<b class="sym">${esc(r.sym || '—')}</b><span class="sub">${esc(r.name || '')}</span>`;
+const mfSector = (r) => `${esc(r.sector || '—')}<span class="sub">${esc(r.cap || '')}</span>`;
+const oneOff = (r) => (r.one_off ? ' ' + chip('one-off', 'warn') : '');
+const trendChip = (t) => (t ? chip(t, t === 'rising' ? 'good' : t === 'falling' ? 'warn' : '') : '');
+
+function mfRows(d, tab) {
+  const months = d.months || [];
+  const lastM = months[months.length - 1] || 'latest';
+  const prevM = months[months.length - 2] || 'previous';
+  const bars = { k: 'series', label: 'Month by month', fmt: (r) => CH.miniBars(r.series), v: (r) => r.total ?? r.total_cr };
+  switch (tab) {
+    case 'streaks': return [d.streaks || [], [{ k: 'sym', label: 'Stock', fmt: mfStock }, { k: 'sector', label: 'Sector', fmt: mfSector }, { k: 'streak', label: 'Streak', fmt: (r) => `<b>${r.streak}</b> mo`, cls: 'r' }, bars, { k: 'total', label: 'Total bought', fmt: (r) => cr(r.total), cls: 'r' }, { k: 'latest', label: `In ${esc(lastM)}`, fmt: (r) => cr(r.latest), cls: 'r' }]];
+    case 'accumulation': return [d.accumulation || [], [{ k: 'sym', label: 'Stock', fmt: mfStock }, { k: 'sector', label: 'Sector', fmt: mfSector }, { k: 'score', label: 'Score', fmt: (r) => `<b>${num(r.score, 0)}</b>`, cls: 'r' }, { k: 'signal', label: 'Pattern', fmt: (r) => chip(r.signal || '—', /Persistent|Accelerat/i.test(r.signal || '') ? 'good' : '') }, { k: 'months', label: 'Months', fmt: (r) => `${r.months}/${months.length}`, cls: 'r' }, { k: 'series', label: 'Month by month', fmt: (r) => CH.miniBars(r.series), v: (r) => r.total_cr }, { k: 'total_cr', label: 'Total', fmt: (r) => cr(r.total_cr), cls: 'r' }, { k: 'flow_to_mcap', label: '% of mcap', fmt: (r) => (r.flow_to_mcap == null ? '—' : `${num(r.flow_to_mcap, 2)}%`), cls: 'r' }, { k: 'ret_3m', label: 'Price 3M', fmt: (r) => `<span class="${tone(r.ret_3m)}">${pct(r.ret_3m, 1)}</span>`, cls: 'r' }]];
+    case 'jumps':
+    case 'fades': return [d[tab] || [], [{ k: 'sym', label: 'Stock', fmt: (r) => mfStock(r) + oneOff(r) }, { k: 'sector', label: 'Sector', fmt: mfSector }, { k: 'prev', label: esc(prevM), fmt: (r) => cr(r.prev), cls: 'r' }, { k: 'latest', label: esc(lastM), fmt: (r) => cr(r.latest), cls: 'r' }, { k: 'jump', label: 'Change', fmt: (r) => `<span class="${tone(r.jump)}">${r.jump > 0 ? '+' : ''}${cr(r.jump)}</span>`, cls: 'r' }, { k: 'pct', label: '%', fmt: (r) => `<span class="${tone(r.pct)}">${pct(r.pct, 0)}</span>`, cls: 'r' }]];
+    case 'entries': return [d.entries || [], [{ k: 'sym', label: 'Stock', fmt: mfStock }, { k: 'sector', label: 'Sector', fmt: mfSector }, { k: 'value', label: `Bought in ${esc(lastM)}`, fmt: (r) => cr(r.value) + oneOff(r), cls: 'r' }]];
+    case 'exits': return [d.exits || [], [{ k: 'sym', label: 'Stock', fmt: mfStock }, { k: 'sector', label: 'Sector', fmt: mfSector }, { k: 'value', label: `Bought in ${esc(prevM)}`, fmt: (r) => cr(r.value), cls: 'r' }]];
+    case 'top_buys': return [d.top_buys || [], [{ k: 'sym', label: 'Stock', fmt: (r) => mfStock(r) + oneOff(r) }, { k: 'sector', label: 'Sector', fmt: mfSector }, { k: 'value', label: 'Total bought', fmt: (r) => cr(r.value), cls: 'r' }, { k: 'n_months', label: 'Months', fmt: (r) => `${r.n_months}/${months.length}`, cls: 'r' }]];
+    case 'smallcap': return [d.smallcap?.top || [], [{ k: 'sym', label: 'Stock', fmt: (r) => mfStock(r) + oneOff(r) }, { k: 'sector', label: 'Sector', fmt: (r) => esc(r.sector || '—') }, { k: 'value', label: 'Bought', fmt: (r) => cr(r.value), cls: 'r' }, { k: 'pct_sc', label: 'Share of small-cap buying', fmt: (r) => `${num(r.pct_sc, 1)}%`, cls: 'r' }]];
+    case 'crowded': return [d.crowding?.crowded || [], [{ k: 'sym', label: 'Stock', fmt: (r) => mfStock(r) + oneOff(r) }, { k: 'sector', label: 'Sector', fmt: (r) => esc(r.sector || '—') }, { k: 'value', label: `Bought in ${esc(lastM)}`, fmt: (r) => cr(r.value), cls: 'r' }, { k: 'share', label: 'Share of month', fmt: (r) => `${num(r.share, 1)}%`, cls: 'r' }]];
+    default: return [[], []];
+  }
+}
+
+let mfStocks = null;
+async function loadMfStocks() {
+  if (!mfStocks) { try { mfStocks = await hist('mf/stocks'); } catch { mfStocks = { stocks: {} }; } }
+  const dl = $('#mfStockList');
+  if (dl && !dl.childElementCount) dl.innerHTML = Object.entries(mfStocks.stocks || {}).map(([s, x]) => `<option value="${esc(s)}">${esc(x.n)}</option>`).join('');
+  return mfStocks;
+}
+function showMfStock(q) {
+  const out = $('#mfStockOut');
+  if (!out || !mfStocks) return;
+  const v = String(q || '').trim().toUpperCase();
+  if (!v) { out.innerHTML = '<p class="sub">Type a symbol or company name, e.g. HDFCBANK or Bajaj.</p>'; return; }
+  const all = mfStocks.stocks || {};
+  let sym = all[v] ? v : Object.keys(all).find((s) => all[s].n.toUpperCase().includes(v) || s.startsWith(v));
+  if (!sym) { out.innerHTML = `<p class="sub">Mutual funds did not buy <b>${esc(q)}</b> in the stored months (or it is not in the data).</p>`; return; }
+  const x = all[sym], months = mfStocks.months || [];
+  out.innerHTML = `<div class="mf-stock"><div><b class="sym">${esc(sym)}</b> <span class="sub">${esc(x.n)}</span>
+      <p>Bought in <b>${x.mb}/${months.length}</b> months${x.st ? ` · current streak <b>${x.st}</b> months` : ''} · total <b>${cr(x.tot)}</b> ${trendChip(x.tr)}</p></div>
+    ${CH.barChart({ labels: months.map((m) => m.replace(' 20', " '")), series: [{ name: 'Bought', values: x.s, color: CH.C.green2 }], height: 170 })}</div>`;
+}
+
+function mfSectorPanel(d) {
+  const list = ui.mf.grp === 'themes' ? d.themes || [] : d.sectors || [];
+  const sel = list.find((g) => g.name === ui.mf.sel) || list[0];
+  if (!sel) return '<div class="empty">No sector data.</div>';
+  const labels = (d.months || []).map((m) => m.replace(' 20', " '"));
+  return `<div class="mf-split">
+    <div class="mf-list">${list.map((g) => `<button class="mf-item ${g === sel ? 'on' : ''}" data-act="mfSel" data-v="${esc(g.name)}"><span><b>${esc(g.name)}</b><span class="sub">${cr(g.last_cr)} in ${esc((d.months || []).slice(-1)[0] || '')}</span></span>${CH.miniBars(g.ex, 70, 22)}${trendChip(g.trend)}</button>`).join('')}</div>
+    <div class="mf-detail">
+      <h3>${esc(sel.name)}</h3>
+      <p class="sub">Mutual fund buying each month (one-off block buys removed)</p>
+      ${CH.barChart({ labels, series: [{ name: 'Bought', values: sel.ex, color: CH.C.green2 }], height: 200 })}
+      <div class="mini-stats">${labels.map((l, i) => `<div><span>${esc(l)}</span><b>${num(sel.share?.[i], 1)}%</b><small>${sel.n_stocks?.[i] ?? '—'} stocks</small></div>`).join('')}</div>
+      <p class="sub">% = share of all MF buying that month · stocks = how many stocks funds bought in it</p>
+    </div></div>`;
+}
+
 async function viewFunds() {
   const d = await data('funds');
+  const months = d.months || [];
+  const lastM = months[months.length - 1] || '', prevM = months[months.length - 2] || '';
+  const mt = d.month_total || [];
+  const lt = mt[mt.length - 1] || {}, pt = mt[mt.length - 2] || {};
+  const k = d.kpis || {};
+  const conc = d.concentration || {};
   const rot = d.rotation || {};
   const secs = (rot.sectors || []).slice().sort((a, b) => (b.delta ?? 0) - (a.delta ?? 0));
   const maxD = Math.max(0.01, ...secs.map((s) => Math.abs(s.delta || 0)));
-  const acols = [{ k: 'sym', label: 'Stock', fmt: (r) => `<b class="sym">${esc(r.sym || '—')}</b><span class="sub">${esc(r.name)}</span>` }, { k: 'sector', label: 'Sector', fmt: (r) => `${esc(r.sector || '—')}<span class="sub">${esc(r.cap || '')}</span>` },
-    { k: 'signal', label: 'Pattern', fmt: (r) => chip(r.signal || '—', /Persistent|Accelerat/i.test(r.signal || '') ? 'good' : '') },
-    { k: 'months', label: 'Months bought', fmt: (r) => `${r.months}/${(d.months || []).length}`, cls: 'r' },
-    { k: 'series', label: 'Monthly buying', fmt: (r) => spark(r.series, 90, 26), v: (r) => r.total_cr },
-    { k: 'total_cr', label: 'Total bought', fmt: (r) => cr(r.total_cr), cls: 'r' }, { k: 'last_cr', label: `In ${esc((d.months || []).slice(-1)[0] || 'last month')}`, fmt: (r) => cr(r.last_cr), cls: 'r' }];
-  const ecols = [{ k: 'sym', label: 'Stock', fmt: (r) => `<b class="sym">${esc(r.sym || '—')}</b><span class="sub">${esc(r.name)}</span>` }, { k: 'sector', label: 'Sector', fmt: (r) => `${esc(r.sector || '—')}<span class="sub">${esc(r.cap || '')}</span>` },
-    { k: 'value', label: 'Bought', fmt: (r) => `${cr(r.value)}${r.one_off ? ' ' + chip('one-off', 'warn') : ''}`, cls: 'r' }];
+  const capColor = { 'Large-Cap': CH.C.green, 'Mid-Cap': CH.C.gold, 'Small-Cap': CH.C.sage };
+  const tab = MF_TABS.some(([t]) => t === ui.mf.tab) ? ui.mf.tab : 'streaks';
+  const tinfo = MF_TABS.find(([t]) => t === tab);
+  let [rows, cols] = mfRows(d, tab);
+  const sectors = [...new Set(rows.map((r) => r.sector).filter(Boolean))].sort();
+  const q = ui.mf.q.trim().toLowerCase();
+  rows = rows.filter((r) => (ui.mf.sector === 'all' || r.sector === ui.mf.sector) && (!q || `${r.sym || ''} ${r.name || ''}`.toLowerCase().includes(q)));
+  const mx = d.matrix || [];
+  const mxMax = Math.max(1, ...mx.flatMap((r) => ['Large-Cap', 'Mid-Cap', 'Small-Cap'].map((c) => r[c] || 0)));
   const es = d.entries_summary || {};
-  return `${pageHead('Mutual fund activity', 'Where mutual funds are buying')}
-  <p class="asof">${ic('refresh', 14)} Monthly data · ${esc((d.months || [])[0] || '')} to ${esc((d.months || []).slice(-1)[0] || '')}</p>
-  <section class="card"><div class="card-head"><h2>Sectors gaining and losing MF money</h2><span class="sub">${esc(rot.prev_month || '')} → ${esc(rot.last_month || '')} · share of all MF buying</span></div>
-    <div class="dbars">${secs.map((s) => `<div class="dbar"><span class="dbar-l">${esc(s.sector)}</span><span class="dbar-t"><i class="${tone(s.delta)}" style="width:${(Math.abs(s.delta || 0) * 50) / maxD}%;${(s.delta || 0) >= 0 ? 'left:50%' : `right:50%`}"></i></span><b class="${tone(s.delta)}">${s.delta > 0 ? '+' : ''}${num(s.delta, 1)} pts</b><span class="sub">${num(s.share, 1)}% now</span></div>`).join('')}</div>
-    <p class="sub">${esc(rot.note || '')}</p>
+  const chg = lt.total_ex && pt.total_ex ? ((lt.total_ex / pt.total_ex) - 1) * 100 : null;
+  after.push(() => loadMfStocks().then(() => { if (ui.mf.stock) showMfStock(ui.mf.stock); }));
+  return `${pageHead('Mutual fund activity', 'Where mutual funds are putting money')}
+  <p class="asof">${ic('refresh', 14)} Monthly portfolio disclosures · ${esc(months[0] || '')} to ${esc(lastM)} · ${months.length} months</p>
+
+  <section class="kpis">
+    <div><span>Bought in ${esc(lastM)}</span><b>₹${CH.crShort(lt.total_ex)}</b><small class="${tone(chg)}">${chg == null ? '' : `${pct(chg, 1)} vs ${esc(prevM)}`}</small></div>
+    <div><span>Total over ${months.length} months</span><b>₹${CH.crShort(k.total_ex_oneoff)}</b><small>excluding ${num(k.n_oneoff)} one-off block buys</small></div>
+    <div><span>Stocks bought</span><b>${num(k.n_stocks)}</b><small>across ${months.length} months</small></div>
+    <div><span>Small-cap share</span><b>${num(lt.sc_pct, 1)}%</b><small>was ${num(mt[0]?.sc_pct, 1)}% in ${esc(months[0] || '')}</small></div>
+    <div><span>Top 10 stocks' share</span><b>${num(conc.top10_share_ex, 1)}%</b><small>of all buying, ex one-offs</small></div>
   </section>
-  <section class="card flush"><div class="card-head pad"><h2>Stocks mutual funds keep buying</h2><span class="sub">most persistent buying across the months</span></div>${table('mf-acc', d.accumulation || [], acols)}</section>
-  <section class="card flush"><div class="card-head pad"><h2>New entries in ${esc(es.last_month || 'the latest month')}</h2><span class="sub">${num(es.n_new)} stocks bought for the first time in the window · ${cr(es.new_value_ex_oneoff)} excluding one-offs</span></div>${table('mf-new', d.entries || [], ecols)}</section>
-  <p class="sub legend">${esc(d.note || '')}</p>`;
+
+  <section class="card"><div class="card-head"><h2>Monthly buying by company size</h2><span class="sub">₹ crore · large, mid and small caps</span></div>
+    ${CH.barChart({ labels: months.map((m) => m.replace(' 20', " '")), series: (d.cap_series || []).map((c) => ({ name: c.cap, values: c.series, color: capColor[c.cap] || CH.C.blue })), height: 240 })}
+    <div class="chip-row">${mt.map((x) => `<span class="chip">${esc(String(x.month).replace(' 20', " '"))}: small caps ${num(x.sc_pct, 1)}%</span>`).join('')}</div>
+  </section>
+
+  <section class="card"><div class="card-head"><h2>Sector money, month by month</h2>
+      <div class="seg">${[['sectors', 'Sectors'], ['themes', 'Themes']].map(([kk, l]) => `<button class="${kk === ui.mf.grp ? 'on' : ''}" data-act="mfGrp" data-v="${kk}">${l}</button>`).join('')}</div></div>
+    <p class="sub">Tap a ${ui.mf.grp === 'themes' ? 'theme' : 'sector'} to see its monthly buying. Sorted by the latest month.</p>
+    ${mfSectorPanel(d)}
+  </section>
+
+  <div class="grid2">
+    <section class="card"><div class="card-head"><h2>Who gained and lost share</h2><span class="sub">${esc(rot.prev_month || '')} → ${esc(rot.last_month || '')}</span></div>
+      <div class="dbars">${secs.map((s) => `<div class="dbar"><span class="dbar-l">${esc(s.sector)}</span><span class="dbar-t"><i class="${tone(s.delta)}" style="width:${(Math.abs(s.delta || 0) * 50) / maxD}%;${(s.delta || 0) >= 0 ? 'left:50%' : 'right:50%'}"></i></span><b class="${tone(s.delta)}">${s.delta > 0 ? '+' : ''}${num(s.delta, 1)} pts</b><span class="sub">${num(s.share, 1)}% now</span></div>`).join('')}</div>
+      <p class="sub">Points = change in the sector's share of all MF buying. ${esc(rot.note || '')}</p>
+    </section>
+    <section class="card flush"><div class="card-head pad"><h2>Sector × company size</h2><span class="sub">total bought, ₹ crore</span></div>
+      <div class="tbl-wrap"><table class="tbl compact"><thead><tr><th><button>Sector</button></th><th class="r"><button>Large</button></th><th class="r"><button>Mid</button></th><th class="r"><button>Small</button></th><th class="r"><button>Total</button></th></tr></thead>
+      <tbody>${mx.map((r) => `<tr><td>${esc(r.sector)}</td>${['Large-Cap', 'Mid-Cap', 'Small-Cap'].map((c) => `<td class="r"><span class="hcell" style="background:rgba(47,107,79,${(0.06 + 0.5 * ((r[c] || 0) / mxMax)).toFixed(2)})">${num(r[c])}</span></td>`).join('')}<td class="r"><b>${num(r.total)}</b></td></tr>`).join('')}</tbody></table></div>
+    </section>
+  </div>
+
+  <section class="card"><div class="card-head"><h2>Check any stock</h2><span class="sub">did mutual funds buy it, and how much each month?</span></div>
+    <label class="search">${ic('search', 16)}<input list="mfStockList" placeholder="Symbol or company, e.g. HDFCBANK" value="${esc(ui.mf.stock)}" data-input="mfStock" autocomplete="off"></label>
+    <datalist id="mfStockList"></datalist>
+    <div id="mfStockOut"><p class="sub">Type a symbol or company name, e.g. HDFCBANK or Bajaj.</p></div>
+  </section>
+
+  <section class="card explain"><h2>Stock lists</h2>
+    <div class="tabs wrap">${MF_TABS.map(([t, l]) => `<button class="tab ${t === tab ? 'on' : ''}" data-act="mfTab" data-v="${t}">${l}</button>`).join('')}</div>
+    <p>${esc(tinfo[2])}</p>
+    ${tab === 'entries' ? `<p class="sub">${num(es.n_new)} new stocks in ${esc(es.last_month || '')} · ${cr(es.new_value_ex_oneoff)} excluding one-offs</p>` : ''}
+    ${tab === 'streaks' && d.full_streak_count ? `<p class="sub">${num(d.full_streak_count)} stocks were bought in every one of the ${months.length} months.</p>` : ''}
+  </section>
+  <div class="toolbar"><label class="search">${ic('search', 16)}<input placeholder="Search stock" value="${esc(ui.mf.q)}" data-input="mfQ"></label>
+    <select data-change="mfSector" aria-label="Sector"><option value="all">All sectors</option>${sectors.map((s) => `<option ${s === ui.mf.sector ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></div>
+  <section class="card flush">${table('mf-' + tab, rows, cols, 'No stocks here.')}</section>
+
+  <div class="grid2">
+    <section class="card"><div class="card-head"><h2>How concentrated is the buying?</h2></div>
+      <div class="tbl-wrap"><table class="tbl compact"><thead><tr><th><button>Month</button></th><th class="r"><button>Top 10 share</button></th><th class="r"><button>Top 20 share</button></th><th class="r"><button>Stocks bought</button></th></tr></thead>
+      <tbody>${(d.crowding?.series || []).map((x) => `<tr><td>${esc(x.month)}</td><td class="r">${num(x.top10_ex ?? x.top10, 1)}%</td><td class="r">${num(x.top20, 1)}%</td><td class="r">${num(x.breadth)}</td></tr>`).join('')}</tbody></table></div>
+      <p class="sub">Lower top-10 share and more stocks bought = buying spread wider across the market.</p>
+    </section>
+    <section class="card"><div class="card-head"><h2>One-off block buys</h2><span class="sub">left out of trends so they don't distort them</span></div>
+      <ul class="plain">${(d.one_offs || []).map((x) => `<li><b>${esc(x.name)}</b> <span class="sub">${esc(x.month)} · ${cr(x.value)} · ${esc(x.why || '')}</span></li>`).join('') || '<li class="sub">None flagged.</li>'}</ul>
+    </section>
+  </div>
+  <p class="sub legend">${esc(d.note || '')} Source: monthly mutual fund portfolio disclosures. This shows what funds did, not a recommendation to buy or sell.</p>`;
 }
 
 async function viewNews() {
@@ -471,14 +765,17 @@ async function render() {
   const top = r.split('/')[0];
   document.querySelectorAll('#topnav a').forEach((a) => a.classList.toggle('on', a.dataset.nav === top));
   const seq = ++renderSeq;
+  after.length = 0;
   const keep = view.dataset.route === r ? window.scrollY : 0;
   if (view.dataset.route !== r) view.innerHTML = '<div class="loading"><span class="dots"><i></i><i></i><i></i></span></div>';
   try {
     const html = top === 'post' ? await viewPost(r.split('/')[1]) : await (VIEWS[top] || viewMarket)();
     if (seq !== renderSeq) return;
+    CH.disposeCharts();
     view.innerHTML = html;
     view.dataset.route = r;
     window.scrollTo(0, keep);
+    after.splice(0).forEach((f) => Promise.resolve().then(f).catch((e) => console.warn('chart', e)));
   } catch (e) {
     if (seq !== renderSeq) return;
     view.innerHTML = `<div class="empty card">Couldn't load this page: ${esc(e.message)}</div>`;
@@ -499,6 +796,12 @@ const ACTS = {
   sort: (el) => { const k = el.dataset.t; const cur = ui.sort[k]; ui.sort[k] = { k: el.dataset.k, dir: cur?.k === el.dataset.k ? -cur.dir : -1 }; render(); },
   scrTab: (el) => { ui.scr.tab = el.dataset.v; ui.scr.sector = 'all'; render(); },
   secPeriod: (el) => { ui.sec.period = el.dataset.v; ui.sort.sectors = { k: 'ret', dir: -1 }; render(); },
+  pickIdx: (el) => { ui.mkt.idx = el.dataset.v; if (ui.mkt.cmp === ui.mkt.idx) ui.mkt.cmp = ''; if (route().split('/')[0] !== '') { location.hash = '#/'; return; } render().then(() => $('#idxCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' })); },
+  mktRange: (el) => { ui.mkt.range = el.dataset.v; render(); },
+  mktItab: (el) => { ui.mkt.itab = el.dataset.v; render(); },
+  mfGrp: (el) => { ui.mf.grp = el.dataset.v; ui.mf.sel = null; render(); },
+  mfSel: (el) => { ui.mf.sel = el.dataset.v; render(); },
+  mfTab: (el) => { ui.mf.tab = el.dataset.v; ui.mf.sector = 'all'; render(); },
   newsType: (el) => { ui.news.type = el.dataset.v; render(); },
   insKind: (el) => { ui.ins.kind = el.dataset.v; render(); },
   dalalHealth: async () => {
@@ -540,8 +843,15 @@ const INPUTS = {
   scrQ: (el) => { ui.scr.q = el.value; rerenderKeepingFocus(el); },
   newsQ: (el) => { ui.news.q = el.value; rerenderKeepingFocus(el); },
   memberQ: (el) => { ui.admin.q = el.value; rerenderKeepingFocus(el); },
+  mfQ: (el) => { ui.mf.q = el.value; rerenderKeepingFocus(el); },
+  mfStock: (el) => { ui.mf.stock = el.value; loadMfStocks().then(() => showMfStock(el.value)); },
 };
-const CHANGES = { scrSector: (el) => { ui.scr.sector = el.value; render(); } };
+const CHANGES = {
+  scrSector: (el) => { ui.scr.sector = el.value; render(); },
+  mfSector: (el) => { ui.mf.sector = el.value; render(); },
+  mktIdx: (el) => { ui.mkt.idx = el.value; render(); },
+  mktCmp: (el) => { ui.mkt.cmp = el.value; render(); },
+};
 let debounce;
 function rerenderKeepingFocus(el) {
   const key = el.dataset.input, pos = el.selectionStart;
