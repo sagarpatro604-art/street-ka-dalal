@@ -530,3 +530,18 @@ h3.mt { margin-top: 14px; margin-bottom: 4px; }
 .mv-news { padding: 10px 0; border-bottom: 1px solid var(--line); }
 .mv-news ul { margin: 4px 0 0; padding-left: 16px; font-size: 13.5px; }
 .mv-news li { margin-bottom: 3px; }
+
+/* ---------- premium lock (dummy) ---------- */
+.premium-tag { display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 999px; background: linear-gradient(135deg, #f3e2bd, #d9b877); color: #5a4214; font: 700 13px var(--sans); }
+.card.locked { position: relative; overflow: hidden; padding: 0; min-height: 520px; }
+.locked-body { filter: blur(3.5px); opacity: 0.8; pointer-events: none; user-select: none; }
+.lock-card { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; background: radial-gradient(ellipse at center, rgba(255, 253, 248, 0.94) 30%, rgba(255, 253, 248, 0.55) 75%); }
+.lock-card h2 { margin: 10px 0 6px; font-size: 24px; }
+.lock-card > p { max-width: 520px; color: var(--muted); }
+.lock-ic { width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, #f3e2bd, #d9b877); color: #5a4214; box-shadow: 0 8px 24px rgba(176, 141, 87, 0.35); }
+.lock-list { list-style: none; padding: 0; margin: 6px 0 16px; display: grid; gap: 4px; font-size: 14px; font-weight: 600; color: var(--green); }
+.lock-list li::before { content: "✓ "; color: var(--gold); }
+.wl { display: inline-flex; gap: 3px; }
+.wl i { width: 9px; height: 9px; border-radius: 50%; }
+.wl i.w { background: var(--up); }
+.wl i.l { background: var(--down); }

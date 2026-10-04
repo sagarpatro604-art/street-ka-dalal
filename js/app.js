@@ -463,6 +463,47 @@ async function viewStock(sym) {
   <p class="sub legend">Facts from NSE and public company data via Sector Scope. Not investment advice — please do your own research. Ask Dalal for more about ${esc(sym)}.</p>`;
 }
 
+/* ---------------- quarterly results (premium, locked: placeholder preview only) ---------------- */
+// Dummy lock: no real results data is published. The preview rows below are made up, so nothing can
+// be read from the page source. When premium goes live, real rows come from Sector Scope's earnings data.
+const PREVIEW_ROWS = [
+  ['Capital Goods', 24, 41, 18.2, 'WWWLWWWW'], ['Banks', 12, 19, null, 'WWWWWLWW'], ['Pharma & Healthcare', 16, 33, 24.5, 'WLWWWWWW'],
+  ['IT / Technology', 6, -4, 21.1, 'LWWLWLWW'], ['FMCG', 9, 11, 19.8, 'WWLWWWLW'], ['Automobile', 14, 27, 12.6, 'WWWWLWWW'],
+  ['Chemicals', -3, -18, 15.4, 'LLWLWLLW'], ['Realty', 31, 58, 28.9, 'WWWWWWWL'], ['Metals & Mining', 7, 22, 17.3, 'WLLWWWWW'],
+  ['Defence & Aerospace', 28, 46, 23.0, 'WWWWWWWW'],
+];
+const streakDots = (s) => `<span class="wl">${s.split('').map((c) => `<i class="${c === 'W' ? 'w' : 'l'}"></i>`).join('')}</span>`;
+
+function viewResults() {
+  const rows = PREVIEW_ROWS.map(([sec, s, p, opm, wl], i) => `<tr><td><b class="sym">██████${i % 3 ? '██' : ''}</b><span class="sub">████████ Ltd</span></td><td>${esc(sec)}</td>
+    <td class="r ${tone(s)}">${pct(s, 0)}</td><td class="r ${tone(p)}">${pct(p, 0)}</td><td class="r">${opm == null ? '—' : `${num(opm, 1)}%`}</td><td>${streakDots(wl)}</td>
+    <td>${chip(p >= 20 ? 'Strong' : p >= 0 ? 'In line' : 'Weak', p >= 20 ? 'good' : p < 0 ? 'warn' : '')}</td></tr>`).join('');
+  return `${pageHead('Earnings', 'Quarterly results', '<span class="premium-tag">★ Premium</span>')}
+  <p class="asof">${ic('refresh', 14)} Q2 FY27 results season · updated every evening from company filings</p>
+  <section class="kpis">
+    <div><span>Companies tracked</span><b>450+</b><small>every quarter</small></div>
+    <div><span>Results this season</span><b>Live</b><small>as companies report</small></div>
+    <div><span>Growth checks</span><b>Sales · Profit · EPS</b><small>vs same quarter last year</small></div>
+    <div><span>Track record</span><b>8 quarters</b><small>beat / miss streak</small></div>
+    <div><span>Concall notes</span><b>Key takeaways</b><small>management commentary</small></div>
+  </section>
+  <section class="card locked">
+    <div class="locked-body" aria-hidden="true">
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th><button>Company</button></th><th><button>Sector</button></th><th class="r"><button>Sales YoY</button></th><th class="r"><button>Profit YoY</button></th><th class="r"><button>Op. margin</button></th><th><button>Last 8 quarters</button></th><th><button>Verdict</button></th></tr></thead>
+      <tbody>${rows}</tbody></table></div>
+    </div>
+    <div class="lock-card">
+      <div class="lock-ic"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+      <h2>Quarterly results is a Premium feature</h2>
+      <p>Every company's results the evening they come out: sales and profit growth, margins, an 8-quarter beat / miss record, sector scorecards and concall highlights.</p>
+      <ul class="lock-list"><li>Results calendar for the week</li><li>Best and worst results by sector</li><li>Companies beating estimates for 4+ quarters</li><li>Concall summaries in simple words</li></ul>
+      <button class="btn primary" data-act="unlockPremium">★ Unlock Premium</button>
+      <p class="sub">Coming soon. Everything else on Street ka Dalal stays free.</p>
+    </div>
+  </section>
+  <p class="sub legend">Results are facts from company filings, not recommendations to buy or sell.</p>`;
+}
+
 const PATTERN_COLS = {
   flag_pole: [{ k: 'pole_gain', label: 'Pole gain', fmt: (r) => pct(r.pole_gain, 1), cls: 'r' }, { k: 'flag_bars', label: 'Flag days', cls: 'r' }, { k: 'flag_depth', label: 'Flag depth', fmt: (r) => `${num(r.flag_depth, 1)}%`, cls: 'r' }, { k: 'breakout_level', label: 'Breakout level', fmt: (r) => num(r.breakout_level, 2), cls: 'r' }],
   rectangle: [{ k: 'base_bars', label: 'Base (days)', cls: 'r' }, { k: 'base_depth', label: 'Base depth', fmt: (r) => `${num(r.base_depth, 1)}%`, cls: 'r' }, { k: 'ceiling', label: 'Ceiling', fmt: (r) => num(r.ceiling, 2), cls: 'r' }, { k: 'touches_top', label: 'Touches', cls: 'r' }],
@@ -877,9 +918,9 @@ function previewHTML() {
 }
 
 /* ---------------- shell, routing ---------------- */
-const NAV = [['', 'Market', 'market'], ['screeners', 'Screeners', 'screen'], ['sectors', 'Sectors', 'sector'], ['funds', 'Mutual funds', 'funds'], ['stocks', 'Stocks', 'search'], ['news', 'News', 'news'], ['insights', 'Insights', 'pen']];
+const NAV = [['', 'Market', 'market'], ['screeners', 'Screeners', 'screen'], ['sectors', 'Sectors', 'sector'], ['funds', 'Mutual funds', 'funds'], ['stocks', 'Stocks', 'search'], ['results', 'Results', 'file'], ['news', 'News', 'news'], ['insights', 'Insights', 'pen']];
 const route = () => location.hash.replace(/^#\/?/, '');
-const VIEWS = { '': viewMarket, screeners: viewScreeners, sectors: viewSectors, funds: viewFunds, stocks: viewStocks, news: viewNews, insights: viewInsights, admin: viewAdmin };
+const VIEWS = { '': viewMarket, screeners: viewScreeners, sectors: viewSectors, funds: viewFunds, stocks: viewStocks, results: viewResults, news: viewNews, insights: viewInsights, admin: viewAdmin };
 
 function shell() {
   const u = A.state.user;
@@ -936,6 +977,7 @@ const ACTS = {
   mktItab: (el) => { ui.mkt.itab = el.dataset.v; render(); },
   mfGrp: (el) => { ui.mf.grp = el.dataset.v; ui.mf.sel = null; render(); },
   mfSel: (el) => { ui.mf.sel = el.dataset.v; render(); },
+  unlockPremium: () => toast('Premium is coming soon — you will be the first to know!'),
   stkMore: () => { ui.stk.limit += 200; render(); },
   mfTab: (el) => { ui.mf.tab = el.dataset.v; ui.mf.sector = 'all'; render(); },
   newsView: (el) => { ui.news.view = el.dataset.v; ui.news.q = ''; render(); },
