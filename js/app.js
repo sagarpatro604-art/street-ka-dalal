@@ -98,7 +98,7 @@ const ui = {
   mkt: { idx: 'Nifty 50', cmp: '', range: '1Y', itab: 'broad' },
   stk: { q: '', sector: 'all', limit: 100 },
   mf: { grp: 'sectors', sel: null, tab: 'streaks', q: '', sector: 'all', stock: '' },
-  news: { type: 'all', q: '' },
+  news: { type: 'all', q: '', view: 'heads', cat: 'all', src: 'all', limit: 60 },
   ins: { kind: 'all' },
   admin: { tab: 'publisher', q: '' },
   sort: {},
@@ -412,7 +412,8 @@ async function viewStocks() {
 
 async function viewStock(sym) {
   sym = decodeURIComponent(sym || '').toUpperCase();
-  const [one, news, scr, mfs] = await Promise.all([stkOne(sym), data('news').catch(() => ({})), data('screeners').catch(() => ({})), hist('mf/stocks').catch(() => ({}))]);
+  const [one, news, scr, mfs, feed] = await Promise.all([stkOne(sym), data('news').catch(() => ({})), data('screeners').catch(() => ({})), hist('mf/stocks').catch(() => ({})), hist('newsfeed/latest').catch(() => ({}))]);
+  const inNews = [...((feed.movers || {})[sym] || []), ...(feed.items || []).filter((i) => (i.sy || []).includes(sym))].filter((i, k, a) => a.findIndex((j) => j.t === i.t) === k).slice(0, 8);
   const x = one.info, d = one.d || {};
   if (!x) return `${pageHead('Stocks', esc(sym))}<div class="empty card">This symbol is not in our NSE list. <a href="#/stocks">Search all stocks →</a></div>`;
   const r = d.r || [];
@@ -456,6 +457,9 @@ async function viewStock(sym) {
       ${filings.length ? `<ul class="plain">${filings.slice(0, 8).map((f) => `<li><b>${esc(f.label || f.type || 'Filing')}</b> <span class="sub">${fDT(f.ts)}</span><br>${esc(f.subject || '')}${f.pdf ? ` <a href="${esc(f.pdf)}" target="_blank" rel="noopener">PDF</a>` : ''}</li>`).join('')}</ul>` : '<p class="sub">No filings in today\'s window.</p>'}
     </section>
   </div>
+  <section class="card"><div class="card-head"><h2>In the news</h2><a href="https://news.google.com/search?q=${encodeURIComponent('"' + String(x.n || sym).replace(/\s+(limited|ltd\.?)$/i, '') + '"')}&hl=en-IN&gl=IN&ceid=IN:en" target="_blank" rel="noopener">More on Google News →</a></div>
+    ${inNews.length ? `<ul class="heads-list">${inNews.map(headItem).join('')}</ul>` : '<p class="sub">No headlines about this company in the last 7 days from our sources. Ask Dalal — he searches the latest news live.</p>'}
+  </section>
   <p class="sub legend">Facts from NSE and public company data via Sector Scope. Not investment advice — please do your own research. Ask Dalal for more about ${esc(sym)}.</p>`;
 }
 
@@ -689,7 +693,41 @@ async function viewFunds() {
   <p class="sub legend">${esc(d.note || '')} Source: monthly mutual fund portfolio disclosures. This shows what funds did, not a recommendation to buy or sell.</p>`;
 }
 
+const NEWS_CATS = [['all', 'All'], ['markets', 'Markets'], ['companies', 'Companies'], ['stocks', 'Stocks'], ['ipo', 'IPOs'], ['economy', 'Economy'], ['global', 'Global']];
+const dayLabel = (iso) => { const d = new Date(iso); if (isNaN(d)) return ''; const t = new Date(); const y = new Date(Date.now() - 86400000); return d.toDateString() === t.toDateString() ? 'Today' : d.toDateString() === y.toDateString() ? 'Yesterday' : `${DAY[d.getDay()]}, ${d.getDate()} ${MON[d.getMonth()]}`; };
+const headItem = (i) => `<li class="head-item"><div class="head-meta">${chip(i.s || 'News')}<span class="sub">${ago(i.at)}</span></div>
+  <a href="${esc(i.u)}" target="_blank" rel="noopener">${esc(i.t)}</a>${i.d ? `<p>${esc(i.d)}</p>` : ''}
+  ${(i.sy || []).length ? `<div class="head-syms">${i.sy.map((s) => `<a class="chip type" href="#/stock/${encodeURIComponent(s)}">${esc(s)}</a>`).join('')}</div>` : ''}</li>`;
+
+async function viewHeadlines() {
+  const [f, m] = await Promise.all([hist('newsfeed/latest'), data('market').catch(() => ({}))]);
+  const items = f.items || [];
+  const sources = Object.entries(items.reduce((a, i) => ((a[i.s] = (a[i.s] || 0) + 1), a), {})).sort((a, b) => b[1] - a[1]);
+  const q = ui.news.q.trim().toLowerCase();
+  const rows = items.filter((i) => (ui.news.cat === 'all' || i.c === ui.news.cat) && (ui.news.src === 'all' || i.s === ui.news.src) && (!q || `${i.t} ${i.d || ''} ${(i.sy || []).join(' ')}`.toLowerCase().includes(q)));
+  const shown = rows.slice(0, ui.news.limit);
+  let last = '';
+  const list = shown.map((i) => { const dl = dayLabel(i.at); const h = dl !== last ? `<li class="head-day">${dl}</li>` : ''; last = dl; return h + headItem(i); }).join('');
+  const mv = f.movers || {};
+  const movers = [...(m.gainers || []), ...(m.losers || [])].filter((x) => mv[x.sym]?.length);
+  return `${pageHead('News & announcements', 'Market news')}
+  <div class="tabs"><button class="tab on" data-act="newsView" data-v="heads">Headlines</button><button class="tab" data-act="newsView" data-v="filings">Company filings</button></div>
+  <p class="asof">${ic('refresh', 14)} ${num(items.length)} headlines from ${sources.length} trusted sources · last 7 days · updated ${ago(f.updated)}</p>
+  <div class="toolbar"><label class="search grow">${ic('search', 16)}<input placeholder="Search headlines, company or symbol" value="${esc(ui.news.q)}" data-input="newsQ"></label>
+    <select data-change="newsSrc" aria-label="Source"><option value="all">All sources</option>${sources.map(([s, n]) => `<option value="${esc(s)}" ${s === ui.news.src ? 'selected' : ''}>${esc(s)} (${n})</option>`).join('')}</select></div>
+  <div class="tabs wrap">${NEWS_CATS.map(([k, l]) => `<button class="tab ${k === ui.news.cat ? 'on' : ''}" data-act="newsCat" data-v="${k}">${l}</button>`).join('')}</div>
+  <div class="grid-news">
+    <section class="card"><ul class="heads-list">${list || '<li class="empty">No headlines match.</li>'}</ul>
+      ${rows.length > shown.length ? `<div class="more"><button class="btn ghost" data-act="newsMore">Show more (${num(rows.length - shown.length)} left)</button></div>` : ''}</section>
+    <aside class="card heads"><h2>Why today's movers moved</h2>
+      ${movers.length ? movers.map((x) => `<div class="mv-news"><a class="sym" href="#/stock/${encodeURIComponent(x.sym)}">${esc(x.sym)}</a> <b class="${tone(x.ret)}">${pct(x.ret, 1)}</b>
+        <ul>${mv[x.sym].map((h) => `<li><a href="${esc(h.u)}" target="_blank" rel="noopener">${esc(h.t)}</a> <span class="sub inline">· ${esc(h.s)}</span></li>`).join('')}</ul></div>`).join('') : '<p class="sub">No news found for today\'s biggest movers.</p>'}
+      <p class="sub">Headlines link to the publisher. Street ka Dalal only lists them.</p></aside>
+  </div>`;
+}
+
 async function viewNews() {
+  if (ui.news.view !== 'filings') return viewHeadlines();
   const d = await data('news');
   const labels = {};
   for (const r of d.filings || []) labels[r.label] = (labels[r.label] || 0) + 1;
@@ -698,6 +736,7 @@ async function viewNews() {
   const rows = (d.filings || []).filter((r) => (ui.news.type === 'all' || r.label === ui.news.type) && (!q || `${r.sym} ${r.name} ${r.subject || ''} ${r.summary || ''}`.toLowerCase().includes(q)));
   const facts = (r) => [r.order_cr != null ? `Order ${cr(r.order_cr)}${r.order_pct_mcap != null ? ` (${num(r.order_pct_mcap, 1)}% of m-cap)` : ''}` : '', r.amount_cr != null ? `Amount ${cr(r.amount_cr)}` : '', r.rating ? `Rating: ${esc(r.rating)}` : '', r.revenue_yoy != null ? `Revenue ${pct(r.revenue_yoy, 1)} YoY` : '', r.pat_yoy != null ? `Profit ${pct(r.pat_yoy, 1)} YoY` : '', r.mcap_cr ? `M-cap ${cr(r.mcap_cr)}` : ''].filter(Boolean);
   return `${pageHead('News & announcements', 'Company announcements scanner')}
+  <div class="tabs"><button class="tab" data-act="newsView" data-v="heads">Headlines</button><button class="tab on" data-act="newsView" data-v="filings">Company filings</button></div>
   <p class="asof">${ic('refresh', 14)} Filings from <b>${fDT(d.window_start)}</b> · liquid stocks only · ${num((d.filings || []).length)} filings</p>
   <div class="toolbar"><label class="search grow">${ic('search', 16)}<input placeholder="Search company or keyword" value="${esc(ui.news.q)}" data-input="newsQ"></label></div>
   <div class="tabs wrap"><button class="tab ${ui.news.type === 'all' ? 'on' : ''}" data-act="newsType" data-v="all">All ${num((d.filings || []).length)}</button>${types.slice(0, 14).map(([l, n]) => `<button class="tab ${ui.news.type === l ? 'on' : ''}" data-act="newsType" data-v="${esc(l)}">${esc(l.replace(/ \(.*\)/, ''))} ${n}</button>`).join('')}</div>
@@ -899,6 +938,9 @@ const ACTS = {
   mfSel: (el) => { ui.mf.sel = el.dataset.v; render(); },
   stkMore: () => { ui.stk.limit += 200; render(); },
   mfTab: (el) => { ui.mf.tab = el.dataset.v; ui.mf.sector = 'all'; render(); },
+  newsView: (el) => { ui.news.view = el.dataset.v; ui.news.q = ''; render(); },
+  newsCat: (el) => { ui.news.cat = el.dataset.v; ui.news.limit = 60; render(); },
+  newsMore: () => { ui.news.limit += 80; render(); },
   newsType: (el) => { ui.news.type = el.dataset.v; render(); },
   insKind: (el) => { ui.ins.kind = el.dataset.v; render(); },
   dalalHealth: async () => {
@@ -947,6 +989,7 @@ const INPUTS = {
 const CHANGES = {
   scrSector: (el) => { ui.scr.sector = el.value; render(); },
   stkSector: (el) => { ui.stk.sector = el.value; ui.stk.limit = 100; render(); },
+  newsSrc: (el) => { ui.news.src = el.value; ui.news.limit = 60; render(); },
   mfSector: (el) => { ui.mf.sector = el.value; render(); },
   mktIdx: (el) => { ui.mkt.idx = el.value; render(); },
   mktCmp: (el) => { ui.mkt.cmp = el.value; render(); },

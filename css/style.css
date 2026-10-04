@@ -513,3 +513,20 @@ a.sym:hover { text-decoration: underline; }
 h3.mt { margin-top: 14px; margin-bottom: 4px; }
 .sub.inline { display: inline; }
 .card .spark { width: 100%; height: auto; }
+
+/* ---------- headlines ---------- */
+.heads-list { list-style: none; margin: 0; padding: 0; }
+.head-day { font: 700 12px var(--sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--gold); padding: 14px 0 4px; }
+.head-day:first-child { padding-top: 0; }
+.head-item { padding: 10px 0; border-bottom: 1px solid var(--line); }
+.head-item:last-child { border-bottom: 0; }
+.head-item > a { font-weight: 600; color: var(--ink); text-decoration: none; line-height: 1.4; display: block; }
+.head-item > a:hover { color: var(--green-2); text-decoration: underline; }
+.head-item p { margin: 4px 0 0; font-size: 13.5px; color: var(--muted); }
+.head-meta { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; }
+.head-meta .sub { display: inline; }
+.head-syms { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.head-syms a.chip { text-decoration: none; margin: 0; }
+.mv-news { padding: 10px 0; border-bottom: 1px solid var(--line); }
+.mv-news ul { margin: 4px 0 0; padding-left: 16px; font-size: 13.5px; }
+.mv-news li { margin-bottom: 3px; }
