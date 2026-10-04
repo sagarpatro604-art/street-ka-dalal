@@ -51,6 +51,8 @@ export async function init() {
     let db;
     try { db = fs.initializeFirestore(app, { localCache: fs.persistentLocalCache() }); } catch { db = fs.getFirestore(app); }
     fb = { auth, fs, a, db };
+    // Stay signed in on this device until the member taps Sign out (survives closing the browser / phone restart).
+    await auth.setPersistence(a, auth.indexedDBLocalPersistence).catch(() => auth.setPersistence(a, auth.browserLocalPersistence)).catch(() => {});
     await auth.getRedirectResult(a).catch(() => {});
     await new Promise((resolve) => {
       auth.onAuthStateChanged(a, (u) => {
