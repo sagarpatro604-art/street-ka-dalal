@@ -233,13 +233,20 @@ async function pickModels(env) {
     } catch {}
   }
   const list = found && found.length ? [...wanted.filter((w) => found.includes(w)), ...found] : (wanted.length ? wanted : ['gemini-flash-latest', 'gemini-2.5-flash']);
-  return [...new Set(list)].slice(0, 3);
+  const top = [...new Set(list)].slice(0, 3);
+  // 2.5-flash is kept as a fallback when the key still has it (its free tier has included web search)
+  if (found && found.includes('gemini-2.5-flash') && !top.includes('gemini-2.5-flash')) top.push('gemini-2.5-flash');
+  return top;
 }
 
+// Web search (grounding) is not free on every model. When Google refuses it for quota, that model answers
+// without search for the next 6 hours (remembered in KV), from the site's own data.
 async function askGemini(env, models, sys, contents, only) {
+  const noSearch = new Set();
+  if (env.DALAL_KV) for (const m of models) if (await env.DALAL_KV.get(`ns:${m}`)) noSearch.add(m);
   const attempts = [];
-  for (const m of models) attempts.push([m, true]);
-  if (!only) attempts.push([models[models.length - 1], false]); // last resort: no web search
+  for (const m of models) if (!noSearch.has(m)) attempts.push([m, true]);
+  if (!only || noSearch.size) for (const m of models) attempts.push([m, false]);
   let lastErr = '';
   for (let i = 0; i < attempts.length; i++) {
     const [model, search, plain] = attempts[i];
@@ -262,11 +269,12 @@ async function askGemini(env, models, sys, contents, only) {
       const gm = c.groundingMetadata || {};
       const seen = new Set();
       const sources = (gm.groundingChunks || []).map((g) => g.web).filter((w) => w && w.uri && !seen.has(w.title) && seen.add(w.title)).slice(0, 5).map((w) => ({ title: w.title, uri: w.uri }));
-      return { text, sources, web: !!(gm.webSearchQueries && gm.webSearchQueries.length), model };
+      return { text, sources, web: !!(gm.webSearchQueries && gm.webSearchQueries.length), model, searchOn: search };
     }
     const errText = await r.text();
     lastErr += ` | ${model}${search ? '' : ' (no search)'}: ${r.status} ${errText.replace(/\s+/g, ' ').slice(0, 140)}`;
     if (r.status === 400 && think && /thinking/i.test(errText)) { attempts.splice(i + 1, 0, [model, search, true]); continue; }
+    if (r.status === 429 && search && env.DALAL_KV) await env.DALAL_KV.put(`ns:${model}`, '1', { expirationTtl: 21600 }).catch(() => {});
     if (r.status === 404 && env.DALAL_KV) await env.DALAL_KV.delete('models').catch(() => {}); // a retired model: refresh the list next time
     if (![429, 500, 503, 404, 400, 403].includes(r.status)) break;
   }
@@ -294,7 +302,7 @@ export async function onRequestGet({ request, env }) {
       const res = [];
       for (const m of out.health.models.split(',').map((x) => x.trim())) {
         const t0 = Date.now();
-        try { await askGemini(env, [m], 'Reply with the single word OK.', [{ role: 'user', parts: [{ text: 'ping' }] }], true); res.push(`${m}: ok ${((Date.now() - t0) / 1000).toFixed(1)}s`); }
+        try { const r = await askGemini(env, [m], 'Reply with the single word OK.', [{ role: 'user', parts: [{ text: 'ping' }] }]); res.push(`${m}: ok ${((Date.now() - t0) / 1000).toFixed(1)}s${r.searchOn ? ' · web search on' : ' · no web search (site data only)'}`); }
         catch (e) { res.push(`${m}: ${clip(e.message, 140)}`); }
       }
       out.health.gemini = res.join(' | ');
