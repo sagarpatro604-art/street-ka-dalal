@@ -134,7 +134,13 @@ const pctCell = (k, d = 1) => ({ k, fmt: (r) => `<span class="${tone(r[k])}">${p
 const chip = (t, cls = '') => `<span class="chip ${cls}">${esc(t)}</span>`;
 const quadChip = (q) => (q ? chip(q, 'q-' + String(q).toLowerCase()) : '');
 
-const dataNote = (d) => `<p class="asof">${ic('refresh', 14)} Data as of close of <b>${fDay(d?.as_of || meta?.as_of)}</b> · updated ${ago(meta?.published_at)}</p>`;
+const dataNote = (d) => {
+  const day = d?.as_of || meta?.as_of;
+  const prov = meta?.provisional && day === meta?.as_of;
+  return `<p class="asof">${ic('refresh', 14)} ${prov
+    ? `Provisional close of <b>${fDay(day)}</b> (last traded prices; NSE's official closing prices replace them this evening)`
+    : `Data as of close of <b>${fDay(day)}</b>`} · updated ${ago(meta?.published_at)}</p>`;
+};
 const pageHead = (eyebrow, title, extra = '') => `<header class="page-head"><div><p class="eyebrow">${eyebrow}</p><h1>${title}</h1></div>${extra}</header>`;
 
 /* ---------------- views ---------------- */
