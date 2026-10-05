@@ -545,3 +545,29 @@ h3.mt { margin-top: 14px; margin-bottom: 4px; }
 .wl i { width: 9px; height: 9px; border-radius: 50%; }
 .wl i.w { background: var(--up); }
 .wl i.l { background: var(--down); }
+
+/* ---------------- Prop. Research ---------------- */
+.rs-lede { max-width: 760px; margin: 0 0 18px; }
+.rs-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
+.rs-card { display: block; text-decoration: none; color: var(--ink); transition: border-color .15s; }
+.rs-card:hover { border-color: var(--gold); }
+.rs-card h2 { font-size: 22px; margin: 4px 0 8px; }
+.rs-card p { margin: 0 0 10px; color: var(--muted); }
+.rs-h { font-size: 24px; margin: 30px 0 12px; }
+.rs-p { margin: 0 0 14px; max-width: 860px; }
+.rs-note { color: var(--muted); font-size: 13px; margin: 12px 0 0; max-width: 900px; }
+.rs-min ul { margin: 8px 0 0; padding-left: 20px; }
+.rs-min li { margin-bottom: 10px; line-height: 1.6; }
+.rs-now-grid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 22px; align-items: start; }
+.rs-gauge-box { text-align: center; }
+.rs-gauge { width: 100%; max-width: 280px; display: block; margin: 0 auto; }
+.rs-g-l { font: 600 10.5px var(--sans); fill: var(--muted); }
+.rs-g-v { margin: 2px 0 6px; display: flex; align-items: baseline; justify-content: center; gap: 10px; }
+.rs-g-v b { font: 600 40px var(--serif); color: var(--green); }
+.rs-g-v span { font-weight: 700; font-size: 16px; }
+.rs-kpis { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); margin: 0; }
+.rs-kpis b { font-size: 20px; }
+.rs-prose { font-size: 15.5px; }
+.rs-prose h2 { font-size: 21px; margin: 6px 0 10px; }
+.rs-disc { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--line); padding-top: 12px; margin: 24px 0 8px; }
+@media (max-width: 760px) { .rs-now-grid { grid-template-columns: 1fr; } }

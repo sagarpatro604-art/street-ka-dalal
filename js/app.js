@@ -2,6 +2,7 @@ import * as A from './auth.js';
 import { SITE, DALAL_API } from './config.js';
 import { mountDalal } from './dalal.js';
 import * as CH from './charts.js';
+import * as RS from './research.js';
 
 /* ---------------- helpers ---------------- */
 const $ = (s, r = document) => r.querySelector(s);
@@ -66,6 +67,7 @@ const ICONS = {
   google: '',
   copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/>',
   file: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/>',
+  lab: '<path d="M9 3h6M10 3v6l-5.5 9.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3"/><path d="M7.5 15h9"/>',
   refresh: '<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',
 };
 const ic = (n, s = 18) => `<svg class="ic" viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ''}</svg>`;
@@ -917,10 +919,18 @@ function previewHTML() {
   return `<p class="eyebrow">${esc(kindLabel(p.kind))}${p.sector ? ' · ' + esc(p.sector) : ''}</p><h1 class="pv-title">${esc(p.title || 'Untitled')}</h1>${p.summary ? `<p class="lede">${esc(p.summary)}</p>` : ''}${p.cover ? `<img class="post-hero" src="${esc(p.cover)}" alt="">` : ''}<div class="prose">${md(p.body)}</div>`;
 }
 
+/* ---------------- prop. research ---------------- */
+const rsHelp = () => ({ data, after, esc, pct, num, pageHead, table, fDate });
+function viewResearch() { return RS.researchList(rsHelp()); }
+async function viewResearchItem(id) {
+  if (id === 'participation') return RS.researchParticipation(rsHelp());
+  return `<div class="empty card">That research page does not exist. <a href="#/research">All research →</a></div>`;
+}
+
 /* ---------------- shell, routing ---------------- */
-const NAV = [['', 'Market', 'market'], ['screeners', 'Screeners', 'screen'], ['sectors', 'Sectors', 'sector'], ['funds', 'Mutual funds', 'funds'], ['stocks', 'Stocks', 'search'], ['results', 'Results', 'file'], ['news', 'News', 'news'], ['insights', 'Insights', 'pen']];
+const NAV = [['', 'Market', 'market'], ['screeners', 'Screeners', 'screen'], ['sectors', 'Sectors', 'sector'], ['funds', 'Mutual funds', 'funds'], ['stocks', 'Stocks', 'search'], ['results', 'Results', 'file'], ['news', 'News', 'news'], ['research', 'Prop. Research', 'lab'], ['insights', 'Insights', 'pen']];
 const route = () => location.hash.replace(/^#\/?/, '');
-const VIEWS = { '': viewMarket, screeners: viewScreeners, sectors: viewSectors, funds: viewFunds, stocks: viewStocks, results: viewResults, news: viewNews, insights: viewInsights, admin: viewAdmin };
+const VIEWS = { '': viewMarket, screeners: viewScreeners, sectors: viewSectors, funds: viewFunds, stocks: viewStocks, results: viewResults, news: viewNews, insights: viewInsights, admin: viewAdmin, research: viewResearch };
 
 function shell() {
   const u = A.state.user;
@@ -945,7 +955,7 @@ async function render() {
   const keep = view.dataset.route === r ? window.scrollY : 0;
   if (view.dataset.route !== r) view.innerHTML = '<div class="loading"><span class="dots"><i></i><i></i><i></i></span></div>';
   try {
-    const html = top === 'post' ? await viewPost(r.split('/')[1]) : top === 'stock' ? await viewStock(r.split('/')[1]) : await (VIEWS[top] || viewMarket)();
+    const html = top === 'research' && r.split('/')[1] ? await viewResearchItem(r.split('/')[1]) : top === 'post' ? await viewPost(r.split('/')[1]) : top === 'stock' ? await viewStock(r.split('/')[1]) : await (VIEWS[top] || viewMarket)();
     if (seq !== renderSeq) return;
     CH.disposeCharts();
     view.innerHTML = html;
