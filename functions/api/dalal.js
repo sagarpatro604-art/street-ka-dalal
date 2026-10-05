@@ -259,6 +259,13 @@ function stockFacts(focus, all) {
         from_52w_high_pct: d.hi, new_52w_high: !!d.nh, new_52w_low: !!d.nl, above_dma: d.dma ? { '20': !!d.dma[0], '50': !!d.dma[1], '200': !!d.dma[2] } : undefined,
         relative_strength_0_100: d.rs, last_24_closes: d.sp };
       f.valuation = { market_cap_cr: d.mc, pe: d.pe, pb: d.pb, roe_pct: d.roe, debt_to_equity_pct: d.de, dividend_yield_pct: d.dy, revenue_growth_pct: d.rg, earnings_growth_pct: d.eg, as_of: all.stkFundAsOf };
+      const u = all.stkFund?.[sym];
+      if (u) {
+        f.fundamentals_upstox = { year: u.fy, basis: u.basis, pe: u.pe, pb: u.pb, roe_pct: u.roe, roce_pct: u.roce, roa_pct: u.roa, ev_ebitda: u.eve, revenue_cr: u.rev, net_profit_cr: u.np,
+          sales_growth_pct: u.rg, profit_growth_pct: u.pg, sales_cagr_3y_pct: u.rc3, profit_cagr_3y_pct: u.pc3, net_margin_pct: u.nm, profit_last_4_quarters_cr: u.ttm, ttm_to: u.ttm_to,
+          bank: u.bank ? { nim_pct: u.nim, net_npa_pct: u.npa, casa_pct: u.casa } : undefined, refreshed: all.stkFundUpdated };
+        f.shareholding_pct = { quarter: u.hp, promoters: u.pr, promoters_change: u.prc, fii: u.fii, fii_change: u.fiic, mutual_funds: u.mf, mutual_funds_change: u.mfc, all_dii: u.dii };
+      }
       if (d.mf) f.mutual_fund_buying = { months_bought: d.mf[0], of_months: (all.funds?.months || []).length, total_cr: d.mf[1], trend: d.mf[2] };
     }
     const g = (all.market?.gainers || []).concat(all.market?.losers || []).find((x) => x.sym === sym);
@@ -524,9 +531,11 @@ export async function onRequestPost({ request, env }) {
   const focus = findStocks(q, all);
   if (focus.size) {
     const shards = [...new Set([...focus].map((x) => (/^[A-Z]/.test(x[0]) ? x[0] : '0')))];
-    const got = await Promise.all(shards.map((c) => asset(env, selfOrigin, `data/stk/d/${c}.json`)));
+    const [got, fund] = await Promise.all([Promise.all(shards.map((c) => asset(env, selfOrigin, `data/stk/d/${c}.json`))), Promise.all(shards.map((c) => asset(env, selfOrigin, `data/stk/f/${c}.json`)))]);
     all.stkDaily = {};
+    all.stkFund = {};
     got.forEach((g) => { if (g) { Object.assign(all.stkDaily, g.rows || {}); all.stkAsOf = g.as_of; all.stkFundAsOf = g.fund_as_of; } });
+    fund.forEach((g) => { if (g) { Object.assign(all.stkFund, g.rows || {}); all.stkFundUpdated = g.updated; } });
   }
   const [posts, news] = await Promise.all([publishedPosts(env, projectId, token), newsFor(env, selfOrigin, q, focus, all).catch(() => null)]);
   const context = buildContext(q, all, posts, extra, focus, news);

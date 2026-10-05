@@ -99,6 +99,7 @@ const ui = {
   sec: { period: '1D' },
   mkt: { idx: 'Nifty 50', cmp: '', range: '1Y', itab: 'broad' },
   stk: { q: '', sector: 'all', limit: 100 },
+  eq: { tab: 'companies', f: { sector: 'all', mc: 0, pe: 0, roe: 0, rg: 0, pg: 0, pr: 0, r1y: 0, above200: false } },
   mf: { grp: 'sectors', sel: null, tab: 'streaks', q: '', sector: 'all', stock: '' },
   news: { type: 'all', q: '', view: 'heads', cat: 'all', src: 'all', limit: 60 },
   ins: { kind: 'all' },
@@ -388,7 +389,7 @@ async function stkOne(sym) {
 const RET = ['1D', '1W', '1M', '3M', '6M', '1Y'];
 const mcapCr = (v) => (v == null ? '—' : v >= 100000 ? `₹${(v / 100000).toFixed(2)} L cr` : `₹${num(v)} cr`);
 
-async function viewStocks() {
+async function viewStocks(embedded) {
   const S = await stkAll();
   let rows = Object.entries(S.info).map(([sym, x]) => {
     const d = S.daily[sym] || {};
@@ -405,7 +406,7 @@ async function viewStocks() {
     { k: 'hi', label: 'From 52W high', fmt: (r) => pct(r.hi, 1), cls: 'r' }, { k: 'mc', label: 'Market cap', fmt: (r) => mcapCr(r.mc), cls: 'r' }, { k: 'pe', label: 'P/E', fmt: (r) => num(r.pe, 1), cls: 'r' }];
   const total = rows.length;
   const shown = sortRows('stocks', rows, cols).slice(0, ui.stk.limit);
-  return `${pageHead('All NSE stocks', 'Stocks', `<span class="sub">${num(Object.keys(S.info).length)} companies</span>`)}
+  return `${embedded ? '' : pageHead('All NSE stocks', 'Stocks', `<span class="sub">${num(Object.keys(S.info).length)} companies</span>`)}
   <p class="asof">${ic('refresh', 14)} Prices as of close of <b>${fDay(S.asOf)}</b> · ratios updated ${fDate(S.fundAsOf)}</p>
   <div class="toolbar"><label class="search">${ic('search', 16)}<input placeholder="Search symbol or company" value="${esc(ui.stk.q)}" data-input="stkQ"></label>
     <select data-change="stkSector" aria-label="Sector"><option value="all">All sectors</option>${sectors.map((s) => `<option ${s === ui.stk.sector ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select>
@@ -417,7 +418,7 @@ async function viewStocks() {
 
 async function viewStock(sym) {
   sym = decodeURIComponent(sym || '').toUpperCase();
-  const [one, news, scr, mfs, feed] = await Promise.all([stkOne(sym), data('news').catch(() => ({})), data('screeners').catch(() => ({})), hist('mf/stocks').catch(() => ({})), hist('newsfeed/latest').catch(() => ({}))]);
+  const [one, news, scr, mfs, feed, fo] = await Promise.all([stkOne(sym), data('news').catch(() => ({})), data('screeners').catch(() => ({})), hist('mf/stocks').catch(() => ({})), hist('newsfeed/latest').catch(() => ({})), fundOne(sym).catch(() => ({}))]);
   const inNews = [...((feed.movers || {})[sym] || []), ...(feed.items || []).filter((i) => (i.sy || []).includes(sym))].filter((i, k, a) => a.findIndex((j) => j.t === i.t) === k).slice(0, 8);
   const x = one.info, d = one.d || {};
   if (!x) return `${pageHead('Stocks', esc(sym))}<div class="empty card">This symbol is not in our NSE list. <a href="#/stocks">Search all stocks →</a></div>`;
@@ -430,7 +431,7 @@ async function viewStock(sym) {
   const dma = d.dma || [];
   const yearsListed = x.ld ? ((Date.now() - pd(x.ld)) / (365.25 * 86400000)) : null;
   const sp = d.sp || [];
-  return `<p class="crumb"><a href="#/stocks">← All stocks</a></p>
+  return `<p class="crumb"><a href="#/equity">← Research · all companies</a></p>
   ${pageHead(esc(x.sec || 'NSE'), `${esc(x.n || sym)}`, `<span class="mood">${esc(sym)}</span>`)}
   <p class="asof">${ic('refresh', 14)} Price as of close of <b>${fDay(one.asOf)}</b></p>
   <div class="grid2">
@@ -446,11 +447,12 @@ async function viewStock(sym) {
       <dl class="kv"><dt>Sector</dt><dd>${esc(x.sec || '—')}</dd><dt>Industry</dt><dd>${esc(x.ind || '—')}</dd>
         <dt>Listed on NSE</dt><dd>${x.ld ? `${fDate(x.ld)} <span class="sub inline">(${yearsListed < 1 ? `${Math.round(yearsListed * 12)} months ago` : `${num(yearsListed, 1)} years ago`})</span>` : '—'}</dd>
         <dt>Market cap</dt><dd>${mcapCr(d.mc)}</dd><dt>ISIN</dt><dd>${esc(x.isin || '—')}</dd><dt>Face value</dt><dd>₹${esc(x.fv || '—')}</dd></dl>
-      <h3 class="mt">Valuation and quality</h3>
+      ${fo?.f ? '' : `      <h3 class="mt">Valuation and quality</h3>
       <div class="ret-grid">${[['P/E', num(d.pe, 1)], ['P/B', num(d.pb, 1)], ['ROE', d.roe == null ? '—' : `${num(d.roe, 1)}%`], ['Debt/Equity', d.de == null ? '—' : `${num(d.de / 100, 2)}x`], ['Div. yield', d.dy == null ? '—' : `${num(d.dy, 2)}%`], ['Revenue growth', d.rg == null ? '—' : pct(d.rg, 1)], ['Profit growth', d.eg == null ? '—' : pct(d.eg, 1)]].map(([l, v]) => `<div><span>${l}</span><b>${v}</b></div>`).join('')}</div>
-      <p class="sub">Ratios updated ${fDate(one.fundAsOf)}; they can lag the latest results.</p>
+      <p class="sub">Ratios updated ${fDate(one.fundAsOf)}; they can lag the latest results.</p>`}
     </section>
   </div>
+  ${fundCard(fo?.f, fo?.updated)}
   <div class="grid2">
     <section class="card"><h2>Mutual fund buying</h2>
       ${mf ? `<p>Bought in <b>${mf.mb}/${months.length}</b> months · total <b>${cr(mf.tot)}</b>${mf.st ? ` · streak <b>${mf.st}</b> months` : ''} ${trendChip(mf.tr)}</p>${CH.barChart({ labels: months.map((m) => m.replace(' 20', " '")), series: [{ name: 'Bought', values: mf.s, color: CH.C.green2 }], height: 170 })}`
@@ -507,6 +509,138 @@ function viewResults() {
     </div>
   </section>
   <p class="sub legend">Results are facts from company filings, not recommendations to buy or sell.</p>`;
+}
+
+/* ---------------- Research (equity research basics free; deeper tools Premium) ---------------- */
+const EQ_TABS = [
+  ['companies', 'All companies', false], ['screener', 'Screener', false], ['macro', 'India macro', false],
+  ['statements', 'Financial statements', true], ['charts', 'Fundamental charts', true], ['advscreen', 'Advanced screener', true],
+  ['peers', 'Peers & shareholding', true], ['globalmacro', 'Global macro', true], ['auto', 'Auto volumes', true], ['saved', 'Saved research', true],
+];
+const EQ_LOCKS = {
+  statements: ['Full financial statements', 'Income statement, balance sheet and cash flow with every line item, yearly and quarterly, consolidated and standalone.', ['Every line, not just the summary', 'Quarterly and yearly side by side', 'Consolidated or standalone']],
+  charts: ['Fundamental charts', 'Every statement line as its own chart with the share price at each period end, so you see if the price followed the business.', ['Sales, profit, margins, debt over time', 'Price overlaid on each chart', 'Expand any chart full screen']],
+  advscreen: ['Advanced screener', 'Build your own screen from 40+ fundamental fields with AND / ANY rules, any index as the universe, saved screens and CSV export.', ['40+ fields, any rule', 'Nifty 50 / 500 / sector universes', 'Save screens and export']],
+  peers: ['Peers & shareholding history', 'Each company against its competitors on every ratio, and how promoters, FIIs, MFs and DIIs changed their holding over the last 4 quarters.', ['Competitor ratio table', '4-quarter shareholding trend', 'Corporate actions']],
+  globalmacro: ['Global macro dashboard', 'Growth, inflation, jobs, external sector, fiscal and rates for 15 countries, compared side by side, plus daily US yields, dollar, crude, gold and VIX.', ['15 countries, compare any two', 'IMF projections to 2031', 'Daily markets: yields, crude, gold, VIX']],
+  auto: ['Auto volumes', 'Vehicle demand every month: registrations by segment, maker and fuel (EV share), dealer retail and inventory, production and wholesale, tractors.', ['VAHAN registrations by maker', 'EV share by segment', 'Dealer stock building']],
+  saved: ['Saved research', 'Save any company page with your notes and come back to it later, frozen exactly as it was.', ['Snapshots with notes', 'Compare then vs now', 'Your private research shelf']],
+};
+async function fundAll() {
+  const parts = await Promise.all(SHARDS.map((c) => hist(`stk/f/${c}`).catch(() => null)));
+  const rows = {};
+  let updated = null;
+  parts.forEach((p) => { if (p) { Object.assign(rows, p.rows || {}); updated = p.updated || updated; } });
+  return { rows, updated };
+}
+async function fundOne(sym) {
+  const c = /^[A-Z]/.test(sym[0]) ? sym[0] : '0';
+  const p = await hist(`stk/f/${c}`).catch(() => null);
+  return { f: p?.rows?.[sym], updated: p?.updated };
+}
+function lockPanel(key) {
+  const [title, text, list] = EQ_LOCKS[key];
+  return `<section class="card locked eq-locked">
+    <div class="locked-body" aria-hidden="true"><div class="fake-chart">${Array.from({ length: 18 }, (_, i) => `<i style="height:${30 + ((i * 37) % 60)}%"></i>`).join('')}</div>
+      <div class="fake-rows">${Array.from({ length: 6 }, () => '<span></span>').join('')}</div></div>
+    <div class="lock-card">
+      <div class="lock-ic"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+      <h2>${esc(title)}</h2><p>${esc(text)}</p>
+      <ul class="lock-list">${list.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>
+      <button class="btn primary" data-act="unlockPremium">★ Unlock Premium</button>
+      <p class="sub">Coming soon. The basics stay free.</p>
+    </div></section>`;
+}
+const eqTabsHTML = (tab) => `<div class="tabs wrap eq-tabs">${EQ_TABS.map(([k, l, p]) => `<button class="tab ${k === tab ? 'on' : ''} ${p ? 'prem' : ''}" data-act="eqTab" data-v="${k}">${p ? '★ ' : ''}${l}</button>`).join('')}</div>`;
+
+const SCR_FIELDS = [
+  ['mc', 'Market cap at least (₹ cr)', [0, 500, 1000, 5000, 20000, 100000], 'min'], ['pe', 'P/E at most', [0, 10, 15, 20, 30, 50], 'max'],
+  ['roe', 'ROE at least (%)', [0, 10, 15, 20, 25], 'min'], ['rg', 'Sales growth at least (%)', [0, 5, 10, 15, 25], 'min'],
+  ['pg', 'Profit growth at least (%)', [0, 10, 15, 25, 50], 'min'], ['pr', 'Promoter holding at least (%)', [0, 40, 50, 60, 70], 'min'],
+  ['r1y', '1-year return at least (%)', [0, -20, 0.0001, 10, 25, 50], 'min'],
+];
+async function eqScreener() {
+  const [S, F] = await Promise.all([stkAll(), fundAll()]);
+  const f = ui.eq.f;
+  let rows = Object.entries(S.info).map(([sym, x]) => {
+    const d = S.daily[sym] || {}, g = F.rows[sym] || {};
+    return { sym, name: x.n, sector: x.sec, p: d.p, r1y: (d.r || [])[5], above200: (d.dma || [])[2], mc: d.mc ?? null, pe: g.pe ?? d.pe, roe: g.roe, rg: g.rg, pg: g.pg, pr: g.pr, nm: g.nm };
+  });
+  const sectors = [...new Set(rows.map((r) => r.sector).filter(Boolean))].sort();
+  rows = rows.filter((r) => (f.sector === 'all' || r.sector === f.sector) && (!f.above200 || r.above200)
+    && SCR_FIELDS.every(([k, , , mode]) => { const v = +f[k]; if (!v) return true; const x = r[k]; if (x == null) return false; return mode === 'min' ? x >= v : x > 0 && x <= v; }));
+  if (!ui.sort.eqscr) ui.sort.eqscr = { k: 'mc', dir: -1 };
+  const cols = [{ k: 'sym', label: 'Company', fmt: (r) => `<a class="sym" href="#/stock/${encodeURIComponent(r.sym)}">${esc(r.sym)}</a><span class="sub">${esc(r.name || '')}</span>` }, { k: 'sector', label: 'Sector', fmt: (r) => esc(r.sector || '—') },
+    { k: 'mc', label: 'Market cap', fmt: (r) => mcapCr(r.mc), cls: 'r' }, { k: 'pe', label: 'P/E', fmt: (r) => num(r.pe, 1), cls: 'r' }, { k: 'roe', label: 'ROE', fmt: (r) => (r.roe == null ? '—' : `${num(r.roe, 1)}%`), cls: 'r' },
+    { k: 'rg', label: 'Sales growth', fmt: (r) => `<span class="${tone(r.rg)}">${pct(r.rg, 1)}</span>`, cls: 'r' }, { k: 'pg', label: 'Profit growth', fmt: (r) => `<span class="${tone(r.pg)}">${pct(r.pg, 1)}</span>`, cls: 'r' },
+    { k: 'nm', label: 'Net margin', fmt: (r) => (r.nm == null ? '—' : `${num(r.nm, 1)}%`), cls: 'r' }, { k: 'pr', label: 'Promoter', fmt: (r) => (r.pr == null ? '—' : `${num(r.pr, 1)}%`), cls: 'r' },
+    { k: 'r1y', label: '1Y return', fmt: (r) => `<span class="${tone(r.r1y)}">${pct(r.r1y, 1)}</span>`, cls: 'r' }];
+  const shown = sortRows('eqscr', rows, cols).slice(0, 200);
+  const sel = (k, label, opts) => `<label class="fld-s"><span>${label}</span><select data-change="eqF" data-k="${k}">${opts.map((o) => `<option value="${o}" ${String(f[k]) === String(o) ? 'selected' : ''}>${o === 0 ? 'Any' : o === 0.0001 ? 'Positive' : num(o)}</option>`).join('')}</select></label>`;
+  return `<section class="card"><div class="card-head"><h2>Basic screener</h2><button class="btn sm ghost" data-act="eqReset">Reset</button></div>
+    <div class="scr-grid">
+      <label class="fld-s"><span>Sector</span><select data-change="eqF" data-k="sector"><option value="all">All sectors</option>${sectors.map((s) => `<option ${s === f.sector ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></label>
+      ${SCR_FIELDS.map(([k, l, o]) => sel(k, l, o)).join('')}
+      <label class="fld-s chk"><input type="checkbox" data-change="eqF" data-k="above200" ${f.above200 ? 'checked' : ''}><span>Price above 200-day average</span></label>
+    </div>
+    <p class="sub">${num(rows.length)} companies match${rows.length > 200 ? ' · showing the top 200 by the chosen sort' : ''}. Fundamentals: Upstox via Sector Scope, latest reported year. Not a recommendation.</p>
+    <p class="prem-note">★ Want 40+ fields, your own rules, index universes and saved screens? <button class="linkbtn" data-act="eqTab" data-v="advscreen">See the Advanced screener</button></p>
+  </section>
+  <section class="card flush">${table('eqscr', shown, cols, 'No company passes all the filters. Loosen one.')}</section>`;
+}
+
+async function eqMacro() {
+  const m = await hist('macro/india');
+  const S = m.series || [];
+  after.push(async () => {
+    for (const s of S) {
+      const el = $(`#mc-${s.id}`);
+      if (!el) continue;
+      await CH.timeChart(el, [{ name: s.title, type: /growth|inflation/i.test(s.title) ? 'line' : 'area', color: CH.C.green2, data: s.points.map(([t, v]) => ({ time: `${t}-01`, value: v })), axis: (v) => num(v, Math.abs(v) < 100 ? 1 : 0) }], {});
+    }
+  });
+  const order = ['in_gdp', 'in_cpi', 'in_repo', 'in_gsec', 'in_iip', 'in_core', 'in_wpi', 'in_cpi_food', 'in_fx', 'in_exp', 'in_imp', 'in_cli', 'in_diesel', 'in_petrol', 'in_gdpn'];
+  const sorted = S.slice().sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+  return `<p class="sub">India's economy month by month, from official free sources (MoSPI, Office of the Economic Adviser, BIS, OECD, IMF, PPAC). Updated as each figure is released.</p>
+  <section class="kpis">${sorted.slice(0, 5).map((s) => `<div><span>${esc(s.title)}</span><b>${num(s.value, 2)}${/%/.test(s.unit || '') ? '%' : ''}</b><small>${esc(s.last || '')} · ${esc(s.unit || '')}</small></div>`).join('')}</section>
+  <div class="macro-grid">${sorted.map((s) => `<section class="card"><div class="card-head"><h3>${esc(s.title)}</h3><b>${num(s.value, 2)} <span class="sub inline">${esc(s.unit || '')}</span></b></div>
+    <div class="chart-box mini" id="mc-${s.id}"></div><p class="sub">Latest ${esc(s.last || '')} · <a href="${esc(s.home || '#')}" target="_blank" rel="noopener">${esc(s.source || '')}</a></p></section>`).join('')}</div>
+  <p class="prem-note">★ Growth, inflation, jobs, trade, fiscal and rates for 15 countries side by side, plus daily yields, crude, gold and VIX: <button class="linkbtn" data-act="eqTab" data-v="globalmacro">Global macro</button></p>`;
+}
+
+async function viewEquity() {
+  const tab = EQ_TABS.some(([k]) => k === ui.eq.tab) ? ui.eq.tab : 'companies';
+  const prem = (EQ_TABS.find(([k]) => k === tab) || [])[2];
+  let body;
+  if (prem) body = lockPanel(tab);
+  else if (tab === 'screener') body = await eqScreener();
+  else if (tab === 'macro') body = await eqMacro();
+  else body = await viewStocks(true);
+  return `${pageHead('Equity research', 'Research', '<span class="sub">2,500+ NSE companies · basics free · ★ Premium tools</span>')}
+  ${eqTabsHTML(tab)}${body}`;
+}
+
+function fundCard(g, updated) {
+  if (!g) return '';
+  const hold = [['Promoters', g.pr, g.prc], ['FIIs', g.fii, g.fiic], ['Mutual funds', g.mf, g.mfc], ['Other DIIs', g.dii != null && g.mf != null ? g.dii - g.mf : null, null]];
+  const ratios = g.bank
+    ? [['P/E', num(g.pe, 1)], ['P/B', num(g.pb, 2)], ['ROE', g.roe == null ? '—' : `${num(g.roe, 1)}%`], ['ROA', g.roa == null ? '—' : `${num(g.roa, 2)}%`], ['NIM', g.nim == null ? '—' : `${num(g.nim, 2)}%`], ['Net NPA', g.npa == null ? '—' : `${num(g.npa, 2)}%`], ['CASA', g.casa == null ? '—' : `${num(g.casa, 1)}%`]]
+    : [['P/E', `${num(g.pe, 1)}${g.pe2 ? ` <small class="sub inline">(check ${num(g.pe2, 1)})</small>` : ''}`], ['P/B', num(g.pb, 2)], ['ROE', g.roe == null ? '—' : `${num(g.roe, 1)}%`], ['ROCE', g.roce == null ? '—' : `${num(g.roce, 1)}%`], ['ROA', g.roa == null ? '—' : `${num(g.roa, 1)}%`], ['EV/EBITDA', num(g.eve, 1)], ['Quick ratio', num(g.qr, 2)]];
+  return `<div class="grid2">
+    <section class="card"><div class="card-head"><h2>Fundamentals</h2><span class="sub">${esc(g.basis || '')} · ${esc(g.fy || '')}</span></div>
+      <div class="ret-grid">${ratios.map(([l, v]) => `<div><span>${l}</span><b>${v}</b></div>`).join('')}</div>
+      <dl class="kv"><dt>${esc(g.rl === 'Revenue' ? 'Revenue' : 'Total revenue')} (${esc(g.fy || 'FY')})</dt><dd>${cr(g.rev)}</dd><dt>Net profit (${esc(g.fy || 'FY')})</dt><dd>${cr(g.np)}</dd>
+        <dt>Sales growth · 3-yr average</dt><dd><span class="${tone(g.rg)}">${pct(g.rg, 1)}</span> · <span class="${tone(g.rc3)}">${pct(g.rc3, 1)}</span></dd>
+        <dt>Profit growth · 3-yr average</dt><dd><span class="${tone(g.pg)}">${pct(g.pg, 1)}</span> · <span class="${tone(g.pc3)}">${pct(g.pc3, 1)}</span></dd>
+        <dt>Net margin · pre-tax margin</dt><dd>${g.nm == null ? '—' : `${num(g.nm, 1)}%`} · ${g.pbm == null ? '—' : `${num(g.pbm, 1)}%`}</dd>
+        ${g.ttm ? `<dt>Profit, last 4 quarters (to ${esc(g.ttm_to || '')})</dt><dd>${cr(g.ttm)}</dd>` : ''}</dl>
+      <p class="sub">Source: Upstox Fundamentals via Sector Scope · refreshed weekly (last ${fDate(String(updated || '').slice(0, 10))}).</p>
+    </section>
+    <section class="card"><div class="card-head"><h2>Who owns it</h2><span class="sub">${esc(g.hp || '')} · change vs previous quarter</span></div>
+      <div class="hold">${hold.filter(([, v]) => v != null).map(([l, v, c]) => `<div class="hold-row"><span>${l}</span><span class="hold-bar"><i style="width:${Math.min(100, Math.max(0, v))}%"></i></span><b>${num(v, 1)}%</b><small class="${tone(c)}">${c == null ? '' : `${c > 0 ? '▲' : c < 0 ? '▼' : ''} ${num(Math.abs(c), 2)}`}</small></div>`).join('')}</div>
+      <div class="prem-strip"><b>★ Premium</b> Full statements · fundamental charts · peers · 4-quarter shareholding <button class="btn sm" data-act="unlockPremium">Unlock</button></div>
+    </section>
+  </div>`;
 }
 
 const PATTERN_COLS = {
@@ -931,9 +1065,9 @@ async function viewResearchItem(id) {
 }
 
 /* ---------------- shell, routing ---------------- */
-const NAV = [['', 'Market', 'market'], ['screeners', 'Screeners', 'screen'], ['sectors', 'Sectors', 'sector'], ['funds', 'Mutual funds', 'funds'], ['stocks', 'Stocks', 'search'], ['results', 'Results', 'file'], ['news', 'News', 'news'], ['research', 'Prop. Research', 'lab'], ['insights', 'Insights', 'pen']];
+const NAV = [['', 'Market', 'market'], ['screeners', 'Screeners', 'screen'], ['sectors', 'Sectors', 'sector'], ['funds', 'Mutual funds', 'funds'], ['equity', 'Research', 'search'], ['results', 'Results', 'file'], ['news', 'News', 'news'], ['research', 'Prop. Research', 'lab'], ['insights', 'Insights', 'pen']];
 const route = () => location.hash.replace(/^#\/?/, '');
-const VIEWS = { '': viewMarket, screeners: viewScreeners, sectors: viewSectors, funds: viewFunds, stocks: viewStocks, results: viewResults, news: viewNews, insights: viewInsights, admin: viewAdmin, research: viewResearch };
+const VIEWS = { '': viewMarket, screeners: viewScreeners, sectors: viewSectors, funds: viewFunds, equity: viewEquity, stocks: () => { ui.eq.tab = 'companies'; return viewEquity(); }, results: viewResults, news: viewNews, insights: viewInsights, admin: viewAdmin, research: viewResearch };
 
 function shell() {
   const u = A.state.user;
@@ -952,7 +1086,7 @@ async function render() {
   if (!A.state.user) { view.innerHTML = viewSignIn(); document.title = SITE.name; return; }
   const r = route();
   const top = r.split('/')[0];
-  document.querySelectorAll('#topnav a').forEach((a) => a.classList.toggle('on', a.dataset.nav === (top === 'stock' ? 'stocks' : top)));
+  document.querySelectorAll('#topnav a').forEach((a) => a.classList.toggle('on', a.dataset.nav === (['stock', 'stocks'].includes(top) ? 'equity' : top)));
   const seq = ++renderSeq;
   after.length = 0;
   const keep = view.dataset.route === r ? window.scrollY : 0;
@@ -969,7 +1103,7 @@ async function render() {
     if (seq !== renderSeq) return;
     view.innerHTML = `<div class="empty card">Couldn't load this page: ${esc(e.message)}</div>`;
   }
-  const label = (NAV.find(([k]) => k === top) || [, top === 'admin' ? 'Admin' : top === 'post' ? 'Insight' : top === 'stock' ? decodeURIComponent(r.split('/')[1] || 'Stock') : 'Market'])[1];
+  const label = (NAV.find(([k]) => k === top) || [, top === 'admin' ? 'Admin' : top === 'post' ? 'Insight' : top === 'stock' ? decodeURIComponent(r.split('/')[1] || 'Stock') : top === 'stocks' ? 'Research' : 'Market'])[1];
   document.title = `${label} · ${SITE.name}`;
 }
 
@@ -991,6 +1125,8 @@ const ACTS = {
   mfGrp: (el) => { ui.mf.grp = el.dataset.v; ui.mf.sel = null; render(); },
   mfSel: (el) => { ui.mf.sel = el.dataset.v; render(); },
   unlockPremium: () => toast('Premium is coming soon — you will be the first to know!'),
+  eqTab: (el) => { ui.eq.tab = el.dataset.v; if (route().split('/')[0] !== 'equity') { location.hash = '#/equity'; return; } render(); },
+  eqReset: () => { ui.eq.f = { sector: 'all', mc: 0, pe: 0, roe: 0, rg: 0, pg: 0, pr: 0, r1y: 0, above200: false }; render(); },
   stkMore: () => { ui.stk.limit += 200; render(); },
   mfTab: (el) => { ui.mf.tab = el.dataset.v; ui.mf.sector = 'all'; render(); },
   newsView: (el) => { ui.news.view = el.dataset.v; ui.news.q = ''; render(); },
@@ -1043,6 +1179,7 @@ const INPUTS = {
 };
 const CHANGES = {
   scrSector: (el) => { ui.scr.sector = el.value; render(); },
+  eqF: (el) => { ui.eq.f[el.dataset.k] = el.type === 'checkbox' ? el.checked : el.value; render(); },
   stkSector: (el) => { ui.stk.sector = el.value; ui.stk.limit = 100; render(); },
   newsSrc: (el) => { ui.news.src = el.value; ui.news.limit = 60; render(); },
   mfSector: (el) => { ui.mf.sector = el.value; render(); },
