@@ -571,3 +571,13 @@ h3.mt { margin-top: 14px; margin-bottom: 4px; }
 .rs-prose h2 { font-size: 21px; margin: 6px 0 10px; }
 .rs-disc { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--line); padding-top: 12px; margin: 24px 0 8px; }
 @media (max-width: 760px) { .rs-now-grid { grid-template-columns: 1fr; } }
+
+/* Participation Gauge card on the Market page */
+.pgc-grid { display: grid; grid-template-columns: 260px minmax(0, 1fr) minmax(0, 300px); gap: 22px; align-items: start; }
+.pgc-g { text-align: center; }
+.pgc-g .rs-gauge { max-width: 230px; }
+.pgc-run p { margin: 0 0 8px; }
+.pgc-trend { margin-top: 10px; }
+.pgc-spark { display: block; width: 100%; height: 46px; margin-top: 4px; }
+.pgc-flows .kv { margin: 4px 0 0; }
+@media (max-width: 980px) { .pgc-grid { grid-template-columns: 1fr; } }

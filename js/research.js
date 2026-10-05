@@ -247,3 +247,44 @@ async function drawCharts(d) {
     height: 240, fmt: (v) => `${CH.crShort(v)}`,
   });
 }
+
+// Compact Participation Gauge for the Market page. Same data file as the report, refreshed every
+// evening by SectorScope; the latest-session flows change daily, the gauge itself monthly.
+export function gaugeCard(d, h) {
+  const { esc, num, fDate } = h;
+  const n = d.now || {};
+  const zc = ZONE_COL[n.zone] || '#6c786f';
+  const daily = d.daily || [];
+  const last = daily[daily.length - 1] || {};
+  const last5 = daily.slice(-5);
+  const sum = (k) => (last5.length ? last5.reduce((a, x) => a + (x[k] || 0), 0) : null);
+  const crs = (x) => { if (x == null) return '—'; const a = Math.abs(x); return `₹${num(a >= 100000 ? a / 100000 : a, a >= 100000 ? 2 : 0)}${a >= 100000 ? ' L' : ''} cr`; };
+  const flow = (x) => (x == null ? '—' : `<b class="${x < 0 ? 'down' : 'up'}">${crs(x)}</b> <span class="sub inline">${x < 0 ? 'sold' : 'bought'}</span>`);
+  const pc = (x) => (x == null ? '—' : `${x > 0 ? '+' : ''}${Math.round(x * 100)}%`);
+  const g = (d.series || []).filter((x) => x.gauge != null).slice(-24);
+  const W = 220, H = 46, lo = 0, hi = 100;
+  const pts = g.map((x, i) => `${((i * W) / Math.max(1, g.length - 1)).toFixed(1)},${(H - 3 - ((x.gauge - lo) * (H - 6)) / (hi - lo)).toFixed(1)}`).join(' ');
+  const y40 = (H - 3 - (40 * (H - 6)) / 100).toFixed(1);
+  const spark = g.length > 1 ? `<svg class="pgc-spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><line x1="0" x2="${W}" y1="${y40}" y2="${y40}" stroke="#c27c3a" stroke-dasharray="3 3" stroke-width="1"/><polyline points="${pts}" fill="none" stroke="#2f6b4f" stroke-width="2" stroke-linejoin="round"/></svg>` : '';
+  return `<section class="card pgc">
+    <div class="card-head"><h2>Participation Gauge</h2><a href="#/research/participation">The research behind it →</a></div>
+    <div class="pgc-grid">
+      <div class="pgc-g">${gaugeSVG(n.gauge, n.zone)}<p class="rs-g-v"><b>${num(n.gauge, 0)}</b><span style="color:${zc}">${esc(n.zone || '—')}</span></p>
+        <p class="sub">How fearful (0) or crowded (100) the market is against its own past · ${mLabel(n.month)}</p></div>
+      <div class="pgc-run">
+        <p><b>${n.run_months}</b> month${n.run_months === 1 ? '' : 's'} in a row on the ${esc(n.run_side || '')}</p>
+        <p><b>${n.fear_months_last24}</b> of the last 24 months were on the fearful side</p>
+        <p>Retail trading <b>${pc(n.retail_vs_peak)}</b> from its ${mLabel(n.retail_peak_month)} peak</p>
+        <p>Foreign funds net sellers in <b>${n.fpi_sell_months_last12}</b> of the last 12 months</p>
+        <div class="pgc-trend"><span class="sub">Last 24 months (dashed line = 40)</span>${spark}</div>
+      </div>
+      <div class="pgc-flows">
+        <p class="sub">Who bought on ${fDate(last.d)}</p>
+        <dl class="kv"><dt>Retail</dt><dd>${flow(last.retail)}</dd><dt>Domestic funds</dt><dd>${flow(last.dii)}</dd><dt>Foreign funds</dt><dd>${flow(last.fpi)}</dd></dl>
+        <p class="sub" style="margin-top:8px">Last 5 sessions</p>
+        <dl class="kv"><dt>Retail</dt><dd>${flow(sum('retail'))}</dd><dt>Domestic funds</dt><dd>${flow(sum('dii'))}</dd><dt>Foreign funds</dt><dd>${flow(sum('fpi'))}</dd></dl>
+      </div>
+    </div>
+    <p class="rs-note">A description of the market, not a signal to buy or sell. Flows here are NSE's final category file (domestic funds = MFs, insurers, banks, AIFs, PMS), so they can differ from the provisional FII / DII card above. Updated every evening.</p>
+  </section>`;
+}

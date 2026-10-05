@@ -256,6 +256,7 @@ const ymLabel = (ym) => { const [y, m] = String(ym).split('-').map(Number); retu
 
 async function viewMarket() {
   const [m, s] = await Promise.all([data('market'), data('sectors')]);
+  const pg = await data('participation').catch(() => null);   // Participation Gauge card (Prop. Research)
   let posts = [];
   try { posts = (await A.listPosts()).slice(0, 3); } catch {}
   const b = m.breadth || {};
@@ -321,6 +322,8 @@ async function viewMarket() {
       <ul class="alerts">${(m.alerts || []).slice(0, 5).map((a) => `<li class="${a.level === 'bearish' ? 'down' : a.level === 'bullish' ? 'up' : ''}"><b>${esc(a.type)}</b><span>${esc(a.detail)}</span></li>`).join('') || '<li>No notable shifts today.</li>'}</ul>
     </article>
   </div>
+
+  ${pg && pg.now ? RS.gaugeCard(pg, rsHelp()) : ''}
 
   <section class="card">
     <div class="card-head"><h2>Breadth: how many stocks are in uptrends</h2><span class="sub">last 12 months · dashed line = Nifty 500 (left scale)</span></div>
