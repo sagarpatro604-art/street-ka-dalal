@@ -999,8 +999,39 @@ function freshChip(sec, latest) {
   return chip('OK', 'good');
 }
 
+/* daily tick sheet: one row per part of the site, one column per day */
+const TICK_DAILY = ['prices', 'indices', 'breadth', 'fiidii', 'screeners', 'sectors', 'stocks', 'filings'];
+const TICK_LABEL = { prices: 'Prices & returns', indices: 'Index charts', breadth: 'Breadth', fiidii: 'FII / DII', screeners: 'Screeners', sectors: 'Sectors',
+  stocks: 'All companies', filings: 'Company filings', headlines: 'Headlines', fundamentals: 'Fundamentals (weekly)', funds: 'Mutual funds (monthly)',
+  macro: 'India macro (as released)', participation: 'Participation (monthly)' };
+function tickCell(key, day, rec, trading, isToday) {
+  const v = rec?.dates?.[key];
+  const shown = v ? String(v).replace('T', ' ') : 'nothing';
+  if (TICK_DAILY.includes(key)) {
+    if (!trading.has(day)) return `<td class="tk na" title="No trading this day">–</td>`;
+    if (v && String(v).slice(0, 10) >= day) return key === 'prices' && rec.provisional ? `<td class="tk part" title="Provisional prices only (${shown})">◐</td>` : `<td class="tk ok" title="Updated: shows ${shown}">✓</td>`;
+    if (isToday) return `<td class="tk wait" title="Not yet: shows ${shown}. Comes in later today">⏳</td>`;
+    return `<td class="tk no" title="Not updated: still showed ${shown}">✗</td>`;
+  }
+  if (key === 'headlines') return v && String(v).slice(0, 10) === day ? `<td class="tk ok" title="Refreshed ${shown}">✓</td>` : `<td class="tk no" title="Not refreshed (${shown})">✗</td>`;
+  return v ? `<td class="tk chk" title="Checked: shows ${shown}">✓</td>` : `<td class="tk na" title="Not on the site yet">–</td>`;
+}
+function tickSheet(daily) {
+  const days = Object.keys(daily?.days || {}).sort().reverse().slice(0, 14);
+  if (!days.length) return '';
+  const trading = new Set(daily.trading || []);
+  const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  const head = days.map((d) => { const x = pd(d); return `<th class="tk"><button>${DAY[x.getDay()]}<br>${x.getDate()} ${MON[x.getMonth()]}</button></th>`; }).join('');
+  const rows = Object.keys(TICK_LABEL).map((k) => `<tr><td><b>${TICK_LABEL[k]}</b></td>${days.map((d) => tickCell(k, d, daily.days[d], trading, d === today)).join('')}</tr>`).join('');
+  const dayDone = (d) => trading.has(d) && TICK_DAILY.every((k) => String(daily.days[d]?.dates?.[k] || '').slice(0, 10) >= d);
+  return `<section class="card flush"><div class="card-head pad"><h2>Daily tick sheet</h2><span class="sub">each part of the site, day by day, after that day's last publish · hover a cell for the date it showed</span></div>
+    <div class="tbl-wrap"><table class="tbl compact ticks"><thead><tr><th><button>Part of the site</button></th>${head}</tr></thead><tbody>${rows}</tbody>
+    <tfoot><tr><td><b>Whole day</b></td>${days.map((d) => `<td class="tk ${!trading.has(d) ? 'na' : dayDone(d) ? 'ok' : d === today ? 'wait' : 'no'}">${!trading.has(d) ? '–' : dayDone(d) ? '✓' : d === today ? '⏳' : '✗'}</td>`).join('')}</tr></tfoot></table></div>
+    <p class="sub legend pad">✓ updated with that day's data · ◐ provisional prices only · ⏳ still to come today · ✗ did not update · – no trading that day (weekend / NSE holiday). Weekly and monthly items: ✓ = checked that day; new data only when the source releases it.</p></section>`;
+}
+
 async function adminUpdates() {
-  const [st, cl] = await Promise.all([hist('admin/status').catch(() => null), hist('admin/changelog').catch(() => null)]);
+  const [st, cl, daily] = await Promise.all([hist('admin/status').catch(() => null), hist('admin/changelog').catch(() => null), hist('admin/daily').catch(() => null)]);
   if (!st) return '<div class="empty card">The update status appears after the next publish.</div>';
   const latest = (st.sections.find((x) => x.key === 'prices') || {}).as_of;
   const last = (st.runs || [])[0] || {};
@@ -1023,6 +1054,7 @@ async function adminUpdates() {
       <div><span class="sub">Next scheduled publish</span><b>${esc(winDate(st.schedule?.next))}</b><small>${esc((st.schedule?.times || []).map(winTime).join(' & '))} · ${esc(st.schedule?.days || '')}, plus after-close runs</small></div>
       <div><span class="sub">Needs a look</span><b class="${behind.length ? 'down' : 'up'}">${behind.length ? `${behind.length} part${behind.length > 1 ? 's' : ''}` : 'Nothing'}</b><small>${behind.map((x) => esc(x.what.split(' (')[0])).join(', ') || 'everything is current'}</small></div>
     </section>
+    ${tickSheet(daily)}
     <div class="grid2">
       <section class="card"><h2>A normal weekday</h2><ol class="timeline">${DAY_PLAN.map(([t, x]) => `<li><b>${esc(t)}</b><span>${esc(x)}</span></li>`).join('')}</ol></section>
       <section class="card"><h2>Everything else</h2><ol class="timeline">${OTHER_PLAN.map(([t, x]) => `<li><b>${esc(t)}</b><span>${esc(x)}</span></li>`).join('')}</ol>
