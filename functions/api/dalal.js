@@ -367,10 +367,21 @@ async function braveNews(env, query, n = 6) {
 const wantsNews = (ql) => /news|khabar|filing|announce|order|result|acqui|merger|rating|board|resign|dividend|bonus|split|buyback|ipo|listing|why|kyu|fell|fall|gir|rose|rise|jump|crash|surge|tank|rally|up |down |today|aaj|update|happen|event|rbi|sebi|fed|budget|policy|inflation|gdp|war|crude|rupee|dollar/.test(ql);
 
 // The news part of Dalal's context: the evening's headlines (tagged to stocks) + a live Google News search.
+// news pushed every 30 minutes to the repo's `live` branch (see the site's LIVE_URL); newer than the publish copy
+const LIVE_URL = 'https://raw.githubusercontent.com/sagarpatro604-art/street-ka-dalal/live/live.json';
+async function liveDoc() {
+  try { const r = await fetch(LIVE_URL, { cf: { cacheTtl: 300 }, signal: AbortSignal.timeout(4000) }); return r.ok ? await r.json() : null; } catch { return null; }
+}
 async function newsFor(env, origin, q, focus, all) {
   const ql = q.toLowerCase();
   if (!focus.size && !wantsNews(ql)) return null;
-  const feed = await asset(env, origin, 'data/newsfeed/latest.json');
+  let feed = await asset(env, origin, 'data/newsfeed/latest.json');
+  const lh = all.live?.headlines;
+  if (lh?.items && (!feed?.updated || lh.updated > feed.updated)) {
+    const seen = new Set();
+    feed = { ...(feed || {}), updated: lh.updated, movers: lh.movers || feed?.movers,
+      items: [...lh.items, ...(feed?.items || [])].filter((i) => { const k = String(i.t || '').toLowerCase(); return !seen.has(k) && seen.add(k); }) };
+  }
   const out = {};
   const short = (sym) => String(all.stkInfo?.stocks?.[sym]?.n || sym).replace(/\s+(limited|ltd\.?)$/i, '').trim();
   const jobs = [];
@@ -526,6 +537,10 @@ export async function onRequestPost({ request, env }) {
   const all = { meta };
   const extra = {};
   files.forEach((f, i) => { if (['market', 'sectors', 'screeners', 'funds', 'news'].includes(f)) all[f] = loaded[i]; else if (loaded[i]) extra[f] = loaded[i]; });
+  // filings and headlines from the 30-minute live copy when it is newer
+  all.live = await liveDoc();
+  const newest = (d) => (d?.filings || []).reduce((m, r) => (String(r.ts || '') > m ? String(r.ts || '') : m), '');
+  if (all.live?.filings?.filings && newest(all.live.filings) > newest(all.news)) all.news = { ...(all.news || {}), ...all.live.filings };
   // every NSE stock: who it is (one file) and the day's numbers (one small file per first letter)
   all.stkInfo = await asset(env, selfOrigin, 'data/stk/info.json');
   const focus = findStocks(q, all);

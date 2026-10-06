@@ -143,6 +143,33 @@ const dataNote = (d) => {
 };
 const pageHead = (eyebrow, title, extra = '') => `<header class="page-head"><div><p class="eyebrow">${eyebrow}</p><h1>${title}</h1></div>${extra}</header>`;
 
+/* ---------------- live news (every 30 min, outside the site's deploys) ---------------- */
+// Sector Scope pushes headlines + filings to the repo's `live` branch every 30 minutes (no Cloudflare build).
+// Pages use whichever is newer: that copy or the one inside the last full publish.
+const LIVE_URL = 'https://raw.githubusercontent.com/sagarpatro604-art/street-ka-dalal/live/live.json';
+let liveP = null, liveAt = 0;
+function liveNews() {
+  if (!liveP || Date.now() - liveAt > 5 * 60000) {
+    liveAt = Date.now();
+    liveP = fetch(`${LIVE_URL}?t=${Math.floor(Date.now() / 300000)}`, { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  }
+  return liveP;
+}
+async function newsfeed() {
+  const [b, l] = await Promise.all([hist('newsfeed/latest').catch(() => ({ items: [] })), liveNews()]);
+  const lh = l?.headlines;
+  if (!lh?.items || (b.updated && lh.updated && lh.updated <= b.updated)) return b;
+  const seen = new Set();
+  const items = [...lh.items, ...(b.items || [])].filter((i) => { const k = String(i.t || '').toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; })
+    .sort((x, y) => String(y.at || '').localeCompare(String(x.at || '')));
+  return { ...b, updated: lh.updated, items, n: items.length, movers: lh.movers || b.movers };
+}
+const newestFiling = (d) => (d?.filings || []).reduce((m, r) => (String(r.ts || '') > m ? String(r.ts || '') : m), '');
+async function filingsData() {
+  const [b, l] = await Promise.all([data('news').catch(() => ({})), liveNews()]);
+  return l?.filings?.filings && newestFiling(l.filings) > newestFiling(b) ? { ...b, ...l.filings } : b;
+}
+
 /* ---------------- views ---------------- */
 function viewSignIn() {
   const inApp = A.inAppBrowser();
@@ -424,7 +451,7 @@ async function viewStocks(embedded) {
 
 async function viewStock(sym) {
   sym = decodeURIComponent(sym || '').toUpperCase();
-  const [one, news, scr, mfs, feed, fo] = await Promise.all([stkOne(sym), data('news').catch(() => ({})), data('screeners').catch(() => ({})), hist('mf/stocks').catch(() => ({})), hist('newsfeed/latest').catch(() => ({})), fundOne(sym).catch(() => ({}))]);
+  const [one, news, scr, mfs, feed, fo] = await Promise.all([stkOne(sym), filingsData(), data('screeners').catch(() => ({})), hist('mf/stocks').catch(() => ({})), newsfeed(), fundOne(sym).catch(() => ({}))]);
   const inNews = [...((feed.movers || {})[sym] || []), ...(feed.items || []).filter((i) => (i.sy || []).includes(sym))].filter((i, k, a) => a.findIndex((j) => j.t === i.t) === k).slice(0, 8);
   const x = one.info, d = one.d || {};
   if (!x) return `${pageHead('Stocks', esc(sym))}<div class="empty card">This symbol is not in our NSE list. <a href="#/stocks">Search all stocks →</a></div>`;
@@ -886,7 +913,7 @@ const headItem = (i) => `<li class="head-item"><div class="head-meta">${chip(i.s
   ${(i.sy || []).length ? `<div class="head-syms">${i.sy.map((s) => `<a class="chip type" href="#/stock/${encodeURIComponent(s)}">${esc(s)}</a>`).join('')}</div>` : ''}</li>`;
 
 async function viewHeadlines() {
-  const [f, m] = await Promise.all([hist('newsfeed/latest'), data('market').catch(() => ({}))]);
+  const [f, m] = await Promise.all([newsfeed(), data('market').catch(() => ({}))]);
   const items = f.items || [];
   const sources = Object.entries(items.reduce((a, i) => ((a[i.s] = (a[i.s] || 0) + 1), a), {})).sort((a, b) => b[1] - a[1]);
   const q = ui.news.q.trim().toLowerCase();
@@ -914,7 +941,7 @@ async function viewHeadlines() {
 
 async function viewNews() {
   if (ui.news.view !== 'filings') return viewHeadlines();
-  const d = await data('news');
+  const d = await filingsData();
   const labels = {};
   for (const r of d.filings || []) labels[r.label] = (labels[r.label] || 0) + 1;
   const types = Object.entries(labels).sort((a, b) => b[1] - a[1]);
@@ -1034,6 +1061,11 @@ async function adminUpdates() {
   const [st, cl, daily] = await Promise.all([hist('admin/status').catch(() => null), hist('admin/changelog').catch(() => null), hist('admin/daily').catch(() => null)]);
   if (!st) return '<div class="empty card">The update status appears after the next publish.</div>';
   const latest = (st.sections.find((x) => x.key === 'prices') || {}).as_of;
+  // the 30-minute news push is newer than the last full publish for headlines and filings
+  const lv = await liveNews();
+  const istMin = (z) => { const d = new Date(z); return isNaN(d) ? null : new Date(d.getTime() + 330 * 60000).toISOString().slice(0, 16); };
+  if (lv) st.sections = st.sections.map((x) => (x.key === 'headlines' && lv.headlines?.updated ? { ...x, as_of: istMin(lv.headlines.updated), when: 'Every 30 minutes (live branch), plus every publish; Dalal also searches live' }
+    : x.key === 'filings' && lv.filings?.filings ? { ...x, as_of: [newestFiling(lv.filings), x.as_of].sort().pop(), when: 'Every 30 minutes (live branch), plus every publish; shows the newest filing time' } : x));
   const last = (st.runs || [])[0] || {};
   const items = cl?.items || [];
   const areas = [...new Set(items.map((i) => i.area))].sort();
@@ -1052,6 +1084,7 @@ async function adminUpdates() {
       <div><span class="sub">The site shows market data of</span><b>${fDay(latest)}</b>${st.provisional ? chip('Provisional prices', 'warn') : chip('NSE official closes', 'good')}</div>
       <div><span class="sub">Last publish</span><b>${ago(last.at)}</b><small>${fDT(last.at)} · took ${num(last.took_s)} s</small></div>
       <div><span class="sub">Next scheduled publish</span><b>${esc(winDate(st.schedule?.next))}</b><small>${esc((st.schedule?.times || []).map(winTime).join(' & '))} · ${esc(st.schedule?.days || '')}, plus after-close runs</small></div>
+      <div><span class="sub">News & filings (every 30 min)</span><b>${lv ? ago(lv.updated) : '—'}</b><small>${lv ? `${num(lv.headlines?.items?.length)} headlines (48 h) · ${num(lv.filings?.filings?.length)} filings` : 'live copy not reachable'}</small></div>
       <div><span class="sub">Needs a look</span><b class="${behind.length ? 'down' : 'up'}">${behind.length ? `${behind.length} part${behind.length > 1 ? 's' : ''}` : 'Nothing'}</b><small>${behind.map((x) => esc(x.what.split(' (')[0])).join(', ') || 'everything is current'}</small></div>
     </section>
     ${tickSheet(daily)}

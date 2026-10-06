@@ -613,7 +613,7 @@ h3.mt { margin-top: 14px; margin-bottom: 4px; }
 @media (max-width: 760px) { .hold-row { grid-template-columns: 82px minmax(0, 1fr) 52px 56px; font-size: 13px; } .macro-grid { grid-template-columns: 1fr; } }
 
 /* ---------- admin: updates & change log ---------- */
-.upd-hero { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.upd-hero { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; }
 .upd-hero > div { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .upd-hero b { font: 600 20px var(--serif); color: var(--green); }
 .upd-hero small { font-size: 12px; color: var(--muted); }
