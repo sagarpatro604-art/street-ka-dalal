@@ -103,7 +103,7 @@ const ui = {
   mf: { grp: 'sectors', sel: null, tab: 'streaks', q: '', sector: 'all', stock: '' },
   news: { type: 'all', q: '', view: 'heads', cat: 'all', src: 'all', limit: 60 },
   ins: { kind: 'all' },
-  admin: { tab: 'publisher', q: '' },
+  admin: { tab: 'publisher', q: '', clq: '', cla: 'all', cln: 40 },
   sort: {},
   edit: null,
 };
@@ -972,10 +972,79 @@ async function viewPost(id) {
 }
 
 /* ---------------- admin terminal ---------------- */
+/* ---------------- admin: when everything updates + change log ---------------- */
+const DAY_PLAN = [
+  ['3:30 PM', 'Market closes'],
+  ['~3:45 PM', 'Prices, returns, screeners, indices go live as PROVISIONAL (Upstox last traded prices)'],
+  ['4:30 PM onward', "NSE's official closing file is checked every 10 min; when it lands, prices are corrected and the site republishes"],
+  ['5:15 PM', 'Scheduled publish (backup): everything refreshed, incl. headlines and filings'],
+  ['7:30–8:45 PM', 'NSE posts FII/DII and participation files; picked up by the next publish'],
+  ['8:45 PM', 'Scheduled publish: final numbers of the day, Participation Gauge'],
+  ['Next morning ~7 AM', "Sector Scope checks Upstox's own candle against NSE's close (audit, nothing changes on the site)"],
+];
+const OTHER_PLAN = [['Weekly', 'Company fundamentals and shareholding (each company refetched every 7 days)'], ['Monthly', 'Mutual fund buying, when the new month\'s AMC file is imported (~10th–15th)'],
+  ['As released', 'India macro figures (CPI, IIP, GDP, repo...)'], ['Live', 'Dalal answers (site data + Google News at the moment you ask)'], ['~1 minute after a change', 'Site features; open tabs reload themselves within 10 minutes']];
+const DAILY_KEYS = ['prices', 'indices', 'breadth', 'fiidii', 'screeners', 'sectors', 'stocks', 'filings'];
+
+// Windows task times: "06-10-2026 05:15:00 PM" -> "Tue, 6 Oct, 5:15 PM"; "08:45:00 PM" -> "8:45 PM"
+const winTime = (t) => String(t || '').replace(/^0(\d)/, '$1').replace(/:00 (AM|PM)$/, ' $1');
+const winDate = (s) => { const m = String(s || '').match(/^(\d{2})-(\d{2})-(\d{4}) (.*)$/); if (!m) return s || '—'; const d = new Date(+m[3], +m[2] - 1, +m[1]); return `${DAY[d.getDay()]}, ${d.getDate()} ${MON[d.getMonth()]}, ${winTime(m[4])}`; };
+function freshChip(sec, latest) {
+  const v = sec.as_of;
+  if (sec.key === 'dalal') return chip('Live', 'good');
+  if (sec.key === 'code') return chip('Auto', 'good');
+  if (!v) return chip('Unknown', 'warn');
+  if (DAILY_KEYS.includes(sec.key)) return String(v).slice(0, 10) >= String(latest).slice(0, 10) ? chip('Up to date', 'good') : chip('Behind', 'warn');
+  if (sec.key === 'headlines') return Date.now() - new Date(String(v).replace(' ', 'T') + (String(v).length <= 16 ? ':00Z' : '')) < 30 * 3600000 ? chip('Up to date', 'good') : chip('Behind', 'warn');
+  return chip('OK', 'good');
+}
+
+async function adminUpdates() {
+  const [st, cl] = await Promise.all([hist('admin/status').catch(() => null), hist('admin/changelog').catch(() => null)]);
+  if (!st) return '<div class="empty card">The update status appears after the next publish.</div>';
+  const latest = (st.sections.find((x) => x.key === 'prices') || {}).as_of;
+  const last = (st.runs || [])[0] || {};
+  const items = cl?.items || [];
+  const areas = [...new Set(items.map((i) => i.area))].sort();
+  const q = ui.admin.clq.trim().toLowerCase();
+  const list = items.filter((i) => (ui.admin.cla === 'all' || i.area === ui.admin.cla) && (!q || `${i.title} ${i.detail}`.toLowerCase().includes(q)));
+  let lastDay = '';
+  const logHTML = list.slice(0, ui.admin.cln).map((i) => {
+    const d = new Date(i.at); const dl = `${DAY[d.getDay()]}, ${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`;
+    const h = dl !== lastDay ? `<li class="head-day">${dl}</li>` : ''; lastDay = dl;
+    const title = i.title.replace(/^skd_publish:\s*/i, '');
+    return `${h}<li class="cl-item"><div class="head-meta">${chip(i.area, 'type')}<span class="sub">${fTime(i.at.slice(11, 16))} · ${i.project === 'publisher' ? 'data publisher' : 'website'} · ${esc(i.id)}</span></div>
+      <b>${esc(title.charAt(0).toUpperCase() + title.slice(1))}</b>${i.detail ? `<details><summary>Details</summary><p>${esc(i.detail)}</p></details>` : ''}</li>`;
+  }).join('');
+  const behind = st.sections.filter((x) => /Behind|Unknown/.test(freshChip(x, latest)));
+  return `<section class="upd-hero card">
+      <div><span class="sub">The site shows market data of</span><b>${fDay(latest)}</b>${st.provisional ? chip('Provisional prices', 'warn') : chip('NSE official closes', 'good')}</div>
+      <div><span class="sub">Last publish</span><b>${ago(last.at)}</b><small>${fDT(last.at)} · took ${num(last.took_s)} s</small></div>
+      <div><span class="sub">Next scheduled publish</span><b>${esc(winDate(st.schedule?.next))}</b><small>${esc((st.schedule?.times || []).map(winTime).join(' & '))} · ${esc(st.schedule?.days || '')}, plus after-close runs</small></div>
+      <div><span class="sub">Needs a look</span><b class="${behind.length ? 'down' : 'up'}">${behind.length ? `${behind.length} part${behind.length > 1 ? 's' : ''}` : 'Nothing'}</b><small>${behind.map((x) => esc(x.what.split(' (')[0])).join(', ') || 'everything is current'}</small></div>
+    </section>
+    <div class="grid2">
+      <section class="card"><h2>A normal weekday</h2><ol class="timeline">${DAY_PLAN.map(([t, x]) => `<li><b>${esc(t)}</b><span>${esc(x)}</span></li>`).join('')}</ol></section>
+      <section class="card"><h2>Everything else</h2><ol class="timeline">${OTHER_PLAN.map(([t, x]) => `<li><b>${esc(t)}</b><span>${esc(x)}</span></li>`).join('')}</ol>
+        <p class="sub">Weekends and NSE holidays: no new prices, so nothing changes except headlines at the next publish.</p></section>
+    </div>
+    <section class="card flush"><div class="card-head pad"><h2>Each part of the site</h2><span class="sub">what it shows right now</span></div>
+      <div class="tbl-wrap"><table class="tbl compact"><thead><tr><th><button>Part of the site</button></th><th><button>Data comes from</button></th><th><button>When it updates</button></th><th><button>Shows data of</button></th><th><button>Status</button></th></tr></thead>
+      <tbody>${st.sections.map((x) => `<tr><td><b>${esc(x.what)}</b></td><td>${esc(x.source)}</td><td class="sm">${esc(x.when)}</td><td>${x.as_of === 'live' ? 'Live' : esc(x.as_of || '—')}</td><td>${freshChip(x, latest)}</td></tr>`).join('')}</tbody></table></div></section>
+    <section class="card flush"><div class="card-head pad"><h2>Publish history</h2><span class="sub">last ${(st.runs || []).length} runs</span></div>
+      <div class="tbl-wrap"><table class="tbl compact"><thead><tr><th><button>When</button></th><th><button>Market date</button></th><th class="r"><button>Took</button></th><th><button>Result</button></th></tr></thead>
+      <tbody>${(st.runs || []).map((r) => `<tr><td>${fDT(r.at)} <span class="sub inline">${ago(r.at)}</span></td><td>${esc(r.as_of || '—')}${r.provisional ? ' ' + chip('provisional', 'warn') : ''}</td><td class="r">${num(r.took_s)} s</td><td>${r.failed?.length ? chip(`${r.failed.length} skipped: ${r.failed.join(', ')}`, 'warn') : chip(`OK · ${r.ok?.length || 0} parts`, 'good')}</td></tr>`).join('')}</tbody></table></div></section>
+    <section class="card"><div class="card-head"><h2>Change log</h2><span class="sub">${num(items.length)} changes · noted automatically from every website and data-publisher change</span></div>
+      <div class="toolbar"><label class="search grow">${ic('search', 16)}<input placeholder="Search changes" value="${esc(ui.admin.clq)}" data-input="clQ"></label>
+        <select data-change="clArea" aria-label="Area"><option value="all">All areas</option>${areas.map((a) => `<option ${a === ui.admin.cla ? 'selected' : ''}>${esc(a)}</option>`).join('')}</select></div>
+      <ul class="heads-list">${logHTML || '<li class="empty">No changes match.</li>'}</ul>
+      ${list.length > ui.admin.cln ? `<div class="more"><button class="btn ghost" data-act="clMore">Show more (${num(list.length - ui.admin.cln)} left)</button></div>` : ''}</section>`;
+}
+
 async function viewAdmin() {
   if (!A.isAdmin()) return '<div class="empty card">This area is for the admin.</div>';
   const t = ui.admin.tab;
-  const tabs = [['publisher', 'Publisher'], ['members', 'Members'], ['logins', 'Login log'], ['asks', 'Dalal questions'], ['status', 'Data status']];
+  const tabs = [['publisher', 'Publisher'], ['updates', 'Updates & change log'], ['members', 'Members'], ['logins', 'Login log'], ['asks', 'Dalal questions'], ['status', 'Data status']];
   if (!ui.purged) { ui.purged = true; A.purgeOld(90).then((n) => n && toast(`Cleaned ${n} records older than 90 days`)).catch(() => {}); }
   let body = '';
   if (t === 'publisher') {
@@ -990,6 +1059,8 @@ async function viewAdmin() {
         { k: 'id', label: '', fmt: (p) => `<button class="btn sm" data-act="editPost" data-id="${esc(p.id)}">Edit</button> ${p.status === 'published' ? `<a class="btn sm ghost" href="#/post/${esc(p.id)}">View</a>` : ''}` },
       ], 'No posts yet. Write your first one.')}</section>`;
     }
+  } else if (t === 'updates') {
+    body = await adminUpdates();
   } else if (t === 'members') {
     const ms = await A.listMembers();
     const q = ui.admin.q.trim().toLowerCase();
@@ -1133,6 +1204,7 @@ const ACTS = {
   unlockPremium: () => toast('Premium is coming soon — you will be the first to know!'),
   eqTab: (el) => { ui.eq.tab = el.dataset.v; if (route().split('/')[0] !== 'equity') { location.hash = '#/equity'; return; } render(); },
   eqReset: () => { ui.eq.f = { sector: 'all', mc: 0, pe: 0, roe: 0, rg: 0, pg: 0, pr: 0, r1y: 0, above200: false }; render(); },
+  clMore: () => { ui.admin.cln += 60; render(); },
   stkMore: () => { ui.stk.limit += 200; render(); },
   mfTab: (el) => { ui.mf.tab = el.dataset.v; ui.mf.sector = 'all'; render(); },
   newsView: (el) => { ui.news.view = el.dataset.v; ui.news.q = ''; render(); },
@@ -1178,6 +1250,7 @@ const ACTS = {
 const INPUTS = {
   scrQ: (el) => { ui.scr.q = el.value; rerenderKeepingFocus(el); },
   newsQ: (el) => { ui.news.q = el.value; rerenderKeepingFocus(el); },
+  clQ: (el) => { ui.admin.clq = el.value; rerenderKeepingFocus(el); },
   memberQ: (el) => { ui.admin.q = el.value; rerenderKeepingFocus(el); },
   stkQ: (el) => { ui.stk.q = el.value; ui.stk.limit = 100; rerenderKeepingFocus(el); },
   mfQ: (el) => { ui.mf.q = el.value; rerenderKeepingFocus(el); },
@@ -1188,6 +1261,7 @@ const CHANGES = {
   eqF: (el) => { ui.eq.f[el.dataset.k] = el.type === 'checkbox' ? el.checked : el.value; render(); },
   stkSector: (el) => { ui.stk.sector = el.value; ui.stk.limit = 100; render(); },
   newsSrc: (el) => { ui.news.src = el.value; ui.news.limit = 60; render(); },
+  clArea: (el) => { ui.admin.cla = el.value; render(); },
   mfSector: (el) => { ui.mf.sector = el.value; render(); },
   mktIdx: (el) => { ui.mkt.idx = el.value; render(); },
   mktCmp: (el) => { ui.mkt.cmp = el.value; render(); },
