@@ -665,3 +665,11 @@ h3.mt { margin-top: 14px; margin-bottom: 4px; }
 @media (max-width: 760px) { .res-nums { grid-template-columns: repeat(2, minmax(0, 1fr)); } .week-strip { grid-template-columns: repeat(7, minmax(0, 1fr)); } .res-grid { grid-template-columns: 1fr; } }
 
 .card.sync-warn { border-color: #e8c98f; background: #fdf6e7; }
+
+/* TradingView concall summaries on result cards and stock pages */
+.warn-t { color: var(--warn); }
+.tv-sum { font-size: 13px; border-top: 1px solid var(--line, #e6dfcf); padding-top: 6px; }
+.tv-sum > summary { cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.tv-sum .tv-h { font-weight: 600; margin: 8px 0 2px; font-size: 12.5px; }
+.tv-sum ul { margin: 0 0 4px; padding-left: 18px; }
+.tv-sum li { margin: 2px 0; line-height: 1.45; }

@@ -453,7 +453,8 @@ async function viewStocks(embedded) {
 async function viewStock(sym) {
   sym = decodeURIComponent(sym || '').toUpperCase();
   const [one, news, scr, mfs, feed, fo] = await Promise.all([stkOne(sym), filingsData(), data('screeners').catch(() => ({})), hist('mf/stocks').catch(() => ({})), newsfeed(), fundOne(sym).catch(() => ({}))]);
-  const resRows = await resHistory(sym);
+  const [resRows, tvd] = await Promise.all([resHistory(sym), tvData()]);
+  const tvS = (tvd.summaries || {})[sym];
   const inNews = [...((feed.movers || {})[sym] || []), ...(feed.items || []).filter((i) => (i.sy || []).includes(sym))].filter((i, k, a) => a.findIndex((j) => j.t === i.t) === k).slice(0, 8);
   const x = one.info, d = one.d || {};
   if (!x) return `${pageHead('Stocks', esc(sym))}<div class="empty card">This symbol is not in our NSE list. <a href="#/stocks">Search all stocks →</a></div>`;
@@ -488,6 +489,7 @@ async function viewStock(sym) {
     </section>
   </div>
   ${resHistoryCard(resRows, sym)}
+  ${tvS ? `<section class="card">${tvBlock(tvS, true)}</section>` : ''}
   ${fundCard(fo?.f, fo?.updated)}
   <div class="grid2">
     <section class="card"><h2>Mutual fund buying</h2>
@@ -516,7 +518,27 @@ const bps = (v) => (v == null ? '' : `<span class="${tone(v)}">${v > 0 ? '+' : '
 const resName = (r) => `<a class="sym" href="#/stock/${encodeURIComponent(r.sym)}">${esc(r.sym)}</a><span class="sub">${esc(r.name || '')}</span>`;
 const qLabel = (q) => { const m = String(q || '').match(/FY(\d+)Q(\d)/); return m ? `Q${m[2]} FY${m[1]}` : q || ''; };
 
-function resCard(r) {
+/* TradingView concall summaries (Sector Scope collects them; figures checked against the NSE filing) */
+const TV_SRC = { call_transcript: 'earnings call', slides: 'investor presentation', interim_report: 'quarterly report', annual_report: 'annual report' };
+const TV_ALT = { ebitda: 'only if other income is counted', pat: 'only on profit incl. minority share', revenue: 'on NII' };
+async function tvData() { try { return await hist('results/tv'); } catch { return { summaries: {} }; } }
+function tvChk(c) {
+  if (!c) return '';
+  if (c.st === 'match') return ` <span class="up">✓ matches NSE filing</span>`;
+  if (c.st === 'match_alt') return ` <span class="warn-t">⚠ matches the filing ${TV_ALT[c.m] || 'on another definition'}; filing shows ${crs(c.filed)} otherwise</span>`;
+  if (c.st === 'differs') return ` <span class="down">✗ NSE filing shows ${crs(c.filed)}</span>`;
+  return '';
+}
+function tvBlock(s, full) {
+  if (!s) return '';
+  const secs = s.sections || [];
+  const pick = full ? secs : secs.filter((x) => /executive|financial|highlight/i.test(x.h || '')).map((x) => ({ h: x.h, b: (x.b || []).slice(0, 2) }));
+  return `<details class="tv-sum" ${full ? 'open' : ''}><summary>${ic('file', 14)} Concall summary · ${esc(qLabel(s.q))} ${esc(TV_SRC[s.src] || '')}<span class="sub inline"> · AI summary by TradingView</span></summary>
+    ${pick.map((x) => `<p class="tv-h">${esc(x.h || '')}</p><ul>${(x.b || []).map((b) => `<li>${esc(b.text)}${tvChk(b.chk)}</li>`).join('')}</ul>`).join('')}
+    <p class="sub">Written by TradingView's AI from the company's documents. Revenue, EBITDA and profit figures are checked against the NSE filing: ✓ same, ⚠ same only on another definition, ✗ different. Not investment advice.</p></details>`;
+}
+
+function resCard(r, tv) {
   const top = r.bank ? [['NII', r.nii, r.nii_y], ['PAT', r.pat, r.pat_y]] : [['Revenue', r.rev, r.rev_y], ['EBITDA', r.ebitda, r.ebitda_y], ['PAT', r.pat, r.pat_y]];
   return `<article class="card res-card">
     <div class="res-top"><span>${resName(r)}</span><span class="r">${labelChip(r.label)}<span class="sub">${fDT(String(r.ts || '').replace(' ', 'T'))}</span></span></div>
@@ -526,11 +548,13 @@ function resCard(r) {
       : `<div><span>EBITDA margin</span><b>${r.m == null ? '—' : num(r.m, 1) + '%'}</b><small>${bps(r.m_y)} YoY</small></div>`}</div>
     <p class="res-foot">${r.pat_q != null ? `PAT ${yy(r.pat_q)} QoQ · ` : ''}${r.eps != null ? `EPS ₹${num(r.eps, 2)}${r.eps_y != null ? ` (${pct(r.eps_y, 1)})` : ''} · ` : ''}${r.day != null ? `Share price on the day ${yy(r.day)}${r.w1 != null ? `, week after ${yy(r.w1)}` : ''}` : ''}${r.check ? ' · ' + chip('numbers need a check', 'warn') : ''}</p>
     <p class="res-links">${r.doc ? `<a href="${esc(r.doc)}" target="_blank" rel="noopener">${ic('file', 14)} Results</a>` : ''}${r.press ? `<a href="${esc(r.press)}" target="_blank" rel="noopener">Press release</a>` : ''}${r.ppt ? `<a href="${esc(r.ppt)}" target="_blank" rel="noopener">Presentation</a>` : ''}</p>
+    ${tv && tv.q === r.q ? tvBlock(tv, false) : ''}
   </article>`;
 }
 
 async function viewResults() {
-  const h = await hist('results/hub');
+  const [h, tvd] = await Promise.all([hist('results/hub'), tvData()]);
+  const tvs = tvd.summaries || {};
   const tab = RES_TABS.some(([k]) => k === ui.res.tab) ? ui.res.tab : 'announced';
   const cur = (h.seasons || []).find((s) => s.q === h.current_q) || {};
   const q = ui.res.q.trim().toLowerCase();
@@ -542,7 +566,7 @@ async function viewResults() {
     body = `<div class="toolbar"><label class="search grow">${ic('search', 16)}<input placeholder="Search company, sector or industry" value="${esc(ui.res.q)}" data-input="resQ"></label>
       <select data-change="resSector"><option value="all">All sectors</option>${sectors.map((s) => `<option ${s === ui.res.sector ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select>
       <select data-change="resLabel">${['all', 'Strong', 'Good', 'Mixed', 'Weak'].map((l) => `<option value="${l}" ${l === ui.res.label ? 'selected' : ''}>${l === 'all' ? 'Every result' : l}</option>`).join('')}</select></div>
-      ${rows.length ? `<div class="res-grid">${rows.slice(0, ui.res.n).map(resCard).join('')}</div>${rows.length > ui.res.n ? `<div class="more"><button class="btn ghost" data-act="resMore">Show more (${num(rows.length - ui.res.n)} left)</button></div>` : ''}`
+      ${rows.length ? `<div class="res-grid">${rows.slice(0, ui.res.n).map((r) => resCard(r, tvs[r.sym])).join('')}</div>${rows.length > ui.res.n ? `<div class="more"><button class="btn ghost" data-act="resMore">Show more (${num(rows.length - ui.res.n)} left)</button></div>` : ''}`
       : `<div class="empty card">No results announced yet for ${esc(h.current_label || 'this quarter')}${q || ui.res.sector !== 'all' ? ' that match' : ''}. ${h.prev_q ? `See <button class="linkbtn" data-act="resTab" data-v="season">last season's review</button>.` : ''}</div>`}`;
   } else if (tab === 'calendar') {
     const today = h.today;
@@ -984,7 +1008,7 @@ async function viewFunds() {
   <p class="sub legend">${esc(d.note || '')} Source: monthly mutual fund portfolio disclosures. This shows what funds did, not a recommendation to buy or sell.</p>`;
 }
 
-const NEWS_CATS = [['all', 'All'], ['markets', 'Markets'], ['companies', 'Companies'], ['stocks', 'Stocks'], ['ipo', 'IPOs'], ['economy', 'Economy'], ['global', 'Global']];
+const NEWS_CATS = [['all', 'All'], ['markets', 'Markets'], ['companies', 'Companies'], ['stocks', 'Stocks'], ['ipo', 'IPOs'], ['economy', 'Economy'], ['global', 'Global'], ['tradingview', 'TradingView']];
 const dayLabel = (iso) => { const d = new Date(iso); if (isNaN(d)) return ''; const t = new Date(); const y = new Date(Date.now() - 86400000); return d.toDateString() === t.toDateString() ? 'Today' : d.toDateString() === y.toDateString() ? 'Yesterday' : `${DAY[d.getDay()]}, ${d.getDate()} ${MON[d.getMonth()]}`; };
 const headItem = (i) => `<li class="head-item"><div class="head-meta">${chip(i.s || 'News')}<span class="sub">${ago(i.at)}</span></div>
   <a href="${esc(i.u)}" target="_blank" rel="noopener">${esc(i.t)}</a>${i.d ? `<p>${esc(i.d)}</p>` : ''}
