@@ -673,3 +673,11 @@ h3.mt { margin-top: 14px; margin-bottom: 4px; }
 .tv-sum .tv-h { font-weight: 600; margin: 8px 0 2px; font-size: 12.5px; }
 .tv-sum ul { margin: 0 0 4px; padding-left: 18px; }
 .tv-sum li { margin: 2px 0; line-height: 1.45; }
+
+/* ---------- Screener.in / TradingView quick links (as in Sector Scope) ---------- */
+.ext { display: inline-flex; gap: 3px; margin-left: 5px; vertical-align: 1px; white-space: nowrap; }
+.ext a { display: inline-block; padding: 0 5px; border: 1px solid var(--line); border-radius: 4px; background: var(--paper-2); color: var(--muted); font: 700 9.5px/1.6 var(--sans); text-decoration: none; letter-spacing: 0.02em; }
+.ext a:hover { color: var(--green); border-color: var(--green-2); background: var(--sage-2); }
+.tag-wrap { display: inline-flex; align-items: center; }
+.ext-big { display: flex; flex-wrap: wrap; gap: 8px; margin: -4px 0 14px; }
+.mv-name b { display: inline-flex; align-items: center; }

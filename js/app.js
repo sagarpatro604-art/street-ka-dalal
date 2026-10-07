@@ -130,7 +130,13 @@ function table(key, rows, cols, emptyMsg = 'Nothing here today.') {
   return `<div class="tbl-wrap"><table class="tbl"><thead><tr>${cols.map((c) => `<th class="${c.cls || ''}"><button data-act="sort" data-t="${key}" data-k="${c.k}">${c.label}${s.k === c.k ? (s.dir > 0 ? ' ↑' : ' ↓') : ''}</button></th>`).join('')}</tr></thead>
   <tbody>${list.map((r) => `<tr>${cols.map((c) => `<td class="${c.cls || ''}">${c.fmt ? c.fmt(r) : esc(r[c.k] ?? '—')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
 }
-const stockCell = (r) => `<a class="sym" href="#/stock/${encodeURIComponent(r.sym)}">${esc(r.sym)}</a>${r.name ? `<span class="sub">${esc(r.name)}</span>` : ''}`;
+// Screener.in + TradingView links after every stock, as in Sector Scope (same URL rules: & and - become _ for TradingView)
+const tvSym = (sym) => 'NSE:' + String(sym || '').toUpperCase().replace(/\.NS$/, '').replace(/[&-]/g, '_');
+const screenerUrl = (sym) => `https://www.screener.in/company/${encodeURIComponent(String(sym || '').toUpperCase().replace(/\.NS$/, ''))}/`;
+const tvUrl = (sym) => `https://www.tradingview.com/chart/?symbol=${encodeURIComponent(tvSym(sym))}`;
+const extLinks = (sym) => (sym ? `<span class="ext"><a href="${screenerUrl(sym)}" target="_blank" rel="noopener" title="Open ${esc(sym)} on Screener.in">S</a><a href="${tvUrl(sym)}" target="_blank" rel="noopener" title="Open ${esc(sym)} chart on TradingView">TV</a></span>` : '');
+const symLink = (sym) => `<a class="sym" href="#/stock/${encodeURIComponent(sym)}">${esc(sym)}</a>${extLinks(sym)}`;
+const stockCell = (r) => `${symLink(r.sym)}${r.name ? `<span class="sub">${esc(r.name)}</span>` : ''}`;
 const pctCell = (k, d = 1) => ({ k, fmt: (r) => `<span class="${tone(r[k])}">${pct(r[k], d)}</span>`, cls: 'r' });
 const chip = (t, cls = '') => `<span class="chip ${cls}">${esc(t)}</span>`;
 const quadChip = (q) => (q ? chip(q, 'q-' + String(q).toLowerCase()) : '');
@@ -303,7 +309,7 @@ async function viewMarket() {
   const fl = m.flows || {};
   const bt = m.breadth_trend || {};
   const md2 = m.mood_detail || {};
-  const mover = (x) => `<li><span class="mv-name"><b>${esc(x.sym)}</b><span class="sub">${esc(x.sector || '')}</span></span>${spark(x.spark, 70, 24)}<span class="mv-num"><b class="${tone(x.ret)}">${pct(x.ret)}</b><span class="sub">₹${num(x.last, 2)}</span></span></li>`;
+  const mover = (x) => `<li><span class="mv-name"><b>${symLink(x.sym)}</b><span class="sub">${esc(x.sector || '')}</span></span>${spark(x.spark, 70, 24)}<span class="mv-num"><b class="${tone(x.ret)}">${pct(x.ret)}</b><span class="sub">₹${num(x.last, 2)}</span></span></li>`;
   const it = m.index_table || [];
   const names = it.map((r) => r.name);
   const opt = (sel) => `<optgroup label="Broad market">${names.filter((n) => BROAD.includes(n)).map((n) => `<option ${n === sel ? 'selected' : ''}>${esc(n)}</option>`).join('')}</optgroup><optgroup label="Sectors and themes">${names.filter((n) => !BROAD.includes(n)).map((n) => `<option ${n === sel ? 'selected' : ''}>${esc(n)}</option>`).join('')}</optgroup>`;
@@ -434,7 +440,7 @@ async function viewStocks(embedded) {
   const q = ui.stk.q.trim().toLowerCase();
   rows = rows.filter((r) => (ui.stk.sector === 'all' || r.sector === ui.stk.sector) && (!q || `${r.sym} ${r.name || ''}`.toLowerCase().includes(q)));
   if (!ui.sort.stocks) ui.sort.stocks = { k: 'mc', dir: -1 };
-  const cols = [{ k: 'sym', label: 'Stock', fmt: (r) => `<a class="sym" href="#/stock/${encodeURIComponent(r.sym)}">${esc(r.sym)}</a><span class="sub">${esc(r.name || '')}</span>` },
+  const cols = [{ k: 'sym', label: 'Stock', fmt: (r) => `${symLink(r.sym)}<span class="sub">${esc(r.name || '')}</span>` },
     { k: 'sector', label: 'Sector', fmt: (r) => esc(r.sector || '—') }, { k: 'p', label: 'Price', fmt: (r) => num(r.p, 2), cls: 'r' },
     ...RET.map((k) => ({ k, label: k, cls: 'r heat', fmt: (r) => `<span style="${heat(r[k], k === '1D' ? 4 : k === '1W' ? 8 : k === '1M' ? 15 : 40)}">${pct(r[k], 1)}</span>` })),
     { k: 'hi', label: 'From 52W high', fmt: (r) => pct(r.hi, 1), cls: 'r' }, { k: 'mc', label: 'Market cap', fmt: (r) => mcapCr(r.mc), cls: 'r' }, { k: 'pe', label: 'P/E', fmt: (r) => num(r.pe, 1), cls: 'r' }];
@@ -470,6 +476,7 @@ async function viewStock(sym) {
   return `<p class="crumb"><a href="#/equity">← Research · all companies</a></p>
   ${pageHead(esc(x.sec || 'NSE'), `${esc(x.n || sym)}`, `<span class="mood">${esc(sym)}</span>`)}
   <p class="asof">${ic('refresh', 14)} Price as of close of <b>${fDay(one.asOf)}</b></p>
+  <div class="ext-big"><a class="btn sm" href="${screenerUrl(sym)}" target="_blank" rel="noopener">Screener.in ↗</a><a class="btn sm" href="${tvUrl(sym)}" target="_blank" rel="noopener">TradingView chart ↗</a></div>
   <div class="grid2">
     <section class="card">
       <div class="stk-price"><b>₹${num(d.p, 2)}</b><span class="${tone(r[0])}">${pct(r[0], 2)} today</span></div>
@@ -515,7 +522,7 @@ const labelChip = (l) => (l ? chip(l, LABEL_CLS[l] ?? '') : '');
 const crs = (v) => (v == null ? '—' : `₹${num(v, Math.abs(v) < 100 ? 1 : 0)} cr`);
 const yy = (v) => (v == null ? '<span class="sub inline">—</span>' : `<span class="${tone(v)}">${pct(v, 1)}</span>`);
 const bps = (v) => (v == null ? '' : `<span class="${tone(v)}">${v > 0 ? '+' : ''}${num(v)} bps</span>`);
-const resName = (r) => `<a class="sym" href="#/stock/${encodeURIComponent(r.sym)}">${esc(r.sym)}</a><span class="sub">${esc(r.name || '')}</span>`;
+const resName = (r) => `${symLink(r.sym)}<span class="sub">${esc(r.name || '')}</span>`;
 const qLabel = (q) => { const m = String(q || '').match(/FY(\d+)Q(\d)/); return m ? `Q${m[2]} FY${m[1]}` : q || ''; };
 
 /* TradingView concall summaries (Sector Scope collects them; figures checked against the NSE filing) */
@@ -705,7 +712,7 @@ async function eqScreener() {
   rows = rows.filter((r) => (f.sector === 'all' || r.sector === f.sector) && (!f.above200 || r.above200)
     && SCR_FIELDS.every(([k, , , mode]) => { const v = +f[k]; if (!v) return true; const x = r[k]; if (x == null) return false; return mode === 'min' ? x >= v : x > 0 && x <= v; }));
   if (!ui.sort.eqscr) ui.sort.eqscr = { k: 'mc', dir: -1 };
-  const cols = [{ k: 'sym', label: 'Company', fmt: (r) => `<a class="sym" href="#/stock/${encodeURIComponent(r.sym)}">${esc(r.sym)}</a><span class="sub">${esc(r.name || '')}</span>` }, { k: 'sector', label: 'Sector', fmt: (r) => esc(r.sector || '—') },
+  const cols = [{ k: 'sym', label: 'Company', fmt: (r) => `${symLink(r.sym)}<span class="sub">${esc(r.name || '')}</span>` }, { k: 'sector', label: 'Sector', fmt: (r) => esc(r.sector || '—') },
     { k: 'mc', label: 'Market cap', fmt: (r) => mcapCr(r.mc), cls: 'r' }, { k: 'pe', label: 'P/E', fmt: (r) => num(r.pe, 1), cls: 'r' }, { k: 'roe', label: 'ROE', fmt: (r) => (r.roe == null ? '—' : `${num(r.roe, 1)}%`), cls: 'r' },
     { k: 'rg', label: 'Sales growth', fmt: (r) => `<span class="${tone(r.rg)}">${pct(r.rg, 1)}</span>`, cls: 'r' }, { k: 'pg', label: 'Profit growth', fmt: (r) => `<span class="${tone(r.pg)}">${pct(r.pg, 1)}</span>`, cls: 'r' },
     { k: 'nm', label: 'Net margin', fmt: (r) => (r.nm == null ? '—' : `${num(r.nm, 1)}%`), cls: 'r' }, { k: 'pr', label: 'Promoter', fmt: (r) => (r.pr == null ? '—' : `${num(r.pr, 1)}%`), cls: 'r' },
@@ -862,7 +869,7 @@ const MF_TABS = [
   ['smallcap', 'Small-cap favourites', 'Where small-cap buying went.'],
   ['crowded', 'Most crowded', 'Stocks taking the largest share of a month\'s total buying.'],
 ];
-const mfStock = (r) => `${r.sym ? `<a class="sym" href="#/stock/${encodeURIComponent(r.sym)}">${esc(r.sym)}</a>` : '<b class="sym">—</b>'}<span class="sub">${esc(r.name || '')}</span>`;
+const mfStock = (r) => `${r.sym ? `${symLink(r.sym)}` : '<b class="sym">—</b>'}<span class="sub">${esc(r.name || '')}</span>`;
 const mfSector = (r) => `${esc(r.sector || '—')}<span class="sub">${esc(r.cap || '')}</span>`;
 const oneOff = (r) => (r.one_off ? ' ' + chip('one-off', 'warn') : '');
 const trendChip = (t) => (t ? chip(t, t === 'rising' ? 'good' : t === 'falling' ? 'warn' : '') : '');
@@ -902,7 +909,7 @@ function showMfStock(q) {
   let sym = all[v] ? v : Object.keys(all).find((s) => all[s].n.toUpperCase().includes(v) || s.startsWith(v));
   if (!sym) { out.innerHTML = `<p class="sub">Mutual funds did not buy <b>${esc(q)}</b> in the stored months (or it is not in the data).</p>`; return; }
   const x = all[sym], months = mfStocks.months || [];
-  out.innerHTML = `<div class="mf-stock"><div><b class="sym">${esc(sym)}</b> <span class="sub">${esc(x.n)}</span>
+  out.innerHTML = `<div class="mf-stock"><div>${symLink(sym)} <span class="sub">${esc(x.n)}</span>
       <p>Bought in <b>${x.mb}/${months.length}</b> months${x.st ? ` · current streak <b>${x.st}</b> months` : ''} · total <b>${cr(x.tot)}</b> ${trendChip(x.tr)}</p></div>
     ${CH.barChart({ labels: months.map((m) => m.replace(' 20', " '")), series: [{ name: 'Bought', values: x.s, color: CH.C.green2 }], height: 170 })}</div>`;
 }
@@ -1012,7 +1019,7 @@ const NEWS_CATS = [['all', 'All'], ['markets', 'Markets'], ['companies', 'Compan
 const dayLabel = (iso) => { const d = new Date(iso); if (isNaN(d)) return ''; const t = new Date(); const y = new Date(Date.now() - 86400000); return d.toDateString() === t.toDateString() ? 'Today' : d.toDateString() === y.toDateString() ? 'Yesterday' : `${DAY[d.getDay()]}, ${d.getDate()} ${MON[d.getMonth()]}`; };
 const headItem = (i) => `<li class="head-item"><div class="head-meta">${chip(i.s || 'News')}<span class="sub">${ago(i.at)}</span></div>
   <a href="${esc(i.u)}" target="_blank" rel="noopener">${esc(i.t)}</a>${i.d ? `<p>${esc(i.d)}</p>` : ''}
-  ${(i.sy || []).length ? `<div class="head-syms">${i.sy.map((s) => `<a class="chip type" href="#/stock/${encodeURIComponent(s)}">${esc(s)}</a>`).join('')}</div>` : ''}</li>`;
+  ${(i.sy || []).length ? `<div class="head-syms">${i.sy.map((s) => `<span class="tag-wrap"><a class="chip type" href="#/stock/${encodeURIComponent(s)}">${esc(s)}</a>${extLinks(s)}</span>`).join('')}</div>` : ''}</li>`;
 
 async function viewHeadlines() {
   const [f, m, inf] = await Promise.all([newsfeed(), data('market').catch(() => ({})), hist('stk/info').catch(() => ({}))]);
@@ -1046,10 +1053,10 @@ async function viewHeadlines() {
     <section class="card"><ul class="heads-list">${list || '<li class="empty">No headlines match.</li>'}</ul>
       ${rows.length > shown.length ? `<div class="more"><button class="btn ghost" data-act="newsMore">Show more (${num(rows.length - shown.length)} left)</button></div>` : ''}</section>
     <aside class="card heads"><h2>Most named</h2><p class="sub">stocks named most in these headlines · tap to filter</p>
-      ${topNamed.length ? `<table class="tbl compact"><tbody>${topNamed.map(([x, c]) => `<tr><td><button class="linkbtn" data-act="newsTag" data-v="${esc(x)}">${esc(x)}</button> <span class="sub inline">${esc(String(inf.stocks?.[x]?.n || '').slice(0, 26))}</span></td><td class="r">${c}</td></tr>`).join('')}</tbody></table>` : '<p class="sub">No tagged headlines here.</p>'}
+      ${topNamed.length ? `<table class="tbl compact"><tbody>${topNamed.map(([x, c]) => `<tr><td><button class="linkbtn" data-act="newsTag" data-v="${esc(x)}">${esc(x)}</button>${extLinks(x)} <span class="sub inline">${esc(String(inf.stocks?.[x]?.n || '').slice(0, 26))}</span></td><td class="r">${c}</td></tr>`).join('')}</tbody></table>` : '<p class="sub">No tagged headlines here.</p>'}
       <p class="sub">A tag means the headline names the company, not that it moves the stock.</p>
       <h2 style="margin-top:16px">Why today's movers moved</h2>
-      ${movers.length ? movers.map((x) => `<div class="mv-news"><a class="sym" href="#/stock/${encodeURIComponent(x.sym)}">${esc(x.sym)}</a> <b class="${tone(x.ret)}">${pct(x.ret, 1)}</b>
+      ${movers.length ? movers.map((x) => `<div class="mv-news">${symLink(x.sym)} <b class="${tone(x.ret)}">${pct(x.ret, 1)}</b>
         <ul>${mv[x.sym].map((h) => `<li><a href="${esc(h.u)}" target="_blank" rel="noopener">${esc(h.t)}</a> <span class="sub inline">· ${esc(h.s)}</span></li>`).join('')}</ul></div>`).join('') : '<p class="sub">No news found for today\'s biggest movers.</p>'}
       <p class="sub">Headlines link to the publisher. Street ka Dalal only lists them.</p></aside>
   </div>`;
@@ -1071,7 +1078,7 @@ async function viewNews() {
   <div class="tabs wrap"><button class="tab ${ui.news.type === 'all' ? 'on' : ''}" data-act="newsType" data-v="all">All ${num((d.filings || []).length)}</button>${types.slice(0, 14).map(([l, n]) => `<button class="tab ${ui.news.type === l ? 'on' : ''}" data-act="newsType" data-v="${esc(l)}">${esc(l.replace(/ \(.*\)/, ''))} ${n}</button>`).join('')}</div>
   <div class="grid-news">
     <section class="filings" id="filings">${rows.slice(0, 150).map((r) => `<article class="card filing">
-      <div class="filing-top"><span><b class="sym">${esc(r.sym)}</b> <span class="sub">${esc(r.name)}</span></span><span class="sub">${fDT(String(r.ts).replace(' ', 'T'))}</span></div>
+      <div class="filing-top"><span>${symLink(r.sym)} <span class="sub">${esc(r.name)}</span></span><span class="sub">${fDT(String(r.ts).replace(' ', 'T'))}</span></div>
       ${chip(r.label || r.type, 'type')}
       <p class="filing-sub">${esc(r.subject || '')}</p>
       ${r.summary && r.summary !== r.subject ? `<p class="filing-sum">${esc(r.summary)}</p>` : ''}
