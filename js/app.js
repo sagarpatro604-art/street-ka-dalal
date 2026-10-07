@@ -532,7 +532,7 @@ async function tvData() { try { return await hist('results/tv'); } catch { retur
 function tvChk(c) {
   if (!c) return '';
   if (c.st === 'match') return ` <span class="up">✓ matches NSE filing</span>`;
-  if (c.st === 'match_alt') return ` <span class="warn-t">⚠ matches the filing ${TV_ALT[c.m] || 'on another definition'}; filing shows ${crs(c.filed)} otherwise</span>`;
+  if (c.st === 'match_alt') return ` <span class="warn-t">⚠ matches the filing ${c.alt ? 'as ' + esc(c.alt) : TV_ALT[c.m] || 'on another definition'}; filing shows ${crs(c.filed)} otherwise</span>`;
   if (c.st === 'differs') return ` <span class="down">✗ NSE filing shows ${crs(c.filed)}</span>`;
   return '';
 }
