@@ -516,13 +516,13 @@ async function viewStock(sym) {
 }
 
 /* ---------------- quarterly results (copy of Sector Scope > Equity Research > Earnings) ---------------- */
-const RES_TABS = [['announced', 'Announced'], ['calendar', 'Calendar'], ['season', 'Season review'], ['companies', 'All companies']];
+const RES_TABS = [['announced', 'Announced'], ['calendar', 'Calendar'], ['company', 'Company'], ['season', 'Season review'], ['companies', 'All companies']];
 const LABEL_CLS = { Strong: 'good', Good: 'good', Mixed: '', Weak: 'warn' };
 const labelChip = (l) => (l ? chip(l, LABEL_CLS[l] ?? '') : '');
 const crs = (v) => (v == null ? '—' : `₹${num(v, Math.abs(v) < 100 ? 1 : 0)} cr`);
 const yy = (v) => (v == null ? '<span class="sub inline">—</span>' : `<span class="${tone(v)}">${pct(v, 1)}</span>`);
 const bps = (v) => (v == null ? '' : `<span class="${tone(v)}">${v > 0 ? '+' : ''}${num(v)} bps</span>`);
-const resName = (r) => `${symLink(r.sym)}<span class="sub">${esc(r.name || '')}</span>`;
+const resName = (r) => `<a class="sym" href="#/results/co/${encodeURIComponent(r.sym)}">${esc(r.sym)}</a>${extLinks(r.sym)}<span class="sub">${esc(r.name || '')}</span>`;
 const qLabel = (q) => { const m = String(q || '').match(/FY(\d+)Q(\d)/); return m ? `Q${m[2]} FY${m[1]}` : q || ''; };
 
 /* TradingView concall summaries (Sector Scope collects them; figures checked against the NSE filing) */
@@ -559,6 +559,128 @@ function resCard(r, tv) {
   </article>`;
 }
 
+/* ---------------- Results > one company (copy of Sector Scope Earnings > Company) ---------------- */
+// Per-company files live on the repo's `co` branch (replaced on every full publish, outside the site's deploys).
+const CO_URL = 'https://raw.githubusercontent.com/sagarpatro604-art/street-ka-dalal/co/co/';
+const coCache = {};
+async function resCompany(sym) {
+  if (!coCache[sym]) coCache[sym] = fetch(`${CO_URL}${encodeURIComponent(sym)}.json?t=${Math.floor(Date.now() / 600000)}`, { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  return coCache[sym];
+}
+const EH_FIELD = { improved: 'Improved', deteriorated: 'Deteriorated', outlook: 'Outlook', guidance: 'Guidance', demand: 'Demand', pricing: 'Pricing', costs: 'Costs', margins: 'Margins',
+  capex: 'Capex', capacity: 'Capacity', orders: 'Orders', debt: 'Debt', initiatives: 'Initiatives', industry: 'Industry', risks: 'Risks', tone: 'Tone', summary: 'Written summary' };
+const EH_DOC = { result: 'Results', press: 'Press release', presentation: 'Presentation', transcript: 'Transcript', call: 'Concall', audio: 'Audio' };
+const docLinks = (docs, url) => {
+  const seen = new Set();
+  const list = (docs || []).filter((d) => d.u && !seen.has(d.k) && seen.add(d.k)).map((d) => `<a href="${esc(d.u)}" target="_blank" rel="noopener" title="${esc(d.t || '')}">${esc(EH_DOC[d.k] || d.t || d.k || 'Document')}</a>`);
+  if (!list.length && url) list.push(`<a href="${esc(url)}" target="_blank" rel="noopener">XBRL</a>`);
+  return list.length ? `<span class="res-links">${list.join('')}</span>` : '<span class="sub inline">—</span>';
+};
+const ttm = (qs, k, end) => { if (end < 3) return null; let s = 0; for (let i = end - 3; i <= end; i++) { const v = qs[i]?.[k]; if (v == null) return null; s += v; } return s; };
+const growth = (a, b) => (a == null || b == null || a <= 0 || b <= 0 ? null : (a / b - 1) * 100);
+
+// bars (₹ crore) with a line on a right axis, quarters along the bottom
+function comboChart({ labels, bars, barColor, negColor, line, lineColor, barName, lineName, height = 240 }) {
+  const W = Math.round(Math.min(760, Math.max(320, (window.innerWidth || 800) - 80))), H = height, L = 46, R = 40, T = 24, B = 28;
+  const n = labels.length || 1, cw = (W - L - R) / n;
+  const bv = bars.map((v) => (v == null ? 0 : v)), lv = line.filter((v) => v != null);
+  const bmax = Math.max(1e-9, ...bv), bmin = Math.min(0, ...bv);
+  const lmax = lv.length ? Math.max(...lv) : 1, lmin = lv.length ? Math.min(0, ...lv) : 0, lsp = (lmax - lmin) || 1;
+  const yb = (v) => T + (H - T - B) * (1 - (v - bmin) / (bmax - bmin || 1));
+  const yl = (v) => T + (H - T - B) * (1 - (v - lmin) / lsp);
+  const fmtC = (v) => (Math.abs(v) >= 1000 ? `${num(v / 1000, 1)}k` : num(v, 0));
+  let g = '';
+  for (let i = 0; i <= 4; i++) { const v = bmin + ((bmax - bmin) * i) / 4, y = yb(v); g += `<line x1="${L}" x2="${W - R}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" class="bc-axis" opacity=".5"/><text x="${L - 6}" y="${(y + 3).toFixed(1)}" text-anchor="end" class="bc-lbl">${fmtC(v)}</text>`; }
+  if (lv.length) for (let i = 0; i <= 2; i++) { const v = lmin + (lsp * i) / 2; g += `<text x="${W - R + 6}" y="${(yl(v) + 3).toFixed(1)}" class="bc-lbl">${num(v, 0)}%</text>`; }
+  labels.forEach((lab, i) => {
+    const v = bars[i], x = L + i * cw + cw * 0.18, w = cw * 0.64;
+    if (v != null) { const y0 = yb(0), y1 = yb(v); g += `<rect x="${x.toFixed(1)}" y="${Math.min(y0, y1).toFixed(1)}" width="${w.toFixed(1)}" height="${Math.abs(y1 - y0).toFixed(1)}" rx="2" fill="${v < 0 ? negColor || CH.C.down : barColor}"><title>${esc(lab)} · ${esc(barName)}: ₹${num(v)} cr</title></rect>`; }
+    if (i % Math.ceil(n / 12) === 0) g += `<text x="${(L + i * cw + cw / 2).toFixed(1)}" y="${H - 8}" text-anchor="middle" class="bc-lbl">${esc(lab.replace(' FY', "'"))}</text>`;
+  });
+  let path = '', pts = '';
+  line.forEach((v, i) => { if (v == null) return; const x = L + i * cw + cw / 2, y = yl(v); path += `${path ? 'L' : 'M'}${x.toFixed(1)},${y.toFixed(1)}`; pts += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="${lineColor}"><title>${esc(labels[i])} · ${esc(lineName)}: ${num(v, 1)}%</title></circle>`; });
+  return `<div class="bc-legend"><span><i style="background:${barColor}"></i>${esc(barName)} (₹ cr)</span><span><i style="background:${lineColor}"></i>${esc(lineName)} (right axis)</span></div>
+    <svg class="barchart" viewBox="0 0 ${W} ${H}" role="img">${g}<path d="${path}" fill="none" stroke="${lineColor}" stroke-width="2"/>${pts}</svg>`;
+}
+
+function commentPanel(qs) {
+  const f = ui.res.cf || 'all';
+  const withC = qs.filter((q) => q.cm && ((q.cm.items || []).length || (q.cm.kpis || []).length)).slice().reverse();
+  if (!withC.length) return `<section class="card"><h2>Management commentary</h2><p class="sub">Nothing read yet for this company. Investor presentations and call transcripts are read each season, biggest companies first.</p></section>`;
+  const fields = ['all', ...Object.keys(EH_FIELD).filter((k) => withC.some((q) => (q.cm.items || []).some((i) => i.field === k)))];
+  const qlink = (it) => (it.url ? `<a class="sub inline" href="${esc(it.url)}${it.page ? '#page=' + it.page : ''}" target="_blank" rel="noopener" title="${esc(it.quote || '')}">${esc(EH_DOC[it.doc_kind] || it.doc_kind || 'source')}${it.page ? ' p.' + it.page : ''}</a>` : '');
+  return `<section class="card"><div class="card-head"><h2>Management commentary</h2><span class="sub">read by AI from presentations and transcripts; each line checked word for word against the document (hover the source for the quote)</span></div>
+    <div class="seg wrap">${fields.map((k) => `<button class="${k === f ? 'on' : ''}" data-act="resCf" data-v="${k}">${k === 'all' ? 'All' : EH_FIELD[k]}</button>`).join('')}</div>
+    ${withC.map((q) => {
+      const items = (q.cm.items || []).filter((i) => i.field !== 'tone' && (f === 'all' || i.field === f));
+      const kp = f === 'all' ? q.cm.kpis || [] : [];
+      if (!items.length && !kp.length) return '';
+      const tone = (q.cm.items || []).find((i) => i.field === 'tone');
+      return `<div class="cm-q"><h3>${esc(q.ql)}${tone ? ` ${chip('tone: ' + tone.statement, tone.statement === 'positive' ? 'good' : tone.statement === 'negative' ? 'warn' : '')}` : ''}</h3>
+        ${kp.length ? `<table class="tbl compact"><thead><tr><th><button>KPI</button></th><th class="r"><button>Value</button></th><th><button>Source</button></th></tr></thead><tbody>${kp.map((k) => `<tr><td>${esc(k.kpi)}</td><td class="r">${Number(k.value).toLocaleString('en-IN')} <span class="sub inline">${esc(k.unit || '')}</span></td><td>${qlink(k)}</td></tr>`).join('')}</tbody></table>` : ''}
+        <ul class="cm-list">${items.map((i) => `<li><b>${EH_FIELD[i.field] || esc(i.field)}:</b> ${esc(i.statement)} ${qlink(i)}${i.kind === 'written summary' ? ' <span class="sub inline">(written summary, not quote-checked)</span>' : ''}</li>`).join('')}</ul></div>`;
+    }).join('')}</section>`;
+}
+
+async function viewResCo(sym) {
+  sym = decodeURIComponent(sym || '').toUpperCase();
+  const [d, tvd] = await Promise.all([resCompany(sym), tvData()]);
+  const back = `<p class="crumb"><a href="#/results">← Quarterly results</a></p>`;
+  if (!d) return `${back}${pageHead('Earnings', esc(sym))}<div class="empty card">Could not load ${esc(sym)}'s results. Check your internet and refresh.</div>`;
+  const qs = d.quarters || [];
+  if (!qs.length) return `${back}${pageHead('Earnings', esc(d.name || sym))}<div class="empty card">No result filings stored for ${esc(sym)} yet. Companies outside the long-history set have quarters from 2025 only.</div>`;
+  const n = qs.length, L = qs[n - 1], bank = qs.some((q) => q.bank);
+  const byQ = Object.fromEntries(qs.map((q) => [q.q, q]));
+  const prev = qs[n - 2] || null;
+  const yaKey = L.q ? `FY${String(+L.q.slice(2, 4) - 1).padStart(2, '0')}Q${L.q[5]}` : null, YA = byQ[yaKey] || null;
+  const top = bank ? 'nii' : 'rev', topL = bank ? 'NII' : 'Revenue';
+  const tr = (k, back) => { const a = ttm(qs, k, n - 1), b = ttm(qs, k, n - 1 - back); return { g: growth(a, b), yrs: back / 4 }; };
+  const cagr = (t) => (t.g == null ? null : (Math.pow(1 + t.g / 100, 1 / t.yrs) - 1) * 100);
+  const t4 = { top: tr(top, 4), pat: tr('pat', 4) }, t8 = { top: tr(top, 8), pat: tr('pat', 8) }, t20 = { top: tr(top, 20), pat: tr('pat', 20) };
+  const col = (x, lab) => (x ? `<td class="r">${crs(x[top])}</td><td class="r">${bank ? crs(x.ppop) : crs(x.ebitda)}</td><td class="r">${bank ? (x.gnpa == null ? '—' : num(x.gnpa, 2) + '%') : x.m == null ? '—' : num(x.m, 1) + '%'}</td><td class="r">${crs(x.pat)}</td><td class="r">${x.eps == null ? '—' : num(x.eps, 2)}</td>` : `<td colspan="5" class="sub">${lab} not filed</td>`);
+  const ev = L.ev || {};
+  const nums = bank ? [['NII', L.nii, L.nii_y, L.nii_q], ['PPOP', L.ppop, null, null], ['PAT', L.pat, L.pat_y, L.pat_q]] : [['Revenue', L.rev, L.rev_y, L.rev_q], ['EBITDA', L.ebitda, L.ebitda_y, null], ['PAT', L.pat, L.pat_y, L.pat_q]];
+  const last12 = qs.slice(-12), labels = last12.map((x) => x.ql || x.q);
+  const hist = qs.slice().reverse();
+  const tvS = (tvd.summaries || {})[sym];
+  return `${back}
+  <section class="card">
+    <div class="rc-head"><div><h1 class="rc-name">${esc(d.name || sym)} <span class="sub inline mono">${esc(sym)}</span>${extLinks(sym)}</h1>
+      <p class="sub">${esc(d.sector || '—')}${d.industry ? ' · ' + esc(d.industry) : ''}${d.sub ? ' · ' + esc(d.sub) : ''}${d.mcap ? ` · m-cap ₹${num(d.mcap)} cr` : ''}</p>
+      <div class="chip-row">${(d.themes || []).map((t) => chip(t, 'type')).join('')}</div></div>
+      <div class="rc-right">${labelChip(L.label)}<span>Latest: <b>${esc(L.ql)}</b>${ev.ts ? ` · announced ${fDT(ev.ts)}` : ''}</span><span class="sub">${esc(L.basis || '')} · <a href="#/stock/${encodeURIComponent(sym)}">Company page →</a></span></div></div>
+    <div class="res-nums rc-nums">${nums.map(([l, v, y, q]) => `<div><span>${l}</span><b>${crs(v)}</b><small>${yy(y)} YoY${q != null ? ` · ${yy(q)} QoQ` : ''}</small></div>`).join('')}
+      ${bank ? `<div><span>Gross / net NPA</span><b>${L.gnpa == null ? '—' : num(L.gnpa, 2) + '%'}</b><small>${L.nnpa == null ? '' : num(L.nnpa, 2) + '% net'}</small></div>` : `<div><span>EBITDA margin</span><b>${L.m == null ? '—' : num(L.m, 1) + '%'}</b><small>${bps(L.m_y)} YoY</small></div>`}
+      <div><span>EPS</span><b>${L.eps == null ? '—' : '₹' + num(L.eps, 2)}</b><small>${L.flip ? esc(L.flip) : ''}</small></div></div>
+    <p class="res-foot">${ev.day != null ? `Share price: result day ${yy(ev.day)}${ev.w1 != null ? ` · week after ${yy(ev.w1)}` : ''}${ev.m1 != null ? ` · month after ${yy(ev.m1)}` : ''} · ` : ''}${docLinks(L.docs, L.url)}</p>
+  </section>
+  <div class="grid2">
+    <section class="card flush"><div class="card-head pad"><h2>Latest vs previous vs a year ago</h2></div><div class="tbl-wrap"><table class="tbl compact"><thead><tr><th><button>Quarter</button></th><th class="r"><button>${topL} ₹ cr</button></th><th class="r"><button>${bank ? 'PPOP ₹ cr' : 'EBITDA ₹ cr'}</button></th><th class="r"><button>${bank ? 'Gross NPA' : 'Margin'}</button></th><th class="r"><button>PAT ₹ cr</button></th><th class="r"><button>EPS ₹</button></th></tr></thead><tbody>
+      <tr><td><b>${esc(L.ql)}</b> (latest)</td>${col(L)}</tr><tr><td>${prev ? esc(prev.ql) : '—'} (previous)</td>${col(prev, 'Previous quarter')}</tr><tr><td>${YA ? esc(YA.ql) : esc(qLabel(yaKey))} (year ago)</td>${col(YA, 'Year-ago quarter')}</tr></tbody></table></div></section>
+    <section class="card flush"><div class="card-head pad"><h2>Trend</h2><span class="sub">last 4 quarters added up (TTM) against earlier</span></div><div class="tbl-wrap"><table class="tbl compact"><thead><tr><th><button>Window</button></th><th class="r"><button>${topL} growth</button></th><th class="r"><button>PAT growth</button></th></tr></thead><tbody>
+      <tr><td>4 quarters vs the 4 before</td><td class="r">${yy(t4.top.g)}</td><td class="r">${yy(t4.pat.g)}</td></tr>
+      <tr><td>8 quarters back (2-year, a year)</td><td class="r">${yy(cagr(t8.top))}</td><td class="r">${yy(cagr(t8.pat))}</td></tr>
+      <tr><td>20 quarters back (5-year, a year)</td><td class="r">${yy(cagr(t20.top))}</td><td class="r">${yy(cagr(t20.pat))}</td></tr></tbody></table></div>
+      <p class="sub legend pad">Growth is left blank when a loss sits on either side.</p></section>
+  </div>
+  <section class="card"><div class="card-head"><h2>Quarter by quarter</h2><span class="sub">bars ₹ crore, line = ${bank ? 'PAT YoY %' : 'EBITDA margin %'}</span></div>
+    <div class="grid2 tight"><div>${comboChart({ labels, bars: last12.map((x) => x[top]), barColor: CH.C.green, line: last12.map((x) => (bank ? x.pat_y : x.m)), lineColor: CH.C.gold, barName: topL, lineName: bank ? 'PAT YoY' : 'EBITDA margin' })}</div>
+      <div>${comboChart({ labels, bars: last12.map((x) => x.pat), barColor: CH.C.blue, negColor: CH.C.down, line: last12.map((x) => x.pat_y), lineColor: CH.C.gold, barName: 'PAT', lineName: 'PAT YoY' })}</div></div></section>
+  ${commentPanel(qs)}
+  ${tvS ? `<section class="card"><h2>TradingView concall summary</h2>${tvBlock(tvS, true)}</section>` : ''}
+  <section class="card flush"><div class="card-head pad"><h2>Earnings history</h2><span class="sub">${n} quarters from NSE filings · reported figures, growth calculated by Sector Scope</span></div>
+    <div class="tbl-wrap rc-hist"><table class="tbl compact"><thead><tr><th><button>Quarter</button></th><th><button>Announced</button></th><th class="r"><button>${topL} ₹ cr</button></th><th class="r"><button>YoY</button></th><th class="r"><button>QoQ</button></th>
+      ${bank ? '<th class="r"><button>PPOP ₹ cr</button></th><th class="r"><button>Gross NPA</button></th><th class="r"><button>Net NPA</button></th>' : '<th class="r"><button>EBITDA ₹ cr</button></th><th class="r"><button>Margin</button></th><th class="r"><button>Δ YoY</button></th>'}
+      <th class="r"><button>PAT ₹ cr</button></th><th class="r"><button>YoY</button></th><th class="r"><button>QoQ</button></th><th class="r"><button>EPS ₹</button></th><th><button>Label</button></th><th class="r"><button>Result day</button></th><th class="r"><button>After 1M</button></th><th><button>Documents</button></th></tr></thead>
+    <tbody>${hist.map((x) => { const e = x.ev || {}; return `<tr><td><b>${esc(x.ql)}</b>${x.basis === 'standalone' ? ' <span class="sub inline" title="standalone figures">S</span>' : ''}</td>
+      <td>${e.ts ? fDate(e.ts.slice(0, 10)) : '—'}${e.src && e.src !== 'NSE announcement' ? ` <span class="sub inline" title="${esc(e.src)}">*</span>` : ''}</td>
+      <td class="r">${crs(x[top])}</td><td class="r">${yy(x[top + '_y'])}</td><td class="r">${yy(x[top + '_q'])}</td>
+      ${bank ? `<td class="r">${crs(x.ppop)}</td><td class="r">${x.gnpa == null ? '—' : num(x.gnpa, 2) + '%'}</td><td class="r">${x.nnpa == null ? '—' : num(x.nnpa, 2) + '%'}</td>` : `<td class="r">${crs(x.ebitda)}</td><td class="r">${x.m == null ? '—' : num(x.m, 1) + '%'}</td><td class="r">${bps(x.m_y)}</td>`}
+      <td class="r">${crs(x.pat)}</td><td class="r">${yy(x.pat_y)}${x.flip ? `<span class="sub">${esc(x.flip)}</span>` : ''}</td><td class="r">${yy(x.pat_q)}</td><td class="r">${x.eps == null ? '—' : num(x.eps, 2)}</td>
+      <td>${labelChip(x.label)}${x.check ? ' ' + chip('check', 'warn') : ''}</td><td class="r">${yy(e.day)}</td><td class="r">${yy(e.m1)}</td><td>${docLinks(x.docs, x.url)}</td></tr>`; }).join('')}</tbody></table></div>
+    <p class="sub legend pad">* time taken from the XBRL publish time, which can be hours after the real announcement. EPS growth only when the share count did not change. 2012–2016 quarters come from NSE's HTML tables (no EBITDA). Before GST (July 2017) many companies reported revenue including excise duty. EBITDA = profit before exceptional items and tax + finance costs + depreciation − other income, from the filed lines. Facts from filings, not a recommendation.</p></section>`;
+}
+
 async function viewResults() {
   const [h, tvd] = await Promise.all([hist('results/hub'), tvData()]);
   const tvs = tvd.summaries || {};
@@ -575,6 +697,12 @@ async function viewResults() {
       <select data-change="resLabel">${['all', 'Strong', 'Good', 'Mixed', 'Weak'].map((l) => `<option value="${l}" ${l === ui.res.label ? 'selected' : ''}>${l === 'all' ? 'Every result' : l}</option>`).join('')}</select></div>
       ${rows.length ? `<div class="res-grid">${rows.slice(0, ui.res.n).map((r) => resCard(r, tvs[r.sym])).join('')}</div>${rows.length > ui.res.n ? `<div class="more"><button class="btn ghost" data-act="resMore">Show more (${num(rows.length - ui.res.n)} left)</button></div>` : ''}`
       : `<div class="empty card">No results announced yet for ${esc(h.current_label || 'this quarter')}${q || ui.res.sector !== 'all' ? ' that match' : ''}. ${h.prev_q ? `See <button class="linkbtn" data-act="resTab" data-v="season">last season's review</button>.` : ''}</div>`}`;
+  } else if (tab === 'company') {
+    const inf = await hist('stk/info').catch(() => ({}));
+    body = `<section class="card"><h2>Open a company's results</h2><p class="sub">Every quarter since 2015, management commentary and documents.</p>
+      <div class="toolbar"><label class="search grow">${ic('search', 16)}<input id="resCoQ" list="resCoList" placeholder="Symbol or company, e.g. TCS or Tata Consultancy" autocomplete="off"></label><button class="btn primary" data-act="resCoGo">Open</button></div>
+      <datalist id="resCoList">${Object.entries(inf.stocks || {}).map(([k, x]) => `<option value="${esc(k)}">${esc(x.n || '')}</option>`).join('')}</datalist>
+      <p class="sub">Or tap any company in Announced, Calendar or the season tables.</p></section>`;
   } else if (tab === 'calendar') {
     const today = h.today;
     const add = (n) => { const d = pd(today); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
@@ -646,7 +774,7 @@ function resHistoryCard(rows, sym) {
   if (!rows?.length) return '';
   const bank = rows.some((r) => r.nii != null);
   const last = rows.slice(-8);
-  return `<section class="card"><div class="card-head"><h2>Quarterly results</h2><a href="#/results" data-act="resTab" data-v="companies">All results →</a></div>
+  return `<section class="card"><div class="card-head"><h2>Quarterly results</h2><a href="#/results/co/${encodeURIComponent(sym)}">Full results, commentary and documents →</a></div>
     ${CH.barChart({ labels: last.map((r) => qLabel(r.q).replace(' FY', "'")), series: [{ name: bank ? 'Net profit (₹ cr)' : 'Net profit (₹ cr)', values: last.map((r) => Math.max(0, r.pat || 0)), color: CH.C.green2 }], height: 170, fmt: (v) => `${num(v)} cr` })}
     <div class="tbl-wrap"><table class="tbl compact"><thead><tr><th><button>Quarter</button></th><th class="r"><button>${bank ? 'NII' : 'Revenue'}</button></th><th class="r"><button>YoY</button></th><th class="r"><button>Profit</button></th><th class="r"><button>YoY</button></th><th class="r"><button>${bank ? 'Gross NPA' : 'EBITDA margin'}</button></th><th><button>Result</button></th></tr></thead>
     <tbody>${rows.slice().reverse().map((r) => `<tr><td>${esc(qLabel(r.q))}${r.check ? ' ' + chip('check', 'warn') : ''}</td><td class="r">${crs(bank ? r.nii : r.rev)}</td><td class="r">${bank ? '' : yy(r.rev_y)}</td><td class="r">${crs(r.pat)}</td><td class="r">${yy(r.pat_y)}</td><td class="r">${bank ? (r.gnpa == null ? '—' : num(r.gnpa, 2) + '%') : r.m == null ? '—' : num(r.m, 1) + '%'}</td><td>${labelChip(r.label)}</td></tr>`).join('')}</tbody></table></div>
@@ -1364,7 +1492,7 @@ async function render() {
   const keep = view.dataset.route === r ? window.scrollY : 0;
   if (view.dataset.route !== r) view.innerHTML = '<div class="loading"><span class="dots"><i></i><i></i><i></i></span></div>';
   try {
-    const html = top === 'research' && r.split('/')[1] ? await viewResearchItem(r.split('/')[1]) : top === 'post' ? await viewPost(r.split('/')[1]) : top === 'stock' ? await viewStock(r.split('/')[1]) : await (VIEWS[top] || viewMarket)();
+    const html = top === 'research' && r.split('/')[1] ? await viewResearchItem(r.split('/')[1]) : top === 'post' ? await viewPost(r.split('/')[1]) : top === 'stock' ? await viewStock(r.split('/')[1]) : top === 'results' && r.split('/')[1] === 'co' ? await viewResCo(r.split('/')[2]) : await (VIEWS[top] || viewMarket)();
     if (seq !== renderSeq) return;
     CH.disposeCharts();
     view.innerHTML = html;
@@ -1402,6 +1530,14 @@ const ACTS = {
   resSeason: (el) => { ui.res.season = el.dataset.v; render(); },
   resLevel: (el) => { ui.res.level = el.dataset.v; render(); },
   resGroup: (el) => { ui.res.group = el.dataset.v; ui.res.tab = 'companies'; ui.res.sector = 'all'; render(); },
+  resCf: (el) => { ui.res.cf = el.dataset.v; render(); },
+  resCoGo: () => {
+    const v = ($('#resCoQ')?.value || '').trim();
+    if (!v) return;
+    const opts = [...document.querySelectorAll('#resCoList option')];
+    const hit = opts.find((o) => o.value.toUpperCase() === v.toUpperCase()) || opts.find((o) => o.textContent.toLowerCase().includes(v.toLowerCase()));
+    if (hit) location.hash = `#/results/co/${encodeURIComponent(hit.value)}`; else toast('No company found with that name');
+  },
   resMore: () => { ui.res.n += 30; render(); },
   newsTag: (el) => { ui.news.sym = el.dataset.v; ui.news.limit = 60; render(); window.scrollTo(0, 0); },
   unlockPremium: () => toast('Premium is coming soon — you will be the first to know!'),
