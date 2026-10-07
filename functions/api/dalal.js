@@ -443,7 +443,7 @@ async function pickModels(env) {
   const list = found && found.length ? [...wanted.filter((w) => found.includes(w)), ...found] : (wanted.length ? wanted : ['gemini-flash-latest', 'gemini-2.5-flash']);
   const top = [...new Set(list)].slice(0, 3);
   // 2.5-flash is kept as a fallback when the key still has it (its free tier has included web search)
-  if (found && found.includes('gemini-2.5-flash') && !top.includes('gemini-2.5-flash')) top.push('gemini-2.5-flash');
+  // (gemini-2.5-flash was kept as a fallback; Google retired it for new keys on 2026-10-07, so it is not added any more)
   return top;
 }
 

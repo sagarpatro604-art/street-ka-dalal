@@ -1642,7 +1642,9 @@ window.addEventListener('beforeunload', (e) => { if (ui.edit?.dirty) { e.prevent
 const CODE = ['./', 'js/app.js', 'js/auth.js', 'js/dalal.js', 'js/charts.js', 'js/config.js', 'css/style.css'];
 let codeSig = null;
 async function codeVersion() {
-  const tags = await Promise.all(CODE.map((f) => fetch(f, { method: 'HEAD', cache: 'no-store' }).then((r) => (r.ok ? r.headers.get('etag') || r.headers.get('last-modified') : '')).catch(() => '')));
+  // Cloudflare answers HEAD with 503. A GET with cache 'no-cache' asks "changed since my copy?" (If-None-Match):
+  // unchanged files come back as a tiny 304 and are read from the browser's cache, with their ETag
+  const tags = await Promise.all(CODE.map((f) => fetch(f, { cache: 'no-cache' }).then((r) => (r.ok ? r.headers.get('etag') || r.headers.get('last-modified') : '')).catch(() => '')));
   return tags.every(Boolean) ? tags.join('|') : null; // a failed check never triggers a reload
 }
 let checking = false;
