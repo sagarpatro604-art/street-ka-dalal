@@ -1176,7 +1176,7 @@ async function adminUpdates() {
   const syncCard = `<section class="card ${sync.changes?.length ? 'sync-warn' : ''}"><div class="card-head"><h2>${sync.changes?.length ? 'Sector Scope changed: the site needs an update' : 'In step with Sector Scope'}</h2><span class="sub">checked ${ago(sync.checked)} · last matched ${fDT(sync.baseline)}</span></div>
     ${sync.changes?.length ? `<ul class="plain">${sync.changes.map((c) => `<li><b>${esc(c.what)}</b> ${chip(c.kind, c.kind === 'removed' ? 'warn' : '')}${c.items?.length ? `<span class="sub">${c.items.map(esc).join(', ')}</span>` : ''}</li>`).join('')}</ul>
       <p class="sub">Ask Claude: "update Street ka Dalal with the new Sector Scope changes". When done it marks them matched.</p>`
-    : '<p class="sub">The Results, News and Research tabs carry everything Sector Scope\'s Equity Research shows. New pages, fields or page changes there will appear here.</p>'}
+    : '<p class="sub">Nothing new in Sector Scope\'s Equity Research since the site last matched it. New pages, new data fields or changed pages there will show up here.</p>'}
     <p class="sub">${(sync.watching || []).map(esc).join(' · ')}</p></section>`;
   return `<section class="upd-hero card">
       <div><span class="sub">The site shows market data of</span><b>${fDay(latest)}</b>${st.provisional ? chip('Provisional prices', 'warn') : chip('NSE official closes', 'good')}</div>
