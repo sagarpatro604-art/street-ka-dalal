@@ -266,6 +266,9 @@ function stockFacts(focus, all) {
           bank: u.bank ? { nim_pct: u.nim, net_npa_pct: u.npa, casa_pct: u.casa } : undefined, refreshed: all.stkFundUpdated };
         f.shareholding_pct = { quarter: u.hp, promoters: u.pr, promoters_change: u.prc, fii: u.fii, fii_change: u.fiic, mutual_funds: u.mf, mutual_funds_change: u.mfc, all_dii: u.dii };
       }
+      if (all.res?.[sym]) f.quarterly_results_cr = { note: 'crore; yoy in %; label from Sector Scope rules', last_quarters: all.res[sym] };
+      if (all.resAnn?.[sym]) f.latest_result_announced = all.resAnn[sym];
+      if (all.resCal?.[sym]) f.next_results = all.resCal[sym];
       if (d.mf) f.mutual_fund_buying = { months_bought: d.mf[0], of_months: (all.funds?.months || []).length, total_cr: d.mf[1], trend: d.mf[2] };
     }
     const g = (all.market?.gainers || []).concat(all.market?.losers || []).find((x) => x.sym === sym);
@@ -551,6 +554,14 @@ export async function onRequestPost({ request, env }) {
     all.stkFund = {};
     got.forEach((g) => { if (g) { Object.assign(all.stkDaily, g.rows || {}); all.stkAsOf = g.as_of; all.stkFundAsOf = g.fund_as_of; } });
     fund.forEach((g) => { if (g) { Object.assign(all.stkFund, g.rows || {}); all.stkFundUpdated = g.updated; } });
+    // quarterly results (Sector Scope's Earnings tab): last quarters per company + the results calendar
+    const [resShards, resHub] = await Promise.all([Promise.all(shards.map((c) => asset(env, selfOrigin, `data/results/c/${c}.json`))), asset(env, selfOrigin, 'data/results/hub.json')]);
+    all.res = {};
+    resShards.forEach((g) => { if (g) for (const [k, rows] of Object.entries(g.rows || {})) all.res[k] = rows.slice(-4).map((r) => Object.fromEntries(g.cols.map((c, i) => [c, r[i]]))); });
+    all.resCal = {};
+    for (const c of resHub?.calendar || []) if (focus.has(c.sym) && !all.resCal[c.sym]) all.resCal[c.sym] = { date: c.date, status: c.status, quarter: c.q };
+    all.resAnn = {};
+    for (const r of resHub?.announced || []) if (focus.has(r.sym) && !all.resAnn[r.sym]) all.resAnn[r.sym] = r;
   }
   const [posts, news] = await Promise.all([publishedPosts(env, projectId, token), newsFor(env, selfOrigin, q, focus, all).catch(() => null)]);
   const context = buildContext(q, all, posts, extra, focus, news);

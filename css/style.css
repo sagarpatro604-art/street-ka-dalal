@@ -637,3 +637,31 @@ h3.mt { margin-top: 14px; margin-bottom: 4px; }
 .tk.na { color: var(--muted); font-weight: 500; }
 .tbl.ticks tfoot td { border-top: 2px solid var(--line); }
 .legend.pad { padding: 10px 20px 16px; margin: 0; }
+
+/* ---------- quarterly results ---------- */
+.res-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 14px; margin-bottom: 18px; }
+.res-card { margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.res-top { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.res-top .r { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.res-nums { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 4px 0; }
+.res-nums div { background: var(--paper-2); border-radius: 10px; padding: 7px 8px; display: flex; flex-direction: column; min-width: 0; }
+.res-nums span { font-size: 11px; color: var(--muted); font-weight: 600; }
+.res-nums b { font-size: 14px; }
+.res-nums small { font-size: 11.5px; }
+.res-foot { font-size: 12.5px; color: var(--muted); margin: 0; }
+.res-links { display: flex; flex-wrap: wrap; gap: 12px; font-size: 13px; font-weight: 600; margin: 0; }
+.res-links a { text-decoration: none; }
+.week-strip { display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 5px; margin-bottom: 12px; }
+.week-strip div { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 6px 2px; text-align: center; display: flex; flex-direction: column; }
+.week-strip div.on { border-color: var(--green); background: var(--sage-2); }
+.week-strip span { font-size: 10.5px; color: var(--muted); font-weight: 600; }
+.week-strip b { font: 600 16px var(--serif); color: var(--green); }
+.week-strip small { font-size: 11px; font-weight: 700; color: var(--gold); }
+.mix { display: inline-block; min-width: 34px; text-align: center; padding: 0 4px; border-radius: 6px; font-size: 16px; }
+.mix.good { background: var(--up-bg); color: var(--up); }
+.mix.warn { background: var(--down-bg); color: var(--down); }
+.legend-card summary { cursor: pointer; font-weight: 600; color: var(--green); }
+.legend-card ul { margin: 8px 0; padding-left: 18px; font-size: 13.5px; }
+@media (max-width: 760px) { .res-nums { grid-template-columns: repeat(2, minmax(0, 1fr)); } .week-strip { grid-template-columns: repeat(7, minmax(0, 1fr)); } .res-grid { grid-template-columns: 1fr; } }
+
+.card.sync-warn { border-color: #e8c98f; background: #fdf6e7; }

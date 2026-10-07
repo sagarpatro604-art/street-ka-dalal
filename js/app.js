@@ -99,9 +99,10 @@ const ui = {
   sec: { period: '1D' },
   mkt: { idx: 'Nifty 50', cmp: '', range: '1Y', itab: 'broad' },
   stk: { q: '', sector: 'all', limit: 100 },
+  res: { tab: 'announced', q: '', sector: 'all', label: 'all', when: 'week', conf: 'all', season: '', level: 'sector', group: '', n: 30 },
   eq: { tab: 'companies', f: { sector: 'all', mc: 0, pe: 0, roe: 0, rg: 0, pg: 0, pr: 0, r1y: 0, above200: false } },
   mf: { grp: 'sectors', sel: null, tab: 'streaks', q: '', sector: 'all', stock: '' },
-  news: { type: 'all', q: '', view: 'heads', cat: 'all', src: 'all', limit: 60 },
+  news: { type: 'all', q: '', view: 'heads', cat: 'all', src: 'all', limit: 60, sec: 'all', tagged: false, sym: '' },
   ins: { kind: 'all' },
   admin: { tab: 'publisher', q: '', clq: '', cla: 'all', cln: 40 },
   sort: {},
@@ -452,6 +453,7 @@ async function viewStocks(embedded) {
 async function viewStock(sym) {
   sym = decodeURIComponent(sym || '').toUpperCase();
   const [one, news, scr, mfs, feed, fo] = await Promise.all([stkOne(sym), filingsData(), data('screeners').catch(() => ({})), hist('mf/stocks').catch(() => ({})), newsfeed(), fundOne(sym).catch(() => ({}))]);
+  const resRows = await resHistory(sym);
   const inNews = [...((feed.movers || {})[sym] || []), ...(feed.items || []).filter((i) => (i.sy || []).includes(sym))].filter((i, k, a) => a.findIndex((j) => j.t === i.t) === k).slice(0, 8);
   const x = one.info, d = one.d || {};
   if (!x) return `${pageHead('Stocks', esc(sym))}<div class="empty card">This symbol is not in our NSE list. <a href="#/stocks">Search all stocks →</a></div>`;
@@ -485,6 +487,7 @@ async function viewStock(sym) {
       <p class="sub">Ratios updated ${fDate(one.fundAsOf)}; they can lag the latest results.</p>`}
     </section>
   </div>
+  ${resHistoryCard(resRows, sym)}
   ${fundCard(fo?.f, fo?.updated)}
   <div class="grid2">
     <section class="card"><h2>Mutual fund buying</h2>
@@ -503,45 +506,120 @@ async function viewStock(sym) {
   <p class="sub legend">Facts from NSE and public company data via Sector Scope. Not investment advice — please do your own research. Ask Dalal for more about ${esc(sym)}.</p>`;
 }
 
-/* ---------------- quarterly results (premium, locked: placeholder preview only) ---------------- */
-// Dummy lock: no real results data is published. The preview rows below are made up, so nothing can
-// be read from the page source. When premium goes live, real rows come from Sector Scope's earnings data.
-const PREVIEW_ROWS = [
-  ['Capital Goods', 24, 41, 18.2, 'WWWLWWWW'], ['Banks', 12, 19, null, 'WWWWWLWW'], ['Pharma & Healthcare', 16, 33, 24.5, 'WLWWWWWW'],
-  ['IT / Technology', 6, -4, 21.1, 'LWWLWLWW'], ['FMCG', 9, 11, 19.8, 'WWLWWWLW'], ['Automobile', 14, 27, 12.6, 'WWWWLWWW'],
-  ['Chemicals', -3, -18, 15.4, 'LLWLWLLW'], ['Realty', 31, 58, 28.9, 'WWWWWWWL'], ['Metals & Mining', 7, 22, 17.3, 'WLLWWWWW'],
-  ['Defence & Aerospace', 28, 46, 23.0, 'WWWWWWWW'],
-];
-const streakDots = (s) => `<span class="wl">${s.split('').map((c) => `<i class="${c === 'W' ? 'w' : 'l'}"></i>`).join('')}</span>`;
+/* ---------------- quarterly results (copy of Sector Scope > Equity Research > Earnings) ---------------- */
+const RES_TABS = [['announced', 'Announced'], ['calendar', 'Calendar'], ['season', 'Season review'], ['companies', 'All companies']];
+const LABEL_CLS = { Strong: 'good', Good: 'good', Mixed: '', Weak: 'warn' };
+const labelChip = (l) => (l ? chip(l, LABEL_CLS[l] ?? '') : '');
+const crs = (v) => (v == null ? '—' : `₹${num(v, Math.abs(v) < 100 ? 1 : 0)} cr`);
+const yy = (v) => (v == null ? '<span class="sub inline">—</span>' : `<span class="${tone(v)}">${pct(v, 1)}</span>`);
+const bps = (v) => (v == null ? '' : `<span class="${tone(v)}">${v > 0 ? '+' : ''}${num(v)} bps</span>`);
+const resName = (r) => `<a class="sym" href="#/stock/${encodeURIComponent(r.sym)}">${esc(r.sym)}</a><span class="sub">${esc(r.name || '')}</span>`;
+const qLabel = (q) => { const m = String(q || '').match(/FY(\d+)Q(\d)/); return m ? `Q${m[2]} FY${m[1]}` : q || ''; };
 
-function viewResults() {
-  const rows = PREVIEW_ROWS.map(([sec, s, p, opm, wl], i) => `<tr><td><b class="sym">██████${i % 3 ? '██' : ''}</b><span class="sub">████████ Ltd</span></td><td>${esc(sec)}</td>
-    <td class="r ${tone(s)}">${pct(s, 0)}</td><td class="r ${tone(p)}">${pct(p, 0)}</td><td class="r">${opm == null ? '—' : `${num(opm, 1)}%`}</td><td>${streakDots(wl)}</td>
-    <td>${chip(p >= 20 ? 'Strong' : p >= 0 ? 'In line' : 'Weak', p >= 20 ? 'good' : p < 0 ? 'warn' : '')}</td></tr>`).join('');
-  return `${pageHead('Earnings', 'Quarterly results', '<span class="premium-tag">★ Premium</span>')}
-  <p class="asof">${ic('refresh', 14)} Q2 FY27 results season · updated every evening from company filings</p>
-  <section class="kpis">
-    <div><span>Companies tracked</span><b>450+</b><small>every quarter</small></div>
-    <div><span>Results this season</span><b>Live</b><small>as companies report</small></div>
-    <div><span>Growth checks</span><b>Sales · Profit · EPS</b><small>vs same quarter last year</small></div>
-    <div><span>Track record</span><b>8 quarters</b><small>beat / miss streak</small></div>
-    <div><span>Concall notes</span><b>Key takeaways</b><small>management commentary</small></div>
-  </section>
-  <section class="card locked">
-    <div class="locked-body" aria-hidden="true">
-      <div class="tbl-wrap"><table class="tbl"><thead><tr><th><button>Company</button></th><th><button>Sector</button></th><th class="r"><button>Sales YoY</button></th><th class="r"><button>Profit YoY</button></th><th class="r"><button>Op. margin</button></th><th><button>Last 8 quarters</button></th><th><button>Verdict</button></th></tr></thead>
-      <tbody>${rows}</tbody></table></div>
-    </div>
-    <div class="lock-card">
-      <div class="lock-ic"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
-      <h2>Quarterly results is a Premium feature</h2>
-      <p>Every company's results the evening they come out: sales and profit growth, margins, an 8-quarter beat / miss record, sector scorecards and concall highlights.</p>
-      <ul class="lock-list"><li>Results calendar for the week</li><li>Best and worst results by sector</li><li>Companies beating estimates for 4+ quarters</li><li>Concall summaries in simple words</li></ul>
-      <button class="btn primary" data-act="unlockPremium">★ Unlock Premium</button>
-      <p class="sub">Coming soon. Everything else on Street ka Dalal stays free.</p>
-    </div>
-  </section>
-  <p class="sub legend">Results are facts from company filings, not recommendations to buy or sell.</p>`;
+function resCard(r) {
+  const top = r.bank ? [['NII', r.nii, r.nii_y], ['PAT', r.pat, r.pat_y]] : [['Revenue', r.rev, r.rev_y], ['EBITDA', r.ebitda, r.ebitda_y], ['PAT', r.pat, r.pat_y]];
+  return `<article class="card res-card">
+    <div class="res-top"><span>${resName(r)}</span><span class="r">${labelChip(r.label)}<span class="sub">${fDT(String(r.ts || '').replace(' ', 'T'))}</span></span></div>
+    <p class="sub">${esc(r.sector || '')}${r.industry ? ` · ${esc(r.industry)}` : ''}${r.mcap ? ` · m-cap ${mcapCr(r.mcap)}` : ''} · ${esc(qLabel(r.q))} ${esc(r.basis || '')}</p>
+    <div class="res-nums">${top.map(([l, v, g]) => `<div><span>${l}</span><b>${crs(v)}</b><small>${yy(g)} YoY</small></div>`).join('')}
+      ${r.bank ? `<div><span>Gross / net NPA</span><b>${r.gnpa == null ? '—' : num(r.gnpa, 2) + '%'}</b><small>${r.nnpa == null ? '' : num(r.nnpa, 2) + '% net'}</small></div>`
+      : `<div><span>EBITDA margin</span><b>${r.m == null ? '—' : num(r.m, 1) + '%'}</b><small>${bps(r.m_y)} YoY</small></div>`}</div>
+    <p class="res-foot">${r.pat_q != null ? `PAT ${yy(r.pat_q)} QoQ · ` : ''}${r.eps != null ? `EPS ₹${num(r.eps, 2)}${r.eps_y != null ? ` (${pct(r.eps_y, 1)})` : ''} · ` : ''}${r.day != null ? `Share price on the day ${yy(r.day)}${r.w1 != null ? `, week after ${yy(r.w1)}` : ''}` : ''}${r.check ? ' · ' + chip('numbers need a check', 'warn') : ''}</p>
+    <p class="res-links">${r.doc ? `<a href="${esc(r.doc)}" target="_blank" rel="noopener">${ic('file', 14)} Results</a>` : ''}${r.press ? `<a href="${esc(r.press)}" target="_blank" rel="noopener">Press release</a>` : ''}${r.ppt ? `<a href="${esc(r.ppt)}" target="_blank" rel="noopener">Presentation</a>` : ''}</p>
+  </article>`;
+}
+
+async function viewResults() {
+  const h = await hist('results/hub');
+  const tab = RES_TABS.some(([k]) => k === ui.res.tab) ? ui.res.tab : 'announced';
+  const cur = (h.seasons || []).find((s) => s.q === h.current_q) || {};
+  const q = ui.res.q.trim().toLowerCase();
+  const match = (r) => (!q || `${r.sym} ${r.name || ''} ${r.sector || ''} ${r.industry || ''}`.toLowerCase().includes(q)) && (ui.res.sector === 'all' || r.sector === ui.res.sector);
+  let body = '';
+  if (tab === 'announced') {
+    const rows = (h.announced || []).filter((r) => match(r) && (ui.res.label === 'all' || r.label === ui.res.label));
+    const sectors = [...new Set((h.announced || []).map((r) => r.sector).filter(Boolean))].sort();
+    body = `<div class="toolbar"><label class="search grow">${ic('search', 16)}<input placeholder="Search company, sector or industry" value="${esc(ui.res.q)}" data-input="resQ"></label>
+      <select data-change="resSector"><option value="all">All sectors</option>${sectors.map((s) => `<option ${s === ui.res.sector ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select>
+      <select data-change="resLabel">${['all', 'Strong', 'Good', 'Mixed', 'Weak'].map((l) => `<option value="${l}" ${l === ui.res.label ? 'selected' : ''}>${l === 'all' ? 'Every result' : l}</option>`).join('')}</select></div>
+      ${rows.length ? `<div class="res-grid">${rows.slice(0, ui.res.n).map(resCard).join('')}</div>${rows.length > ui.res.n ? `<div class="more"><button class="btn ghost" data-act="resMore">Show more (${num(rows.length - ui.res.n)} left)</button></div>` : ''}`
+      : `<div class="empty card">No results announced yet for ${esc(h.current_label || 'this quarter')}${q || ui.res.sector !== 'all' ? ' that match' : ''}. ${h.prev_q ? `See <button class="linkbtn" data-act="resTab" data-v="season">last season's review</button>.` : ''}</div>`}`;
+  } else if (tab === 'calendar') {
+    const today = h.today;
+    const add = (n) => { const d = pd(today); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+    const win = { today: [today, today], tomorrow: [add(1), add(1)], week: [today, add(7)], month: [today, add(31)], all: ['0', '9'] }[ui.res.when] || [today, add(7)];
+    const rows = (h.calendar || []).filter((r) => r.date >= win[0] && r.date <= win[1] && match(r) && (ui.res.conf === 'all' || r.status === ui.res.conf));
+    const perDay = {};
+    (h.calendar || []).filter((r) => r.date >= today && r.date <= add(13)).forEach((r) => { perDay[r.date] = (perDay[r.date] || 0) + 1; });
+    const sectors = [...new Set((h.calendar || []).map((r) => r.sector).filter(Boolean))].sort();
+    body = `<div class="week-strip">${Array.from({ length: 14 }, (_, i) => add(i)).map((d) => { const x = pd(d); return `<div class="${d === today ? 'on' : ''}"><span>${DAY[x.getDay()]}</span><b>${x.getDate()}</b><small>${perDay[d] || 0}</small></div>`; }).join('')}</div>
+      <div class="toolbar"><div class="seg">${[['today', 'Today'], ['tomorrow', 'Tomorrow'], ['week', 'Next 7 days'], ['month', 'Next 30 days'], ['all', 'All']].map(([k, l]) => `<button class="${k === ui.res.when ? 'on' : ''}" data-act="resWhen" data-v="${k}">${l}</button>`).join('')}</div>
+        <div class="seg">${[['all', 'All'], ['confirmed', 'Confirmed'], ['estimated', 'Estimated']].map(([k, l]) => `<button class="${k === ui.res.conf ? 'on' : ''}" data-act="resConf" data-v="${k}">${l}</button>`).join('')}</div>
+        <label class="search grow">${ic('search', 16)}<input placeholder="Search company or sector" value="${esc(ui.res.q)}" data-input="resQ"></label>
+        <select data-change="resSector"><option value="all">All sectors</option>${sectors.map((s) => `<option ${s === ui.res.sector ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></div>
+      <section class="card flush">${table('rescal', rows, [{ k: 'date', label: 'Date', fmt: (r) => `<b>${fDay(r.date)}</b>` }, { k: 'sym', label: 'Company', fmt: resName },
+        { k: 'sector', label: 'Sector', fmt: (r) => `${esc(r.sector || '—')}<span class="sub">${esc(r.industry || '')}</span>` }, { k: 'status', label: 'Date is', fmt: (r) => (r.status === 'confirmed' ? chip('Confirmed by NSE notice', 'good') : chip('Estimated (same quarter last year)', '')) },
+        { k: 'mcap', label: 'Market cap', fmt: (r) => mcapCr(r.mcap), cls: 'r' }], 'No results due in this window.')}</section>
+      <p class="sub legend">Confirmed = the company has told NSE the board-meeting date. Estimated = same quarter last year plus 52 weeks; it can move.</p>`;
+  } else {
+    const sq = ui.res.season || (cur.reported ? h.current_q : h.prev_q) || h.current_q;
+    let s;
+    try { s = await hist(`results/s_${sq}`); } catch { s = null; }
+    const opts = [h.current_q, h.prev_q].filter(Boolean).map((x) => `<button class="${x === sq ? 'on' : ''}" data-act="resSeason" data-v="${x}">${qLabel(x)}</button>`).join('');
+    if (!s) body = `<div class="toolbar"><div class="seg">${opts}</div></div><div class="empty card">No data for ${esc(qLabel(sq))} yet.</div>`;
+    else if (tab === 'season') {
+      const a = s.all || {};
+      const cnt = (s.rows || []).reduce((m, r) => ((m[r.label || '—'] = (m[r.label || '—'] || 0) + 1), m), {});
+      const g = (s.groups || {})[ui.res.level] || [];
+      const gcols = [{ k: 'name', label: ui.res.level === 'theme' ? 'Theme' : ui.res.level === 'industry' ? 'Industry' : 'Sector', fmt: (r) => `<button class="linkbtn" data-act="resGroup" data-v="${esc(r.name)}">${esc(r.name)}</button>` },
+        { k: 'reported', label: 'Reported', fmt: (r) => `${num(r.reported)}/${num(r.expected)}`, cls: 'r' }, { k: 'revenue_agg', label: 'Revenue growth', fmt: (r) => yy(r.revenue_agg), cls: 'r' },
+        { k: 'ebitda_agg', label: 'EBITDA growth', fmt: (r) => yy(r.ebitda_agg), cls: 'r' }, { k: 'pat_agg', label: 'Profit growth', fmt: (r) => yy(r.pat_agg), cls: 'r' },
+        { k: 'pat_yoy_med', label: 'Median company profit', fmt: (r) => yy(r.pat_yoy_med), cls: 'r' }, { k: 'turned_loss', label: 'Turned to loss / profit', fmt: (r) => `${num(r.turned_loss || 0)} / ${num(r.turned_profit || 0)}`, cls: 'r' }];
+      body = `<div class="toolbar"><div class="seg">${opts}</div><span class="sub">${s.closed ? 'Season closed' : `Deadline ${fDate(s.deadline)}`}</span></div>
+        <section class="kpis">
+          <div><span>Reported</span><b>${num(s.reported)} / ${num(s.expected)}</b><small>${num((100 * (s.reported || 0)) / Math.max(1, s.expected || 0), 0)}% of companies</small></div>
+          <div><span>Revenue growth (like-for-like)</span><b class="${tone(a.revenue_agg)}">${pct(a.revenue_agg, 1)}</b><small>sum of ${num(a.revenue_n)} companies, YoY</small></div>
+          <div><span>EBITDA growth</span><b class="${tone(a.ebitda_agg)}">${pct(a.ebitda_agg, 1)}</b><small>non-financials, YoY</small></div>
+          <div><span>Profit growth</span><b class="${tone(a.pat_agg)}">${pct(a.pat_agg, 1)}</b><small>median company ${pct(a.pat_yoy_med, 1)}</small></div>
+          <div><span>Results mix</span><b>${['Strong', 'Good', 'Mixed', 'Weak'].map((l) => `<span class="mix ${LABEL_CLS[l]}">${cnt[l] || 0}</span>`).join(' ')}</b><small>Strong · Good · Mixed · Weak</small></div>
+        </section>
+        <section class="card flush"><div class="card-head pad"><h2>By group</h2><div class="seg">${[['sector', 'Sectors'], ['industry', 'Industries'], ['theme', 'Themes']].map(([k, l]) => `<button class="${k === ui.res.level ? 'on' : ''}" data-act="resLevel" data-v="${k}">${l}</button>`).join('')}</div></div>
+          ${table('resgrp-' + ui.res.level, g, gcols, 'No groups yet.')}<p class="sub legend pad">Growth = like-for-like sums (both quarters filed, same basis); banks are left out of revenue sums and all financials out of EBITDA. Tap a group to see its companies. ${esc(s.note || '')}</p></section>`;
+    } else {
+      const rows = (s.rows || []).filter((r) => match(r) && (ui.res.label === 'all' || r.label === ui.res.label) && (!ui.res.group || [r.sector, r.industry].includes(ui.res.group)));
+      const sectors = [...new Set((s.rows || []).map((r) => r.sector).filter(Boolean))].sort();
+      if (!ui.sort.resall) ui.sort.resall = { k: 'mcap', dir: -1 };
+      body = `<div class="toolbar"><div class="seg">${opts}</div><label class="search grow">${ic('search', 16)}<input placeholder="Search company, sector or industry" value="${esc(ui.res.q)}" data-input="resQ"></label>
+        <select data-change="resSector"><option value="all">All sectors</option>${sectors.map((x) => `<option ${x === ui.res.sector ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>
+        <select data-change="resLabel">${['all', 'Strong', 'Good', 'Mixed', 'Weak'].map((l) => `<option value="${l}" ${l === ui.res.label ? 'selected' : ''}>${l === 'all' ? 'Every result' : l}</option>`).join('')}</select>
+        ${ui.res.group ? `<span class="chip type">${esc(ui.res.group)} <button class="linkbtn" data-act="resGroup" data-v="">✕</button></span>` : ''}</div>
+        <section class="card flush">${table('resall', sortRows('resall', rows, []).slice(0, 400), [{ k: 'sym', label: 'Company', fmt: resName }, { k: 'label', label: 'Result', fmt: (r) => labelChip(r.label) },
+          { k: 'rev', label: 'Revenue', fmt: (r) => crs(r.bank ? r.nii : r.rev), cls: 'r' }, { k: 'rev_y', label: 'YoY', fmt: (r) => yy(r.bank ? r.nii_y : r.rev_y), cls: 'r' },
+          { k: 'pat', label: 'Profit', fmt: (r) => crs(r.pat), cls: 'r' }, { k: 'pat_y', label: 'YoY', fmt: (r) => yy(r.pat_y), cls: 'r' }, { k: 'pat_q', label: 'QoQ', fmt: (r) => yy(r.pat_q), cls: 'r' },
+          { k: 'm', label: 'EBITDA margin', fmt: (r) => (r.m == null ? '—' : `${num(r.m, 1)}%`), cls: 'r' }, { k: 'mcap', label: 'Market cap', fmt: (r) => mcapCr(r.mcap), cls: 'r' }], 'No company matches.')}</section>
+        <p class="sub legend">${num(rows.length)} companies${rows.length > 400 ? ' · showing 400 (sort or search to narrow)' : ''}. Banks show NII as revenue.</p>`;
+    }
+  }
+  return `${pageHead('Earnings', 'Quarterly results', `<span class="sub">${esc(h.current_label || '')} season · ${num(cur.reported || 0)} of ${num(cur.expected || 0)} reported · deadline ${fDate(h.deadline)}</span>`)}
+  <p class="asof">${ic('refresh', 14)} From NSE filings (XBRL) via Sector Scope · updated ${ago(h.built)}</p>
+  <div class="tabs">${RES_TABS.map(([k, l]) => `<button class="tab ${k === tab ? 'on' : ''}" data-act="resTab" data-v="${k}">${l}</button>`).join('')}</div>
+  ${body}
+  <details class="card legend-card"><summary>How results are labelled</summary><ul>${Object.entries(h.label_rule || {}).map(([k, v]) => `<li><b>${esc(k)}</b>: ${esc(v)}</li>`).join('')}</ul><p class="sub">Facts from company filings. Not a recommendation to buy or sell.</p></details>`;
+}
+
+async function resHistory(sym) {
+  const c = /^[A-Z]/.test(sym[0]) ? sym[0] : '0';
+  try { const d = await hist(`results/c/${c}`); const rows = d.rows?.[sym]; if (!rows) return null; return rows.map((r) => Object.fromEntries(d.cols.map((k, i) => [k, r[i]]))); } catch { return null; }
+}
+function resHistoryCard(rows, sym) {
+  if (!rows?.length) return '';
+  const bank = rows.some((r) => r.nii != null);
+  const last = rows.slice(-8);
+  return `<section class="card"><div class="card-head"><h2>Quarterly results</h2><a href="#/results" data-act="resTab" data-v="companies">All results →</a></div>
+    ${CH.barChart({ labels: last.map((r) => qLabel(r.q).replace(' FY', "'")), series: [{ name: bank ? 'Net profit (₹ cr)' : 'Net profit (₹ cr)', values: last.map((r) => Math.max(0, r.pat || 0)), color: CH.C.green2 }], height: 170, fmt: (v) => `${num(v)} cr` })}
+    <div class="tbl-wrap"><table class="tbl compact"><thead><tr><th><button>Quarter</button></th><th class="r"><button>${bank ? 'NII' : 'Revenue'}</button></th><th class="r"><button>YoY</button></th><th class="r"><button>Profit</button></th><th class="r"><button>YoY</button></th><th class="r"><button>${bank ? 'Gross NPA' : 'EBITDA margin'}</button></th><th><button>Result</button></th></tr></thead>
+    <tbody>${rows.slice().reverse().map((r) => `<tr><td>${esc(qLabel(r.q))}${r.check ? ' ' + chip('check', 'warn') : ''}</td><td class="r">${crs(bank ? r.nii : r.rev)}</td><td class="r">${bank ? '' : yy(r.rev_y)}</td><td class="r">${crs(r.pat)}</td><td class="r">${yy(r.pat_y)}</td><td class="r">${bank ? (r.gnpa == null ? '—' : num(r.gnpa, 2) + '%') : r.m == null ? '—' : num(r.m, 1) + '%'}</td><td>${labelChip(r.label)}</td></tr>`).join('')}</tbody></table></div>
+  </section>`;
 }
 
 /* ---------------- Research (equity research basics free; deeper tools Premium) ---------------- */
@@ -913,11 +991,19 @@ const headItem = (i) => `<li class="head-item"><div class="head-meta">${chip(i.s
   ${(i.sy || []).length ? `<div class="head-syms">${i.sy.map((s) => `<a class="chip type" href="#/stock/${encodeURIComponent(s)}">${esc(s)}</a>`).join('')}</div>` : ''}</li>`;
 
 async function viewHeadlines() {
-  const [f, m] = await Promise.all([newsfeed(), data('market').catch(() => ({}))]);
+  const [f, m, inf] = await Promise.all([newsfeed(), data('market').catch(() => ({})), hist('stk/info').catch(() => ({}))]);
+  const secOf = (sy) => inf.stocks?.[sy]?.sec;
   const items = f.items || [];
   const sources = Object.entries(items.reduce((a, i) => ((a[i.s] = (a[i.s] || 0) + 1), a), {})).sort((a, b) => b[1] - a[1]);
   const q = ui.news.q.trim().toLowerCase();
-  const rows = items.filter((i) => (ui.news.cat === 'all' || i.c === ui.news.cat) && (ui.news.src === 'all' || i.s === ui.news.src) && (!q || `${i.t} ${i.d || ''} ${(i.sy || []).join(' ')}`.toLowerCase().includes(q)));
+  const rows = items.filter((i) => (ui.news.cat === 'all' || i.c === ui.news.cat) && (ui.news.src === 'all' || i.s === ui.news.src)
+    && (!ui.news.tagged || (i.sy || []).length) && (!ui.news.sym || (i.sy || []).includes(ui.news.sym))
+    && (ui.news.sec === 'all' || (i.sy || []).some((x) => secOf(x) === ui.news.sec))
+    && (!q || `${i.t} ${i.d || ''} ${(i.sy || []).join(' ')}`.toLowerCase().includes(q)));
+  const sectorsN = [...new Set(Object.values(inf.stocks || {}).map((x) => x.sec).filter(Boolean))].sort();
+  const named = {};
+  rows.forEach((i) => (i.sy || []).forEach((x) => { named[x] = (named[x] || 0) + 1; }));
+  const topNamed = Object.entries(named).sort((a, b) => b[1] - a[1]).slice(0, 25);
   const shown = rows.slice(0, ui.news.limit);
   let last = '';
   const list = shown.map((i) => { const dl = dayLabel(i.at); const h = dl !== last ? `<li class="head-day">${dl}</li>` : ''; last = dl; return h + headItem(i); }).join('');
@@ -927,12 +1013,18 @@ async function viewHeadlines() {
   <div class="tabs"><button class="tab on" data-act="newsView" data-v="heads">Headlines</button><button class="tab" data-act="newsView" data-v="filings">Company filings</button></div>
   <p class="asof">${ic('refresh', 14)} ${num(items.length)} headlines from ${sources.length} trusted sources · last 7 days · updated ${ago(f.updated)}</p>
   <div class="toolbar"><label class="search grow">${ic('search', 16)}<input placeholder="Search headlines, company or symbol" value="${esc(ui.news.q)}" data-input="newsQ"></label>
-    <select data-change="newsSrc" aria-label="Source"><option value="all">All sources</option>${sources.map(([s, n]) => `<option value="${esc(s)}" ${s === ui.news.src ? 'selected' : ''}>${esc(s)} (${n})</option>`).join('')}</select></div>
+    <select data-change="newsSrc" aria-label="Source"><option value="all">All sources</option>${sources.map(([s, n]) => `<option value="${esc(s)}" ${s === ui.news.src ? 'selected' : ''}>${esc(s)} (${n})</option>`).join('')}</select>
+    <select data-change="newsSec" aria-label="Sector"><option value="all">All sectors</option>${sectorsN.map((x) => `<option ${x === ui.news.sec ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>
+    <label class="fld-s chk"><input type="checkbox" data-change="newsTagged" ${ui.news.tagged ? 'checked' : ''}><span>Tagged to a stock</span></label>
+    ${ui.news.sym ? `<span class="chip type">stock: ${esc(ui.news.sym)} <button class="linkbtn" data-act="newsTag" data-v="">✕</button></span>` : ''}</div>
   <div class="tabs wrap">${NEWS_CATS.map(([k, l]) => `<button class="tab ${k === ui.news.cat ? 'on' : ''}" data-act="newsCat" data-v="${k}">${l}</button>`).join('')}</div>
   <div class="grid-news">
     <section class="card"><ul class="heads-list">${list || '<li class="empty">No headlines match.</li>'}</ul>
       ${rows.length > shown.length ? `<div class="more"><button class="btn ghost" data-act="newsMore">Show more (${num(rows.length - shown.length)} left)</button></div>` : ''}</section>
-    <aside class="card heads"><h2>Why today's movers moved</h2>
+    <aside class="card heads"><h2>Most named</h2><p class="sub">stocks named most in these headlines · tap to filter</p>
+      ${topNamed.length ? `<table class="tbl compact"><tbody>${topNamed.map(([x, c]) => `<tr><td><button class="linkbtn" data-act="newsTag" data-v="${esc(x)}">${esc(x)}</button> <span class="sub inline">${esc(String(inf.stocks?.[x]?.n || '').slice(0, 26))}</span></td><td class="r">${c}</td></tr>`).join('')}</tbody></table>` : '<p class="sub">No tagged headlines here.</p>'}
+      <p class="sub">A tag means the headline names the company, not that it moves the stock.</p>
+      <h2 style="margin-top:16px">Why today's movers moved</h2>
       ${movers.length ? movers.map((x) => `<div class="mv-news"><a class="sym" href="#/stock/${encodeURIComponent(x.sym)}">${esc(x.sym)}</a> <b class="${tone(x.ret)}">${pct(x.ret, 1)}</b>
         <ul>${mv[x.sym].map((h) => `<li><a href="${esc(h.u)}" target="_blank" rel="noopener">${esc(h.t)}</a> <span class="sub inline">· ${esc(h.s)}</span></li>`).join('')}</ul></div>`).join('') : '<p class="sub">No news found for today\'s biggest movers.</p>'}
       <p class="sub">Headlines link to the publisher. Street ka Dalal only lists them.</p></aside>
@@ -1030,7 +1122,7 @@ function freshChip(sec, latest) {
 const TICK_DAILY = ['prices', 'indices', 'breadth', 'fiidii', 'screeners', 'sectors', 'stocks', 'filings'];
 const TICK_LABEL = { prices: 'Prices & returns', indices: 'Index charts', breadth: 'Breadth', fiidii: 'FII / DII', screeners: 'Screeners', sectors: 'Sectors',
   stocks: 'All companies', filings: 'Company filings', headlines: 'Headlines', fundamentals: 'Fundamentals (weekly)', funds: 'Mutual funds (monthly)',
-  macro: 'India macro (as released)', participation: 'Participation (monthly)' };
+  macro: 'India macro (as released)', participation: 'Participation (monthly)', results: 'Quarterly results' };
 function tickCell(key, day, rec, trading, isToday) {
   const v = rec?.dates?.[key];
   const shown = v ? String(v).replace('T', ' ') : 'nothing';
@@ -1080,13 +1172,20 @@ async function adminUpdates() {
       <b>${esc(title.charAt(0).toUpperCase() + title.slice(1))}</b>${i.detail ? `<details><summary>Details</summary><p>${esc(i.detail)}</p></details>` : ''}</li>`;
   }).join('');
   const behind = st.sections.filter((x) => /Behind|Unknown/.test(freshChip(x, latest)));
+  const sync = st.sync || {};
+  const syncCard = `<section class="card ${sync.changes?.length ? 'sync-warn' : ''}"><div class="card-head"><h2>${sync.changes?.length ? 'Sector Scope changed: the site needs an update' : 'In step with Sector Scope'}</h2><span class="sub">checked ${ago(sync.checked)} · last matched ${fDT(sync.baseline)}</span></div>
+    ${sync.changes?.length ? `<ul class="plain">${sync.changes.map((c) => `<li><b>${esc(c.what)}</b> ${chip(c.kind, c.kind === 'removed' ? 'warn' : '')}${c.items?.length ? `<span class="sub">${c.items.map(esc).join(', ')}</span>` : ''}</li>`).join('')}</ul>
+      <p class="sub">Ask Claude: "update Street ka Dalal with the new Sector Scope changes". When done it marks them matched.</p>`
+    : '<p class="sub">The Results, News and Research tabs carry everything Sector Scope\'s Equity Research shows. New pages, fields or page changes there will appear here.</p>'}
+    <p class="sub">${(sync.watching || []).map(esc).join(' · ')}</p></section>`;
   return `<section class="upd-hero card">
       <div><span class="sub">The site shows market data of</span><b>${fDay(latest)}</b>${st.provisional ? chip('Provisional prices', 'warn') : chip('NSE official closes', 'good')}</div>
       <div><span class="sub">Last publish</span><b>${ago(last.at)}</b><small>${fDT(last.at)} · took ${num(last.took_s)} s</small></div>
       <div><span class="sub">Next scheduled publish</span><b>${esc(winDate(st.schedule?.next))}</b><small>${esc((st.schedule?.times || []).map(winTime).join(' & '))} · ${esc(st.schedule?.days || '')}, plus after-close runs</small></div>
       <div><span class="sub">News & filings (every 30 min)</span><b>${lv ? ago(lv.updated) : '—'}</b><small>${lv ? `${num(lv.headlines?.items?.length)} headlines (48 h) · ${num(lv.filings?.filings?.length)} filings` : 'live copy not reachable'}</small></div>
-      <div><span class="sub">Needs a look</span><b class="${behind.length ? 'down' : 'up'}">${behind.length ? `${behind.length} part${behind.length > 1 ? 's' : ''}` : 'Nothing'}</b><small>${behind.map((x) => esc(x.what.split(' (')[0])).join(', ') || 'everything is current'}</small></div>
+      <div><span class="sub">Needs a look</span><b class="${behind.length || sync.changes?.length ? 'down' : 'up'}">${behind.length + (sync.changes?.length ? 1 : 0) ? `${behind.length + (sync.changes?.length ? 1 : 0)} item${behind.length + (sync.changes?.length ? 1 : 0) > 1 ? 's' : ''}` : 'Nothing'}</b><small>${[...behind.map((x) => esc(x.what.split(' (')[0])), ...(sync.changes?.length ? ['Sector Scope changes to copy'] : [])].join(', ') || 'everything is current'}</small></div>
     </section>
+    ${syncCard}
     ${tickSheet(daily)}
     <div class="grid2">
       <section class="card"><h2>A normal weekday</h2><ol class="timeline">${DAY_PLAN.map(([t, x]) => `<li><b>${esc(t)}</b><span>${esc(x)}</span></li>`).join('')}</ol></section>
@@ -1266,6 +1365,14 @@ const ACTS = {
   mktItab: (el) => { ui.mkt.itab = el.dataset.v; render(); },
   mfGrp: (el) => { ui.mf.grp = el.dataset.v; ui.mf.sel = null; render(); },
   mfSel: (el) => { ui.mf.sel = el.dataset.v; render(); },
+  resTab: (el) => { ui.res.tab = el.dataset.v; ui.res.group = ''; if (route().split('/')[0] !== 'results') { location.hash = '#/results'; return; } render(); },
+  resWhen: (el) => { ui.res.when = el.dataset.v; render(); },
+  resConf: (el) => { ui.res.conf = el.dataset.v; render(); },
+  resSeason: (el) => { ui.res.season = el.dataset.v; render(); },
+  resLevel: (el) => { ui.res.level = el.dataset.v; render(); },
+  resGroup: (el) => { ui.res.group = el.dataset.v; ui.res.tab = 'companies'; ui.res.sector = 'all'; render(); },
+  resMore: () => { ui.res.n += 30; render(); },
+  newsTag: (el) => { ui.news.sym = el.dataset.v; ui.news.limit = 60; render(); window.scrollTo(0, 0); },
   unlockPremium: () => toast('Premium is coming soon — you will be the first to know!'),
   eqTab: (el) => { ui.eq.tab = el.dataset.v; if (route().split('/')[0] !== 'equity') { location.hash = '#/equity'; return; } render(); },
   eqReset: () => { ui.eq.f = { sector: 'all', mc: 0, pe: 0, roe: 0, rg: 0, pg: 0, pr: 0, r1y: 0, above200: false }; render(); },
@@ -1315,6 +1422,7 @@ const ACTS = {
 const INPUTS = {
   scrQ: (el) => { ui.scr.q = el.value; rerenderKeepingFocus(el); },
   newsQ: (el) => { ui.news.q = el.value; rerenderKeepingFocus(el); },
+  resQ: (el) => { ui.res.q = el.value; rerenderKeepingFocus(el); },
   clQ: (el) => { ui.admin.clq = el.value; rerenderKeepingFocus(el); },
   memberQ: (el) => { ui.admin.q = el.value; rerenderKeepingFocus(el); },
   stkQ: (el) => { ui.stk.q = el.value; ui.stk.limit = 100; rerenderKeepingFocus(el); },
@@ -1326,6 +1434,10 @@ const CHANGES = {
   eqF: (el) => { ui.eq.f[el.dataset.k] = el.type === 'checkbox' ? el.checked : el.value; render(); },
   stkSector: (el) => { ui.stk.sector = el.value; ui.stk.limit = 100; render(); },
   newsSrc: (el) => { ui.news.src = el.value; ui.news.limit = 60; render(); },
+  resSector: (el) => { ui.res.sector = el.value; render(); },
+  resLabel: (el) => { ui.res.label = el.value; render(); },
+  newsSec: (el) => { ui.news.sec = el.value; ui.news.limit = 60; render(); },
+  newsTagged: (el) => { ui.news.tagged = el.checked; ui.news.limit = 60; render(); },
   clArea: (el) => { ui.admin.cla = el.value; render(); },
   mfSector: (el) => { ui.mf.sector = el.value; render(); },
   mktIdx: (el) => { ui.mkt.idx = el.value; render(); },
