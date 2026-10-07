@@ -30,40 +30,44 @@ const clip = (s, n) => (s == null ? '' : String(s).length > n ? String(s).slice(
 // which 200 members asking 5 questions each would use up). Two small tables, created on first use:
 //   counts(k = uid:day, n, day)   questions asked per member per IST day; rows older than 3 days are cleared
 //   cache(k, v, exp)              short-lived values: model list, "no web search" flags, published posts
-let dbReady = null;
+let dbReady = null, dbDown = 0;
+// no storage call may hold a member's question: 3 s, then the KV fallback
+const within = (p, ms, label) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error(`${label} took over ${ms} ms`)), ms))]);
 function db(env) {
-  if (!env.DALAL_DB) return Promise.resolve(null);
+  if (!env.DALAL_DB || Date.now() - dbDown < 300000) return Promise.resolve(null);
   dbReady ||= env.DALAL_DB.batch([
     env.DALAL_DB.prepare('CREATE TABLE IF NOT EXISTS counts (k TEXT PRIMARY KEY, n INTEGER NOT NULL, day TEXT NOT NULL)'),
     env.DALAL_DB.prepare('CREATE TABLE IF NOT EXISTS cache (k TEXT PRIMARY KEY, v TEXT, exp INTEGER NOT NULL)'),
   ]).then(() => env.DALAL_DB).catch((e) => { dbReady = null; console.warn('D1', e.message); return null; });
-  return dbReady;
+  return within(dbReady, 3000, 'D1 setup').catch((e) => { dbDown = Date.now(); dbReady = null; console.warn(e.message); return null; });
 }
 async function cacheGet(env, k) {
   const d = await db(env);
-  if (d) { try { const r = await d.prepare('SELECT v FROM cache WHERE k = ? AND exp > ?').bind(k, Date.now()).first(); return r ? r.v : null; } catch { return null; } }
+  if (d) { try { const r = await within(d.prepare('SELECT v FROM cache WHERE k = ? AND exp > ?').bind(k, Date.now()).first(), 3000, 'D1 read'); return r ? r.v : null; } catch { return null; } }
   return env.DALAL_KV ? env.DALAL_KV.get(k) : null;
 }
 async function cachePut(env, k, v, ttlSec) {
   const d = await db(env);
-  if (d) { try { await d.prepare('INSERT INTO cache (k, v, exp) VALUES (?, ?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v, exp = excluded.exp').bind(k, v, Date.now() + ttlSec * 1000).run(); } catch {} return; }
+  if (d) { try { await within(d.prepare('INSERT INTO cache (k, v, exp) VALUES (?, ?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v, exp = excluded.exp').bind(k, v, Date.now() + ttlSec * 1000).run(), 3000, 'D1 write'); } catch {} return; }
   if (env.DALAL_KV) await env.DALAL_KV.put(k, v, { expirationTtl: Math.max(60, ttlSec) }).catch(() => {});
 }
 async function cacheDel(env, k) {
   const d = await db(env);
-  if (d) { try { await d.prepare('DELETE FROM cache WHERE k = ?').bind(k).run(); } catch {} return; }
+  if (d) { try { await within(d.prepare('DELETE FROM cache WHERE k = ?').bind(k).run(), 3000, 'D1 delete'); } catch {} return; }
   if (env.DALAL_KV) await env.DALAL_KV.delete(k).catch(() => {});
 }
 async function getUsed(env, uid) {
   const d = await db(env);
-  if (d) { try { const r = await d.prepare('SELECT n FROM counts WHERE k = ?').bind(`${uid}:${istDate()}`).first(); return r ? r.n : 0; } catch { return 0; } }
+  if (d) { try { const r = await within(d.prepare('SELECT n FROM counts WHERE k = ?').bind(`${uid}:${istDate()}`).first(), 3000, 'D1 count'); return r ? r.n : 0; } catch { return 0; } }
   return env.DALAL_KV ? +((await env.DALAL_KV.get(`n:${uid}:${istDate()}`)) || 0) : 0;
 }
 async function addUsed(env, uid, used) {
   const day = istDate();
   const d = await db(env);
   if (d) {
-    await d.prepare('INSERT INTO counts (k, n, day) VALUES (?, 1, ?) ON CONFLICT(k) DO UPDATE SET n = n + 1').bind(`${uid}:${day}`, day).run();
+    try {
+      await within(d.prepare('INSERT INTO counts (k, n, day) VALUES (?, 1, ?) ON CONFLICT(k) DO UPDATE SET n = n + 1').bind(`${uid}:${day}`, day).run(), 3000, 'D1 count write');
+    } catch (e) { console.warn(e.message); }
     if (Math.random() < 0.03) await d.prepare('DELETE FROM counts WHERE day < ?').bind(new Date(Date.now() + 330 * 60000 - 3 * 86400000).toISOString().slice(0, 10)).run();
     return;
   }
@@ -74,10 +78,12 @@ async function addUsed(env, uid, used) {
 let JWKS = null, JWKS_AT = 0;
 async function googleKeys() {
   if (JWKS && Date.now() - JWKS_AT < 3600000) return JWKS;
-  const r = await fetch('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com');
-  JWKS = (await r.json()).keys || [];
-  JWKS_AT = Date.now();
-  return JWKS;
+  try {
+    const r = await fetch('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com', { cf: { cacheTtl: 3600 }, signal: AbortSignal.timeout(5000) });
+    const keys = (await r.json()).keys || [];
+    if (keys.length) { JWKS = keys; JWKS_AT = Date.now(); }
+  } catch (e) { console.warn('google keys', e.message); }
+  return JWKS || [];
 }
 const b64u = (s) => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - (s.length % 4)) % 4)), (c) => c.charCodeAt(0));
 const dec = (s) => JSON.parse(new TextDecoder().decode(b64u(s)));
@@ -128,7 +134,7 @@ async function publishedPosts(env, projectId, token) {
 async function fetchPosts(projectId, token) {
   try {
     const r = await fetch(`https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents:runQuery`, {
-      method: 'POST',
+      method: 'POST', signal: AbortSignal.timeout(6000),
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ structuredQuery: { from: [{ collectionId: 'posts' }], where: { fieldFilter: { field: { fieldPath: 'status' }, op: 'EQUAL', value: { stringValue: 'published' } } }, limit: 30 } }),
     });
@@ -422,7 +428,7 @@ async function pickModels(env) {
   try { found = JSON.parse((await cacheGet(env, 'models')) || 'null'); } catch {}
   if (!found) {
     try {
-      const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200', { headers: { 'x-goog-api-key': env.GEMINI_API_KEY } });
+      const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200', { headers: { 'x-goog-api-key': env.GEMINI_API_KEY }, signal: AbortSignal.timeout(8000) });
       if (r.ok) {
         const d = await r.json();
         found = (d.models || [])
@@ -460,9 +466,12 @@ async function askGemini(env, models, sys, contents, only) {
       generationConfig: { temperature: 0.3, maxOutputTokens: 1200, ...(think ? { thinkingConfig: think } : {}) },
       ...(search ? { tools: [{ google_search: {} }] } : {}),
     };
-    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY }, body: JSON.stringify(body),
-    });
+    let r;
+    try {
+      r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY }, body: JSON.stringify(body), signal: AbortSignal.timeout(40000),
+      });
+    } catch (e) { lastErr += ` | ${model}: ${e.name === 'TimeoutError' ? 'no answer in 40 s' : e.message}`; continue; }
     if (r.ok) {
       const d = await r.json();
       const c = d.candidates?.[0];

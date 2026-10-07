@@ -58,7 +58,8 @@ function paint(scroll = true) {
 async function api(method, body) {
   const t = await A.idToken();
   const url = location.hostname.endsWith('pages.dev') ? '/api/dalal' : DALAL_API;
-  const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` }, body: body ? JSON.stringify(body) : undefined });
+  // a stuck request must never leave the member waiting forever
+  const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` }, body: body ? JSON.stringify(body) : undefined, signal: AbortSignal.timeout(method === 'GET' ? 15000 : 75000) });
   let d = {};
   try { d = await r.json(); } catch {}
   return { ok: r.ok, status: r.status, d };
@@ -96,7 +97,7 @@ async function ask(q) {
       }
     }
   } catch {
-    msgs.push({ role: 'bot', err: true, text: 'Network problem. Please check your internet and try again.' });
+    msgs.push({ role: 'bot', err: true, text: 'Dalal is taking too long right now. Please try again in a minute.' });
   }
   busy = false;
   save(msgs);
