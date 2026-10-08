@@ -545,11 +545,32 @@ function tvBlock(s, full) {
     <p class="sub">Written by TradingView's AI from the company's documents. Revenue, EBITDA and profit figures are checked against the NSE filing: ✓ same, ⚠ same only on another definition, ✗ different. Not investment advice.</p></details>`;
 }
 
+function resWait(r) {
+  const t = r.ts ? new Date(String(r.ts).replace(' ', 'T')) : null;
+  const m = t ? Math.max(0, Math.round((Date.now() - t.getTime()) / 60000)) : null;
+  const w = m == null ? '' : m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${m % 60} m`;
+  return `<p class="res-wait"><b>Result filed${w ? `, numbers waiting ${w}` : ''}.</b> Sector Scope first reads the table in the company's result PDF (checked against its last two quarters); otherwise the numbers come with NSE's data file, usually 1 to 8 hours after the result. ${r.doc ? `<a href="${esc(r.doc)}" target="_blank" rel="noopener">Open the result PDF now</a>` : ''}</p>`;
+}
+function resToday(h) {
+  const tb = h.today_board || [];
+  if (!tb.length) return '';
+  const n = (k) => tb.filter((b) => b.step === k).length;
+  const step = (b) => (b.step === 'numbers' ? `${chip('Numbers in' + (b.src === 'pdf' ? ' (provisional)' : ''), 'good')} ${labelChip(b.label)} <span class="sub inline">${b.bank ? 'NII' : 'Revenue'} ${yy(b.rev_y)} · PAT ${yy(b.pat_y)}</span>`
+    : b.step === 'filed' ? `${chip('Filed ' + String(b.filed || '').slice(11, 16), 'good')} ${chip('Numbers waiting', 'warn')}` : chip('Not filed yet', 'warn'));
+  return `<section class="card"><div class="card-head"><h2>Today's results</h2><span class="sub">${tb.length} companies: ${n('numbers')} with numbers, ${n('filed')} filed and waiting, ${n('waiting')} not filed yet</span></div>
+    <table class="tbl compact"><tbody>${tb.map((b) => `<tr><td>${resName(b)}</td><td>${step(b)}</td><td>${b.doc ? `<a href="${esc(b.doc)}" target="_blank" rel="noopener">Results PDF</a>` : ''}</td></tr>`).join('')}</tbody></table>
+    <p class="sub">Updated through the day. "Provisional" numbers are read from the result PDF and replaced by NSE's data file when it arrives.</p></section>`;
+}
+
 function resCard(r, tv) {
   const top = r.bank ? [['NII', r.nii, r.nii_y], ['PAT', r.pat, r.pat_y]] : [['Revenue', r.rev, r.rev_y], ['EBITDA', r.ebitda, r.ebitda_y], ['PAT', r.pat, r.pat_y]];
+  if (r.wait) return `<article class="card res-card"><div class="res-top"><span>${resName(r)}</span><span class="r"><span class="sub">${fDT(String(r.ts || '').replace(' ', 'T'))}</span></span></div>
+    <p class="sub">${esc(r.sector || '')}${r.industry ? ` · ${esc(r.industry)}` : ''} · ${esc(qLabel(r.q))}</p>${resWait(r)}
+    <p class="res-links">${r.press ? `<a href="${esc(r.press)}" target="_blank" rel="noopener">Press release</a>` : ''}${r.ppt ? `<a href="${esc(r.ppt)}" target="_blank" rel="noopener">Presentation</a>` : ''}</p></article>`;
   return `<article class="card res-card">
     <div class="res-top"><span>${resName(r)}</span><span class="r">${labelChip(r.label)}<span class="sub">${fDT(String(r.ts || '').replace(' ', 'T'))}</span></span></div>
     <p class="sub">${esc(r.sector || '')}${r.industry ? ` · ${esc(r.industry)}` : ''}${r.mcap ? ` · m-cap ${mcapCr(r.mcap)}` : ''} · ${esc(qLabel(r.q))} ${esc(r.basis || '')}</p>
+    ${r.src === 'pdf' ? `<p class="res-prov">${chip('Provisional', 'warn')} read from the company's result PDF minutes after filing; NSE's data file replaces these numbers when it arrives.</p>` : ''}${r.pdfchk ? `<p class="sub">${esc(r.pdfchk)}</p>` : ''}
     <div class="res-nums">${top.map(([l, v, g]) => `<div><span>${l}</span><b>${crs(v)}</b><small>${yy(g)} YoY</small></div>`).join('')}
       ${r.bank ? `<div><span>Gross / net NPA</span><b>${r.gnpa == null ? '—' : num(r.gnpa, 2) + '%'}</b><small>${r.nnpa == null ? '' : num(r.nnpa, 2) + '% net'}</small></div>`
       : `<div><span>EBITDA margin</span><b>${r.m == null ? '—' : num(r.m, 1) + '%'}</b><small>${bps(r.m_y)} YoY</small></div>`}</div>
@@ -695,7 +716,7 @@ async function viewResults() {
     body = `<div class="toolbar"><label class="search grow">${ic('search', 16)}<input placeholder="Search company, sector or industry" value="${esc(ui.res.q)}" data-input="resQ"></label>
       <select data-change="resSector"><option value="all">All sectors</option>${sectors.map((s) => `<option ${s === ui.res.sector ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select>
       <select data-change="resLabel">${['all', 'Strong', 'Good', 'Mixed', 'Weak'].map((l) => `<option value="${l}" ${l === ui.res.label ? 'selected' : ''}>${l === 'all' ? 'Every result' : l}</option>`).join('')}</select></div>
-      ${rows.length ? `<div class="res-grid">${rows.slice(0, ui.res.n).map((r) => resCard(r, tvs[r.sym])).join('')}</div>${rows.length > ui.res.n ? `<div class="more"><button class="btn ghost" data-act="resMore">Show more (${num(rows.length - ui.res.n)} left)</button></div>` : ''}`
+      ${resToday(h)}${rows.length ? `<div class="res-grid">${rows.slice(0, ui.res.n).map((r) => resCard(r, tvs[r.sym])).join('')}</div>${rows.length > ui.res.n ? `<div class="more"><button class="btn ghost" data-act="resMore">Show more (${num(rows.length - ui.res.n)} left)</button></div>` : ''}`
       : `<div class="empty card">No results announced yet for ${esc(h.current_label || 'this quarter')}${q || ui.res.sector !== 'all' ? ' that match' : ''}. ${h.prev_q ? `See <button class="linkbtn" data-act="resTab" data-v="season">last season's review</button>.` : ''}</div>`}`;
   } else if (tab === 'company') {
     const inf = await hist('stk/info').catch(() => ({}));
