@@ -699,7 +699,50 @@ async function viewResCo(sym) {
       ${bank ? `<td class="r">${crs(x.ppop)}</td><td class="r">${x.gnpa == null ? '—' : num(x.gnpa, 2) + '%'}</td><td class="r">${x.nnpa == null ? '—' : num(x.nnpa, 2) + '%'}</td>` : `<td class="r">${crs(x.ebitda)}</td><td class="r">${x.m == null ? '—' : num(x.m, 1) + '%'}</td><td class="r">${bps(x.m_y)}</td>`}
       <td class="r">${crs(x.pat)}</td><td class="r">${yy(x.pat_y)}${x.flip ? `<span class="sub">${esc(x.flip)}</span>` : ''}</td><td class="r">${yy(x.pat_q)}</td><td class="r">${x.eps == null ? '—' : num(x.eps, 2)}</td>
       <td>${labelChip(x.label)}${x.check ? ' ' + chip('check', 'warn') : ''}</td><td class="r">${yy(e.day)}</td><td class="r">${yy(e.m1)}</td><td>${docLinks(x.docs, x.url)}</td></tr>`; }).join('')}</tbody></table></div>
-    <p class="sub legend pad">* time taken from the XBRL publish time, which can be hours after the real announcement. EPS growth only when the share count did not change. 2012–2016 quarters come from NSE's HTML tables (no EBITDA). Before GST (July 2017) many companies reported revenue including excise duty. EBITDA = profit before exceptional items and tax + finance costs + depreciation − other income, from the filed lines. Facts from filings, not a recommendation.</p></section>`;
+    <p class="sub legend pad">* time taken from the XBRL publish time, which can be hours after the real announcement. EPS growth only when the share count did not change. 2012–2016 quarters come from NSE's HTML tables (no EBITDA). Before GST (July 2017) many companies reported revenue including excise duty. EBITDA = profit before exceptional items and tax + finance costs + depreciation − other income, from the filed lines. Facts from filings, not a recommendation.</p></section>
+  ${fdbPanels(d.fdb)}`;
+}
+
+/* Earlier quarters + balance sheet + cash flow (copy of Sector Scope Earnings > Company, from its checked store of NSE filings).
+   d.fdb = { bank, eq: [earlier quarters, oldest first], bs: [half-year ends, oldest first], cf: [H1 / FY rows, oldest first] }; absent = nothing shown. */
+const fdbQ = (iso) => { const y = +String(iso).slice(0, 4), m = +String(iso).slice(5, 7), fy = m <= 3 ? y : y + 1, q = { 6: 1, 9: 2, 12: 3, 3: 4 }[m]; return q ? `Q${q} FY${String(fy).slice(2)}` : esc(iso); };
+const fdbH = (iso, months) => {
+  const y = +String(iso).slice(0, 4), m = +String(iso).slice(5, 7), fy = m <= 3 ? y : y + 1;
+  if (months === 12) return `FY${String(fy).slice(2)}`;
+  if (months === 6) return `H1 FY${String(fy).slice(2)}`;
+  return m === 3 ? `Mar ${y}` : m === 9 ? `Sep ${y}` : esc(iso);
+};
+function fdbPanels(f) {
+  if (!f) return '';
+  const bank = !!f.bank, S = (x) => (x.basis === 'standalone' ? ' <span class="sub inline" title="standalone figures">S</span>' : '');
+  let h = '';
+  const eq = (f.eq || []).slice().reverse();
+  if (eq.length) {
+    h += `<section class="card flush"><div class="card-head pad"><h2>Earlier quarters</h2><span class="sub">${eq.length} more, ${fdbQ(eq[eq.length - 1].qe)} to ${fdbQ(eq[0].qe)} · first-published figures from NSE filings</span></div>
+    <div class="tbl-wrap rc-hist"><table class="tbl compact"><thead><tr><th><button>Quarter</button></th><th><button>Published</button></th><th class="r"><button>${bank ? 'Interest earned' : 'Revenue'} ₹ cr</button></th><th class="r"><button>YoY</button></th><th class="r"><button>PBT ₹ cr</button></th><th class="r"><button>PAT ₹ cr</button></th><th class="r"><button>YoY</button></th><th class="r"><button>EPS ₹</button></th></tr></thead>
+    <tbody>${eq.map((x) => `<tr><td><b>${fdbQ(x.qe)}</b>${S(x)}</td><td>${x.pub ? fDate(x.pub) : '—'}</td><td class="r">${crs(x.rev)}</td><td class="r">${yy(x.rev_y)}</td>
+      <td class="r">${crs(x.pbt)}</td><td class="r">${crs(x.pat)}</td><td class="r">${yy(x.pat_y)}</td><td class="r">${x.eps == null ? '—' : num(x.eps, 2)}</td></tr>`).join('')}</tbody></table></div>
+    <p class="sub legend pad">Quarters before the history above. 2012–2018 come from NSE's HTML result tables (revenue, profit, EPS only). Before Sep 2019 most companies filed consolidated figures only once a year, so many of these are standalone (S). Growth is left blank when either quarter is a loss or the basis changes.</p></section>`;
+  }
+  const bs = (f.bs || []).slice().reverse();
+  if (bs.length) {
+    const rows = bank
+      ? [['Total assets', 'assets'], ['Equity', 'equity'], ['Deposits', 'dep'], ['Borrowings', 'borrow'], ['Cash & bank', 'cash']]
+      : [['Total assets', 'assets'], ['Equity', 'equity'], ['Borrowings', 'borrow'], ['Cash & bank', 'cash'], ['Receivables', 'recv'],
+         ['Inventories', 'inv'], ['Payables', 'pay'], ['Current assets', 'ca'], ['Current liabilities', 'cl']];
+    h += `<section class="card flush"><div class="card-head pad"><h2>Balance sheet</h2><span class="sub">₹ crore, at each half-year end · NSE filings (machine-readable since Sep 2022)</span></div>
+    <div class="tbl-wrap"><table class="tbl compact"><thead><tr><th><button>Item</button></th>${bs.map((x) => `<th class="r"><button>${fdbH(x.end)}${x.basis === 'standalone' ? ' (S)' : ''}</button></th>`).join('')}</tr></thead>
+    <tbody>${rows.map(([l, k]) => (bs.some((x) => x[k] != null) ? `<tr><td>${l}</td>${bs.map((x) => `<td class="r">${crs(x[k])}</td>`).join('')}</tr>` : '')).join('')}</tbody></table></div>
+    <p class="sub legend pad">Equity = attributable to the company's own shareholders (consolidated) or total equity (standalone). Borrowings = long + short-term borrowings (lenders: borrowings + debt securities + subordinated debt). Cash = cash and equivalents + other bank balances.</p></section>`;
+  }
+  const cf = (f.cf || []).slice().reverse();
+  if (cf.length) {
+    h += `<section class="card flush"><div class="card-head pad"><h2>Cash flow</h2><span class="sub">₹ crore · H1 = April to September, FY = full year · NSE filings (since Sep 2020)</span></div>
+    <div class="tbl-wrap"><table class="tbl compact"><thead><tr><th><button>Period</button></th><th class="r"><button>Operating</button></th><th class="r"><button>Investing</button></th><th class="r"><button>Financing</button></th>${bank ? '' : '<th class="r"><button>Capex</button></th><th class="r"><button>Free cash flow</button></th>'}</tr></thead>
+    <tbody>${cf.map((x) => `<tr><td>${fdbH(x.end, x.m)}${S(x)}</td><td class="r">${crs(x.cfo)}</td><td class="r">${crs(x.cfi)}</td><td class="r">${crs(x.cff)}</td>${bank ? '' : `<td class="r">${crs(x.capex)}</td><td class="r">${crs(x.fcf)}</td>`}</tr>`).join('')}</tbody></table></div>
+    <p class="sub legend pad">Capex = purchase of property, plant, equipment and intangibles. Free cash flow = operating cash flow − capex.${bank ? " A bank's operating cash flow moves with deposits and loans, so it is not a profit-quality measure." : ''} Facts from filings, not a recommendation.</p></section>`;
+  }
+  return h;
 }
 
 async function viewResults() {
