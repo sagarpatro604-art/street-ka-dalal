@@ -68,6 +68,7 @@ const ICONS = {
   copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/>',
   file: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/>',
   lab: '<path d="M9 3h6M10 3v6l-5.5 9.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3"/><path d="M7.5 15h9"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
   refresh: '<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',
 };
 const ic = (n, s = 18) => `<svg class="ic" viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ''}</svg>`;
@@ -97,6 +98,7 @@ async function data(name) {
 const ui = {
   scr: { tab: 'flag_pole', q: '', sector: 'all' },
   sec: { period: '1D' },
+  pm: { story: 'ai', sent: 'all', more: false },
   mkt: { idx: 'Nifty 50', cmp: '', range: '1Y', itab: 'broad' },
   stk: { q: '', sector: 'all', limit: 100 },
   res: { tab: 'announced', q: '', sector: 'all', label: 'all', when: 'week', conf: 'all', season: '', level: 'sector', group: '', n: 30 },
@@ -294,6 +296,102 @@ const heat = (v, span = 12) => {
   return `background:${v >= 0 ? `rgba(35,121,79,${a.toFixed(2)})` : `rgba(180,68,47,${a.toFixed(2)})`}`;
 };
 const ymLabel = (ym) => { const [y, m] = String(ym).split('-').map(Number); return m ? `${MON[m - 1]} ${y}` : ym; };
+
+/* ---------------- Pre-market (Sector Scope's Pre-Market tab, weekdays 07:55 and 08:30) ---------------- */
+// skd_publish.py --premarket pushes premarket.json to the repo's `pm` branch (no Cloudflare build).
+const PM_URL = 'https://raw.githubusercontent.com/sagarpatro604-art/street-ka-dalal/pm/premarket.json';
+let pmP = null, pmAt = 0;
+function pmData() {
+  if (!pmP || Date.now() - pmAt > 5 * 60000) {
+    pmAt = Date.now();
+    pmP = fetch(`${PM_URL}?t=${Math.floor(Date.now() / 300000)}`, { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  }
+  return pmP;
+}
+const sentChip = (s) => `<span class="chip ${s === 'bullish' ? 'good' : s === 'bearish' ? 'bad' : ''}">${esc(s || 'neutral')}</span>`;
+async function viewPremarket() {
+  const d = await pmData();
+  if (!d) return `${pageHead('Before the bell', 'Pre-market')}<section class="card empty"><p>The pre-market page is not published yet. It comes every weekday at 7:55 AM and again at 8:30 AM.</p></section>`;
+  const I = d.india || {}, g = I.gift || {}, im = I.implied || {};
+  const k = (label, v, sub, t) => `<div><span>${label}</span><b class="${t || ''}">${v}</b><small>${sub}</small></div>`;
+  const pub = d.published ? new Date(d.published) : null;
+  const pubT = pub ? pub.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Kolkata' }) : '—';
+  const stale = d.date && d.date !== new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+  const next = (d.schedule || []).find((s) => s > (d.slot || '')) || null;
+  const ai = d.story_ai || {};
+  const useAi = ui.pm.story === 'ai' && (ai.paragraphs || []).length;
+  const story = useAi ? ai.paragraphs : d.story_code || [];
+  const groups = {};
+  (d.globals || []).forEach((x) => { (groups[x.group] = groups[x.group] || []).push(x); });
+  const rn = d.rated_news || {};
+  const rrows = (rn.rows || []).filter((r) => ui.pm.sent === 'all' || r.sentiment === ui.pm.sent).sort((a, b) => (b.impact || 0) - (a.impact || 0));
+  const o = d.options || {};
+  const fl = d.flows || {};
+  const wall = (w) => `<li><b>${num(w.strike, 0)}</b> <span class="sub">OI ${num(w.oi / 1e5, 1)} lakh${w.chg ? ` · ${w.chg > 0 ? '+' : ''}${num(w.chg / 1e5, 1)} lakh added` : ''}</span></li>`;
+  const watchTxt = (w) => (typeof w === 'string' ? w : w.text || w.what || Object.values(w).join(' · '));
+  return `${pageHead('Before the bell', 'Pre-market', `<span class="mood">Updated ${esc(pubT)}${next ? ` · next ${fTime(next)}` : ''}</span>`)}
+  ${stale ? `<p class="notice">This is the pre-market page of ${fDate(d.date)}. Today's comes at 7:55 AM on market days.</p>` : ''}
+  <p class="sub">Overnight cues, flows and news in one place, published at 7:55 AM and 8:30 AM on market days. It describes the market; it is not a buy or sell call.</p>
+  <section class="kpis pm-kpis">
+    ${k('GIFT Nifty', num(g.last, 1), `${pct(g.chg_pct)} · ${esc(g.time || '')}`, tone(g.chg_pct))}
+    ${k('Implied Nifty open', num(im.open_est, 0), `${im.gap_pts > 0 ? '+' : ''}${num(im.gap_pts, 0)} pts (${pct(im.gap_pct)})`, tone(im.gap_pts))}
+    ${k('Nifty 50 close', num(I.nifty?.last, 1), `${pct(I.nifty?.chg_pct)} last session`, tone(I.nifty?.chg_pct))}
+    ${k('Bank Nifty', num(I.bank?.last, 1), pct(I.bank?.chg_pct), tone(I.bank?.chg_pct))}
+    ${k('India VIX', num(I.vix?.last, 2), pct(I.vix?.chg_pct), '')}
+    ${k('Midcap 150', num(I.midcap?.last, 1), pct(I.midcap?.chg_pct), tone(I.midcap?.chg_pct))}
+    ${k('Smallcap 250', num(I.smallcap?.last, 1), pct(I.smallcap?.chg_pct), tone(I.smallcap?.chg_pct))}
+  </section>
+
+  <section class="card">
+    <div class="card-head"><h2>${esc(useAi ? ai.headline || 'Morning story' : 'Morning story')}</h2>
+      <div class="seg"><button class="${ui.pm.story === 'ai' ? 'on' : ''}" data-act="pmStory" data-v="ai">AI story</button><button class="${ui.pm.story === 'code' ? 'on' : ''}" data-act="pmStory" data-v="code">From the numbers</button></div></div>
+    <div class="prose">${story.map((p) => `<p>${esc(p)}</p>`).join('') || '<p class="sub">No story this morning.</p>'}</div>
+    ${useAi && (ai.watch || []).length ? `<h3>Watch today</h3><ul class="pm-list">${ai.watch.map((w) => `<li>${esc(watchTxt(w))}</li>`).join('')}</ul>` : ''}
+    <p class="fine">${useAi ? `Written by AI from this page's numbers; every sentence with a number that is not on the page is removed${(ai.dropped || []).length ? ` (${ai.dropped.length} removed)` : ''}.` : 'Written straight from the numbers on this page.'}</p>
+  </section>
+
+  <div class="grid2">
+    <article class="card"><h2>Top 5 market-moving events</h2>
+      <ol class="pm-list">${(d.top5 || []).map((x) => `<li>${sentChip(x.sentiment)} ${x.url ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.what)}</a>` : esc(x.what)}${x.why ? `<span class="sub">${esc(x.why)}</span>` : ''}</li>`).join('')}</ol></article>
+    <article class="card"><h2>Sector triggers</h2><p class="sub">Rules of thumb on the sectors that usually feel a move like this. Not forecasts.</p>
+      <ul class="pm-list">${(d.triggers || []).map((x) => `<li>${sentChip(x.sentiment)} <b>${esc(x.cue)}</b><span class="sub">${esc(x.effect)}</span></li>`).join('') || '<li class="sub">No big overnight moves.</li>'}</ul></article>
+  </div>
+
+  <section class="card"><h2>Global cues</h2>
+    <div class="pm-globals">${Object.entries(groups).map(([gname, xs]) => `<div><h3>${esc(gname)}</h3>${xs.map((x) => `<div class="pm-g"><span>${esc(x.name)}</span>${spark(x.spark, 64, 20)}<b>${num(x.last, x.last > 1000 ? 0 : 2)}</b><b class="${tone(x.chg_pct)}">${pct(x.chg_pct)}</b></div>`).join('')}</div>`).join('')}</div>
+    <p class="fine">Global prices may be a few minutes late.</p></section>
+
+  <div class="grid3">
+    <article class="card"><h2>FII / DII cash</h2><p class="sub">₹ crore, cash market</p>
+      <table class="tbl"><thead><tr><th>Date</th><th class="r">FII</th><th class="r">DII</th></tr></thead><tbody>${(fl.rows || []).map((r) => `<tr><td>${fDate(r.date)}</td><td class="r ${tone(r.fii)}">${num(r.fii, 0)}</td><td class="r ${tone(r.dii)}">${num(r.dii, 0)}</td></tr>`).join('')}</tbody></table>
+      <dl class="kv"><dt>FII, 5 sessions</dt><dd class="${tone(fl.fii_5d)}">${num(fl.fii_5d, 0)}</dd><dt>DII, 5 sessions</dt><dd class="${tone(fl.dii_5d)}">${num(fl.dii_5d, 0)}</dd></dl></article>
+    <article class="card"><h2>Nifty option levels</h2><p class="sub">Expiry ${fDate(o.expiry)} · chain of ${esc(o.as_of || '—')}</p>
+      <dl class="kv"><dt>Put-call ratio</dt><dd>${num(o.pcr, 2)}</dd><dt>Max pain</dt><dd>${num(o.max_pain, 0)}</dd><dt>ATM IV</dt><dd>${num(o.atm_iv, 1)}%</dd></dl>
+      <h3>Biggest call OI</h3><ul class="pm-list">${(o.call_walls || []).map(wall).join('')}</ul>
+      <h3>Biggest put OI</h3><ul class="pm-list">${(o.put_walls || []).map(wall).join('')}</ul></article>
+    <article class="card"><h2>Today's calendar</h2>
+      <h3>Results today</h3><div class="chip-row">${(d.results_today || []).map((r) => `<a class="chip" href="#/results/co/${encodeURIComponent(r.sym)}" title="${esc(r.name)}">${esc(r.sym)}</a>`).join('') || '<span class="sub">None confirmed</span>'}</div>
+      <h3>Events, next 24 h</h3><ul class="pm-list">${[...(d.india_events || []).map((e) => ({ ...e, region: e.region || 'India' })), ...(d.global_events || [])].map((e) => `<li><b>${esc(e.time || '')}</b> ${esc(e.region || '')} · ${esc(e.name || e.title || '')}${e.forecast ? `<span class="sub">Forecast ${esc(e.forecast)}${e.previous ? ` · previous ${esc(e.previous)}` : ''}</span>` : ''}</li>`).join('') || '<li class="sub">Nothing major</li>'}</ul>
+      <h3>F&amp;O ban</h3><div class="chip-row">${(d.fo_ban?.syms || []).map((s) => `<span class="chip warn">${esc(s)}</span>`).join('') || '<span class="sub">No stock in ban</span>'}</div></article>
+  </div>
+
+  <section class="card">
+    <div class="card-head"><h2>Overnight news, rated</h2><span class="sub"><b class="up">${num(rn.counts?.bullish)} bullish</b> · <b class="down">${num(rn.counts?.bearish)} bearish</b> · ${num(rn.counts?.neutral)} neutral</span></div>
+    <div class="toolbar"><div class="seg">${['all', 'bullish', 'bearish', 'neutral'].map((s) => `<button class="${ui.pm.sent === s ? 'on' : ''}" data-act="pmSent" data-v="${s}">${s[0].toUpperCase() + s.slice(1)}</button>`).join('')}</div></div>
+    <ul class="pm-news">${rrows.slice(0, ui.pm.more ? 200 : 25).map((r) => `<li>${sentChip(r.sentiment)}<span class="pm-imp" title="Impact, 1 to 5">${'●'.repeat(r.impact || 0)}</span>
+      <div><a href="${esc(r.url || '#')}" target="_blank" rel="noopener">${esc(r.title)}</a>
+      <span class="sub">${esc(r.source || r.kind || '')} · ${esc(r.time || '')}${r.category ? ` · ${esc(r.category)}` : ''}${(r.stocks || []).length ? ` · ${r.stocks.slice(0, 4).map((s) => symLink(s)).join(' ')}` : ''}</span>
+      ${r.why ? `<span class="sub">${esc(r.why)}</span>` : ''}</div></li>`).join('') || '<li class="sub">Nothing here.</li>'}</ul>
+    ${rrows.length > 25 && !ui.pm.more ? `<button class="btn" data-act="pmMore">Show all ${rrows.length}</button>` : ''}
+    <p class="fine">Rated by AI for Indian equities (impact 1 to 5). A rating describes the news, not what to do.</p></section>
+
+  <div class="grid2">
+    <article class="card"><h2>Overnight filings</h2><p class="sub">Since ${esc(d.filings?.since || '')} · top 1,000 stocks by turnover</p>
+      <ul class="pm-list">${(d.filings?.rows || []).slice(0, 40).map((f) => `<li>${symLink(f.sym)} <span class="chip">${esc(f.label || f.type || '')}</span> <span class="sub">${esc(f.time || '')}</span><span class="sub">${f.pdf ? `<a href="${esc(f.pdf)}" target="_blank" rel="noopener">${esc(f.subject || 'Filing')}</a>` : esc(f.subject || '')}</span></li>`).join('') || '<li class="sub">No filings overnight.</li>'}</ul></article>
+    <article class="card"><h2>Headlines since the close</h2><p class="sub">${num(d.news?.n)} headlines</p>
+      <ul class="pm-list">${(d.news?.rows || []).slice(0, 40).map((n) => `<li><a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.title)}</a><span class="sub">${esc(n.source || '')} · ${esc(n.time || '')}</span></li>`).join('')}</ul></article>
+  </div>`;
+}
 
 async function viewMarket() {
   const [m, s] = await Promise.all([data('market'), data('sectors')]);
@@ -1529,9 +1627,9 @@ async function viewResearchItem(id) {
 }
 
 /* ---------------- shell, routing ---------------- */
-const NAV = [['', 'Market', 'market'], ['screeners', 'Screeners', 'screen'], ['sectors', 'Sectors', 'sector'], ['funds', 'Mutual funds', 'funds'], ['equity', 'Research', 'search'], ['results', 'Results', 'file'], ['news', 'News', 'news'], ['research', 'Prop. Research', 'lab'], ['insights', 'Insights', 'pen']];
+const NAV = [['premarket', 'Pre-market', 'sun'], ['', 'Market', 'market'], ['screeners', 'Screeners', 'screen'], ['sectors', 'Sectors', 'sector'], ['funds', 'Mutual funds', 'funds'], ['equity', 'Research', 'search'], ['results', 'Results', 'file'], ['news', 'News', 'news'], ['research', 'Prop. Research', 'lab'], ['insights', 'Insights', 'pen']];
 const route = () => location.hash.replace(/^#\/?/, '');
-const VIEWS = { '': viewMarket, screeners: viewScreeners, sectors: viewSectors, funds: viewFunds, equity: viewEquity, stocks: () => { ui.eq.tab = 'companies'; return viewEquity(); }, results: viewResults, news: viewNews, insights: viewInsights, admin: viewAdmin, research: viewResearch };
+const VIEWS = { premarket: viewPremarket, '': viewMarket, screeners: viewScreeners, sectors: viewSectors, funds: viewFunds, equity: viewEquity, stocks: () => { ui.eq.tab = 'companies'; return viewEquity(); }, results: viewResults, news: viewNews, insights: viewInsights, admin: viewAdmin, research: viewResearch };
 
 function shell() {
   const u = A.state.user;
@@ -1584,6 +1682,9 @@ const ACTS = {
   scrTab: (el) => { ui.scr.tab = el.dataset.v; ui.scr.sector = 'all'; render(); },
   secPeriod: (el) => { ui.sec.period = el.dataset.v; ui.sort.sectors = { k: 'ret', dir: -1 }; render(); },
   pickIdx: (el) => { ui.mkt.idx = el.dataset.v; if (ui.mkt.cmp === ui.mkt.idx) ui.mkt.cmp = ''; if (route().split('/')[0] !== '') { location.hash = '#/'; return; } render().then(() => $('#idxCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' })); },
+  pmStory: (el) => { ui.pm.story = el.dataset.v; render(); },
+  pmSent: (el) => { ui.pm.sent = el.dataset.v; ui.pm.more = false; render(); },
+  pmMore: () => { ui.pm.more = true; render(); },
   mktRange: (el) => { ui.mkt.range = el.dataset.v; render(); },
   mktItab: (el) => { ui.mkt.itab = el.dataset.v; render(); },
   mfGrp: (el) => { ui.mf.grp = el.dataset.v; ui.mf.sel = null; render(); },

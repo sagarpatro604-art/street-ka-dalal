@@ -697,3 +697,19 @@ h3.mt { margin-top: 14px; margin-bottom: 4px; }
 @media (max-width: 760px) { .rc-nums { grid-template-columns: repeat(2, minmax(0, 1fr)); } .rc-right { align-items: flex-start; } .rc-name { font-size: 22px; } }
 .res-wait { background: var(--paper-2); border-radius: 10px; padding: 8px 10px; font-size: 13px; margin: 2px 0; }
 .res-prov { font-size: 12px; color: var(--muted); margin: 0; }
+
+/* Pre-market */
+.pm-kpis { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.pm-list { list-style: none; padding: 0; margin: 6px 0 0; display: flex; flex-direction: column; gap: 10px; }
+ol.pm-list { list-style: decimal; padding-left: 20px; }
+.pm-list li .sub, .pm-news li .sub { display: block; margin-top: 2px; }
+.pm-globals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 24px; }
+.pm-globals h3 { margin: 0 0 6px; font-size: 13px; color: var(--muted); }
+.pm-g { display: grid; grid-template-columns: minmax(0, 1fr) 64px 76px 64px; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.pm-g b { text-align: right; font-weight: 600; }
+.pm-news { list-style: none; padding: 0; margin: 10px 0; }
+.pm-news li { display: grid; grid-template-columns: 74px 52px minmax(0, 1fr); gap: 8px; align-items: start; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.pm-imp { color: var(--warn); letter-spacing: 1px; font-size: 11px; padding-top: 3px; }
+.chip.bad { background: var(--down-bg); color: var(--down); }
+@media (max-width: 900px) { .pm-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .pm-globals { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .pm-news li { grid-template-columns: 1fr; gap: 4px; } }
