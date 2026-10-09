@@ -656,7 +656,7 @@ function resToday(h) {
   const step = (b) => (b.step === 'numbers' ? `${chip('Numbers in' + (b.src === 'pdf' ? ' (provisional)' : ''), 'good')} ${labelChip(b.label)} <span class="sub inline">${b.bank ? 'NII' : 'Revenue'} ${yy(b.rev_y)} · PAT ${yy(b.pat_y)}</span>`
     : b.step === 'filed' ? `${chip('Filed ' + String(b.filed || '').slice(11, 16), 'good')} ${chip('Numbers waiting', 'warn')}` : chip('Not filed yet', 'warn'));
   return `<section class="card"><div class="card-head"><h2>Today's results</h2><span class="sub">${tb.length} companies: ${n('numbers')} with numbers, ${n('filed')} filed and waiting, ${n('waiting')} not filed yet</span></div>
-    <table class="tbl compact"><tbody>${tb.map((b) => `<tr><td>${resName(b)}</td><td>${step(b)}</td><td>${b.doc ? `<a href="${esc(b.doc)}" target="_blank" rel="noopener">Results PDF</a>` : ''}</td></tr>`).join('')}</tbody></table>
+    <table class="tbl compact"><tbody>${tb.map((b) => `<tr><td>${resName(b)}</td><td>${step(b)}</td><td>${b.call ? `<span class="sub inline">Earnings call ${esc(String(b.call).slice(11, 16))}</span>` : ''}</td><td>${b.doc ? `<a href="${esc(b.doc)}" target="_blank" rel="noopener">Results PDF</a>` : ''}</td></tr>`).join('')}</tbody></table>
     <p class="sub">Updated through the day. "Provisional" numbers are read from the result PDF and replaced by NSE's data file when it arrives.</p></section>`;
 }
 
@@ -880,8 +880,9 @@ async function viewResults() {
         <select data-change="resSector"><option value="all">All sectors</option>${sectors.map((s) => `<option ${s === ui.res.sector ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></div>
       <section class="card flush">${table('rescal', rows, [{ k: 'date', label: 'Date', fmt: (r) => `<b>${fDay(r.date)}</b>` }, { k: 'sym', label: 'Company', fmt: resName },
         { k: 'sector', label: 'Sector', fmt: (r) => `${esc(r.sector || '—')}<span class="sub">${esc(r.industry || '')}</span>` }, { k: 'status', label: 'Date is', fmt: (r) => (r.status === 'confirmed' ? chip('Confirmed by NSE notice', 'good') : chip('Estimated (same quarter last year)', '')) },
+        { k: 'call', label: 'Earnings call', fmt: (r) => (r.call ? `${fDay(String(r.call).slice(0, 10))}<span class="sub">${esc(String(r.call).slice(11, 16))}</span>` : '<span class="sub">—</span>') },
         { k: 'mcap', label: 'Market cap', fmt: (r) => mcapCr(r.mcap), cls: 'r' }], 'No results due in this window.')}</section>
-      <p class="sub legend">Confirmed = the company has told NSE the board-meeting date. Estimated = same quarter last year plus 52 weeks; it can move.</p>`;
+      <p class="sub legend">Confirmed = the company has told NSE the board-meeting date. Estimated = same quarter last year plus 52 weeks; it can move. Earnings call = date and time from the company's call notice to NSE.</p>`;
   } else {
     const sq = ui.res.season || (cur.reported ? h.current_q : h.prev_q) || h.current_q;
     let s;
