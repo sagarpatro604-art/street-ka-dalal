@@ -18,6 +18,7 @@
 :root{--bg:#f6f1e7;--paper:#fffdf8;--paper-2:#f1ebdf;--line:#e4dccb;--ink:#1d2a23;--muted:#6c786f;--green:#1f4d3a;--green-2:#2f6b4f;--sage:#dfe9d6;--gold:#b08d57;--gold-soft:#f3ead9;--up:#23794f;--up-bg:#e3f1e6;--down:#b4442f;--down-bg:#f8e6e1;
 --serif:"Fraunces",Georgia,"Times New Roman",serif;--sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;--shadow:0 1px 2px rgba(31,46,36,.05),0 10px 30px rgba(31,46,36,.08)}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
 a{color:var(--green-2)}
@@ -74,6 +75,21 @@ label.f{display:block;font-weight:600;font-size:14px;margin:0 0 6px}
 .choice input:focus-visible+label{box-shadow:0 0 0 3px rgba(47,107,79,.25)}
 .consent{display:flex;gap:10px;align-items:flex-start;background:var(--sage);border-radius:12px;padding:12px;margin:0 0 16px;font-size:14px;cursor:pointer}
 .consent input{width:20px;height:20px;margin:1px 0 0;accent-color:var(--green);flex:none}
+.acct{display:flex;align-items:center;gap:12px;border:1px solid var(--line);background:#fff;border-radius:12px;padding:11px 14px;margin:0 0 14px;cursor:pointer;font-size:14px;font-weight:600}
+.acct b{display:block;font-weight:500;color:var(--muted);word-break:break-all}
+.sw{position:relative;flex:none;width:42px;height:24px}
+.sw input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
+.sw i{position:absolute;inset:0;border-radius:999px;background:#cfc6b4;transition:background .2s}
+.sw i::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .2s}
+.sw input:checked+i{background:var(--green)}
+.sw input:checked+i::after{transform:translateX(18px)}
+.sw input:focus-visible+i{box-shadow:0 0 0 3px rgba(47,107,79,.25)}
+.fill{font-size:13px;color:var(--muted);margin:-8px 0 14px}
+.linkbtn{background:none;border:0;padding:0;font:inherit;font-weight:700;color:var(--green-2);text-decoration:underline;cursor:pointer}
+.join{margin:20px 0 0;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;font-size:14px;font-weight:600;color:#3d4a42;max-width:560px}
+.join-btns{display:flex;flex-wrap:wrap;gap:8px}
+.jb{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:8px 14px;color:#fff;text-decoration:none;font-weight:700;font-size:14px}
+.jb svg{width:17px;height:17px}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 .err{color:var(--down);font-size:14px;font-weight:600;min-height:20px;margin:0 0 8px}
 .form .btn.primary{width:100%;padding:14px;font-size:16px}
@@ -191,6 +207,7 @@ footer{padding:26px 0 90px;color:var(--muted);font-size:13px;text-align:center}
       <p class="lede">The week in markets, the quarterly results worth knowing, the data centre theme, and the story everyone is talking about. Free for our community. Register once and we add you to the calendar.</p>
       <div class="count" id="count" aria-label="Time left"><div><b id="cd-d">-</b><small>days</small></div><div><b id="cd-h">-</b><small>hours</small></div><div><b id="cd-m">-</b><small>mins</small></div><div><b id="cd-s">-</b><small>secs</small></div></div>
       <div class="ctas"><a class="btn primary" href="#register">Register now</a><a class="btn ghost" href="#agenda">See what we will cover</a></div>
+      <div class="join" id="join"><span>For session updates and reminders, join us:</span><div class="join-btns" id="joinBtns"></div></div>
     </div>
 
     <div class="form-zone" id="register">
@@ -203,7 +220,9 @@ footer{padding:26px 0 90px;color:var(--muted);font-size:13px;text-align:center}
           <label class="f" for="name">Your name</label>
           <input class="in" id="name" name="name" autocomplete="name" maxlength="80" placeholder="Full name" required>
           <label class="f" for="email">Email (for the calendar invite)</label>
-          <input class="in" id="email" name="email" type="email" inputmode="email" autocomplete="email" maxlength="120" placeholder="you@gmail.com" required>
+          <label class="acct" id="acct" hidden><span class="sw"><input type="checkbox" id="useLogin" checked><i></i></span><span>Use my sign-in email<b id="acctMail"></b></span></label>
+          <div id="emailWrap"><input class="in" id="email" name="email" type="email" inputmode="email" autocomplete="email" maxlength="120" placeholder="you@gmail.com" required>
+          <p class="fill" id="fillG" hidden>Already a Street ka Dalal member? <button type="button" class="linkbtn" id="gsign">Sign in with Google</button> and we fill this for you.</p></div>
           <label class="f">Did you attend the last session?</label>
           <div class="choice"><input type="radio" name="attended" id="att-y" value="yes"><label for="att-y">Yes, I did</label><input type="radio" name="attended" id="att-n" value="no"><label for="att-n">No, first time</label></div>
           <label class="consent"><input type="checkbox" id="consent" checked><span>Yes, add me to the calendar invite for this session (and send me the Meet link).</span></label>
@@ -308,6 +327,51 @@ footer{padding:26px 0 90px;color:var(--muted);font-size:13px;text-align:center}
   let li = 0;
   setInterval(() => { const b = $('#bubble'); if (!b) return; li = (li + 1) % lines.length; b.classList.remove('swap'); void b.offsetWidth; b.textContent = lines[li]; b.classList.add('swap'); }, 4200);
 
+  /* community links (WhatsApp / Telegram); a link left empty is not shown */
+  const JOIN = {
+    whatsapp: ['WhatsApp community', '#25D366', 'https://chat.whatsapp.com/DUdUxpofHqE9auMNtDyZYr', '<path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.5l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.3 2.2 2.2 0 0 0 .1-1.3c0-.1-.2-.2-.5-.3Z"/>'],
+    telegram: ['Telegram', '#229ED9', '', '<path fill="currentColor" d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.8.8l-4.8-3.6-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2L6.4 13.1 1.7 11.6c-1-.3-1-1 .2-1.5L20.6 3c.9-.3 1.6.2 1.3 1.3Z"/>'],
+  };
+  const jb = Object.values(JOIN).filter((x) => x[2]).map(([l, c, u, svg]) => `<a class="jb" style="background:${c}" href="${u}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true">${svg}</svg>${l}</a>`).join('');
+  if (jb) $('#joinBtns').innerHTML = jb; else $('#join').remove();
+
+  /* signed-in members: their Google email is used by default (toggle off to type another one).
+     Firebase loads after the page is on screen, so it never slows the first view. */
+  let fbUser = null, fbAuth = null;
+  const showAcct = () => {
+    const on = !!fbUser?.email;
+    $('#acct').hidden = !on;
+    $('#fillG').hidden = on;
+    if (on) {
+      $('#acctMail').textContent = fbUser.email;
+      const nm = $('#name');
+      if (nm && !nm.value && fbUser.displayName) nm.value = fbUser.displayName;
+    }
+    $('#emailWrap').hidden = on && $('#useLogin').checked;
+  };
+  $('#useLogin')?.addEventListener('change', () => { showAcct(); if (!$('#useLogin').checked) $('#email').focus(); });
+  async function loadAuth() {
+    try {
+      const { firebaseConfig } = await import('./js/config.js');
+      const base = 'https://www.gstatic.com/firebasejs/10.12.2/';
+      const [{ initializeApp }, A] = await Promise.all([import(base + 'firebase-app.js'), import(base + 'firebase-auth.js')]);
+      const a = A.getAuth(initializeApp(firebaseConfig));
+      fbAuth = { A, a };
+      A.onAuthStateChanged(a, (u) => { fbUser = u; showAcct(); });
+    } catch (e) { console.warn('sign-in not available', e); }
+  }
+  $('#fillG').hidden = false;
+  $('#gsign')?.addEventListener('click', async () => {
+    if (!fbAuth) await loadAuth();
+    if (!fbAuth) { $('#err').textContent = 'Google sign-in is not available here. Please type your email.'; return; }
+    const { A, a } = fbAuth;
+    const prov = new A.GoogleAuthProvider();
+    prov.setCustomParameters({ prompt: 'select_account' });
+    try { await A.setPersistence(a, A.indexedDBLocalPersistence).catch(() => {}); await A.signInWithPopup(a, prov); }
+    catch (e) { if (!/popup-closed|cancelled/.test(e.code || '')) $('#err').textContent = 'Could not sign in here. Please type your email instead.'; }
+  });
+  (window.requestIdleCallback || ((f) => setTimeout(f, 600)))(loadAuth);
+
   /* registration */
   const gcal = () => 'https://calendar.google.com/calendar/render?action=TEMPLATE'
     + '&text=' + encodeURIComponent('Street ka Dalal Community Meet 2')
@@ -328,13 +392,16 @@ footer{padding:26px 0 90px;color:var(--muted);font-size:13px;text-align:center}
   $('#regForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const f = e.target, err = $('#err'), btn = $('#sub');
-    const body = { event: EVENT, name: f.name.value.trim(), email: f.email.value.trim(), attended: (f.querySelector('input[name=attended]:checked') || {}).value, consent: $('#consent').checked, website: f.website.value };
+    const useLogin = !!fbUser?.email && $('#useLogin').checked;
+    const body = { event: EVENT, name: f.name.value.trim(), email: useLogin ? fbUser.email : f.email.value.trim(), login: useLogin, attended: (f.querySelector('input[name=attended]:checked') || {}).value, consent: $('#consent').checked, website: f.website.value };
     if (body.name.length < 2) { err.textContent = 'Please write your name.'; f.name.focus(); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(body.email)) { err.textContent = 'Please check your email address.'; f.email.focus(); return; }
     if (!body.attended) { err.textContent = 'Please tell us if you attended the last session.'; return; }
     err.textContent = ''; btn.disabled = true; btn.textContent = 'Saving...';
     try {
-      const r = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout ? AbortSignal.timeout(15000) : undefined });
+      const headers = { 'Content-Type': 'application/json' };
+      if (useLogin) headers.Authorization = `Bearer ${await fbUser.getIdToken()}`;
+      const r = await fetch('/api/register', { method: 'POST', headers, body: JSON.stringify(body), signal: AbortSignal.timeout ? AbortSignal.timeout(15000) : undefined });
       const j = await r.json().catch(() => ({}));
       if (!r.ok || !j.ok) throw new Error(j.error || 'Could not save right now. Please try again.');
       store.set('skd-reg-' + EVENT, { name: body.name, at: Date.now() });

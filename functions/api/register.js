@@ -26,6 +26,7 @@ function table(env) {
   if (!env.DALAL_DB) return Promise.reject(new Error('no database'));
   ready = ready || env.DALAL_DB.batch([
     env.DALAL_DB.prepare('CREATE TABLE IF NOT EXISTS registrations (event TEXT NOT NULL, email TEXT NOT NULL, name TEXT, attended TEXT, consent INTEGER, created TEXT, updated TEXT, iph TEXT, PRIMARY KEY (event, email))'),
+    env.DALAL_DB.prepare("CREATE TABLE IF NOT EXISTS reg_meta (event TEXT NOT NULL, email TEXT NOT NULL, via TEXT, PRIMARY KEY (event, email))"),
     env.DALAL_DB.prepare('CREATE TABLE IF NOT EXISTS reg_ip (k TEXT PRIMARY KEY, n INTEGER, day TEXT)'),
   ]).then(() => env.DALAL_DB).catch((e) => { ready = null; throw e; });
   return within(ready, 5000);
@@ -80,7 +81,13 @@ export async function onRequestPost({ request, env }) {
   }
   const event = EVENTS.includes(b.event) ? b.event : null;
   const name = String(b.name || '').replace(/\s+/g, ' ').trim().slice(0, 80);
-  const email = String(b.email || '').trim().toLowerCase().slice(0, 120);
+  let email = String(b.email || '').trim().toLowerCase().slice(0, 120);
+  let via = 'typed';
+  if (b.login) {                                                    // "use my sign-in email": trust only the verified token
+    const u = await verifyToken((request.headers.get('Authorization') || '').replace(/^Bearer\s+/i, ''), env.FIREBASE_PROJECT_ID || 'street-ka-dalal');
+    if (!u || !u.email) return json({ error: 'Your sign-in has expired. Turn off "Use my sign-in email" and type it, or reload the page.' }, 401, origin);
+    email = u.email; via = 'google';
+  }
   const attended = ['yes', 'no'].includes(b.attended) ? b.attended : null;
   const consent = b.consent === true ? 1 : 0;
   if (!event) return json({ error: 'This session is closed for registration.' }, 400, origin);
@@ -98,6 +105,7 @@ export async function onRequestPost({ request, env }) {
     await within(d.batch([
       d.prepare('INSERT INTO registrations (event, email, name, attended, consent, created, updated, iph) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(event, email) DO UPDATE SET name = excluded.name, attended = excluded.attended, consent = excluded.consent, updated = excluded.updated')
         .bind(event, email, name, attended, consent, now, now, iph),
+      d.prepare('INSERT INTO reg_meta (event, email, via) VALUES (?, ?, ?) ON CONFLICT(event, email) DO UPDATE SET via = excluded.via').bind(event, email, via),
       d.prepare('INSERT INTO reg_ip (k, n, day) VALUES (?, 1, ?) ON CONFLICT(k) DO UPDATE SET n = n + 1').bind(iph, day),
     ]), 5000);
     if (Math.random() < 0.05) d.prepare('DELETE FROM reg_ip WHERE day < ?').bind(day).run().catch(() => {});
@@ -115,7 +123,7 @@ export async function onRequestGet({ request, env }) {
   const event = new URL(request.url).searchParams.get('event') || EVENTS[EVENTS.length - 1];
   try {
     const d = await table(env);
-    const r = await within(d.prepare('SELECT email, name, attended, consent, created, updated FROM registrations WHERE event = ? ORDER BY created DESC').bind(event).all(), 5000);
+    const r = await within(d.prepare('SELECT r.email, r.name, r.attended, r.consent, r.created, r.updated, m.via FROM registrations r LEFT JOIN reg_meta m ON m.event = r.event AND m.email = r.email WHERE r.event = ? ORDER BY r.created DESC').bind(event).all(), 5000);
     return json({ event, rows: r.results || [] }, 200, origin);
   } catch (e) {
     return json({ error: e.message }, 503, origin);

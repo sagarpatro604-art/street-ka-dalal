@@ -1568,7 +1568,7 @@ async function viewAdmin() {
     body = r.error ? `<div class="card empty">Could not load registrations: ${esc(r.error)}</div>` : `<div class="stats big"><div><b>${rows.length}</b><span>registered</span></div><div><b>${rows.filter((x) => x.consent).length}</b><span>want the calendar invite</span></div><div><b>${rows.filter((x) => x.attended === 'yes').length}</b><span>came last time</span></div><div><b>${rows.filter((x) => x.attended === 'no').length}</b><span>first time</span></div></div>
     <div class="toolbar"><span class="sub">Community Meet 2 · Sunday 18 October, 9 PM · sign-up page <a href="session" target="_blank" rel="noopener">street-ka-dalal.pages.dev/session</a></span><span class="grow"></span><button class="btn sm" data-act="copyInvite">Copy invite emails</button> <button class="btn sm ghost" data-act="exportRegs">Download CSV</button></div>
     <section class="card flush">${table('regs', rows, [
-      { k: 'name', label: 'Name', fmt: (x) => `<b>${esc(x.name)}</b><span class="sub">${esc(x.email)}</span>` },
+      { k: 'name', label: 'Name', fmt: (x) => `<b>${esc(x.name)}</b><span class="sub">${esc(x.email)}${x.via === 'google' ? ' · Google sign-in' : ''}</span>` },
       { k: 'attended', label: 'Last session', fmt: (x) => chip(x.attended === 'yes' ? 'Attended' : 'First time', x.attended === 'yes' ? 'good' : '') },
       { k: 'consent', label: 'Calendar invite', fmt: (x) => (x.consent ? chip('Yes', 'good') : chip('No')) },
       { k: 'created', label: 'Registered', fmt: (x) => `${fDT(x.created)}<span class="sub">${ago(x.created)}</span>` },
