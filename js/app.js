@@ -1763,8 +1763,7 @@ const ACTS = {
     try { await navigator.clipboard.writeText(em); toast(`Copied ${em ? em.split(', ').length : 0} emails: paste them into the Google Calendar event's guests`); } catch { prompt('Copy these emails', em); }
   },
   exportRegs: () => {
-    const csv = ['name,email,attended_last,calendar_invite,registered', ...(ui.regs || []).map((x) => [x.name, x.email, x.attended, x.consent ? 'yes' : 'no', x.created].map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','))].join('
-');
+    const csv = ['name,email,attended_last,calendar_invite,registered', ...(ui.regs || []).map((x) => [x.name, x.email, x.attended, x.consent ? 'yes' : 'no', x.created].map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','))].join(String.fromCharCode(10));
     Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })), download: `community-meet-2-registrations-${new Date().toISOString().slice(0, 10)}.csv` }).click();
   },
   exportMembers: async () => {
