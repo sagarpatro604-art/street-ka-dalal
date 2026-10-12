@@ -1530,7 +1530,7 @@ async function adminUpdates() {
 async function viewAdmin() {
   if (!A.isAdmin()) return '<div class="empty card">This area is for the admin.</div>';
   const t = ui.admin.tab;
-  const tabs = [['publisher', 'Publisher'], ['updates', 'Updates & change log'], ['members', 'Members'], ['logins', 'Login log'], ['asks', 'Dalal questions'], ['status', 'Data status']];
+  const tabs = [['publisher', 'Publisher'], ['updates', 'Updates & change log'], ['members', 'Members'], ['logins', 'Login log'], ['asks', 'Dalal questions'], ['regs', 'Registrations'], ['status', 'Data status']];
   if (!ui.purged) { ui.purged = true; A.purgeOld(90).then((n) => n && toast(`Cleaned ${n} records older than 90 days`)).catch(() => {}); }
   let body = '';
   if (t === 'publisher') {
@@ -1560,6 +1560,19 @@ async function viewAdmin() {
       { k: 'firstSeen', label: 'Joined', fmt: (m) => fDT(m.firstSeen) }, { k: 'lastSeen', label: 'Last seen', fmt: (m) => `${fDT(m.lastSeen)}<span class="sub">${ago(m.lastSeen)}</span>` },
       { k: 'visits', label: 'Visits', cls: 'r' }, { k: 'device', label: 'Device', fmt: (m) => esc(m.device || '—') },
     ], 'No members yet.')}</section>`;
+  } else if (t === 'regs') {
+    // Community session sign-ups from session.html (functions/api/register.js, D1 table registrations)
+    const r = await fetch('/api/register?event=meet-2', { headers: { Authorization: `Bearer ${await A.idToken()}` } }).then((x) => x.json()).catch((e) => ({ error: e.message }));
+    const rows = r.rows || [];
+    ui.regs = rows;
+    body = r.error ? `<div class="card empty">Could not load registrations: ${esc(r.error)}</div>` : `<div class="stats big"><div><b>${rows.length}</b><span>registered</span></div><div><b>${rows.filter((x) => x.consent).length}</b><span>want the calendar invite</span></div><div><b>${rows.filter((x) => x.attended === 'yes').length}</b><span>came last time</span></div><div><b>${rows.filter((x) => x.attended === 'no').length}</b><span>first time</span></div></div>
+    <div class="toolbar"><span class="sub">Community Meet 2 · Sunday 18 October, 9 PM · sign-up page <a href="session" target="_blank" rel="noopener">street-ka-dalal.pages.dev/session</a></span><span class="grow"></span><button class="btn sm" data-act="copyInvite">Copy invite emails</button> <button class="btn sm ghost" data-act="exportRegs">Download CSV</button></div>
+    <section class="card flush">${table('regs', rows, [
+      { k: 'name', label: 'Name', fmt: (x) => `<b>${esc(x.name)}</b><span class="sub">${esc(x.email)}</span>` },
+      { k: 'attended', label: 'Last session', fmt: (x) => chip(x.attended === 'yes' ? 'Attended' : 'First time', x.attended === 'yes' ? 'good' : '') },
+      { k: 'consent', label: 'Calendar invite', fmt: (x) => (x.consent ? chip('Yes', 'good') : chip('No')) },
+      { k: 'created', label: 'Registered', fmt: (x) => `${fDT(x.created)}<span class="sub">${ago(x.created)}</span>` },
+    ], 'No registrations yet. Share the sign-up page link on WhatsApp.')}</section>`;
   } else if (t === 'asks') {
     const qs = await A.listAsks(200);
     const day = Date.now() - 86400000;
@@ -1745,6 +1758,15 @@ const ACTS = {
     } catch (e) { toast('Could not save: ' + e.message); }
   },
   deletePost: async () => { if (!confirm('Delete this post for good?')) return; await A.deletePost(ui.edit.id); ui.edit = null; toast('Deleted'); render(); },
+  copyInvite: async () => {
+    const em = (ui.regs || []).filter((x) => x.consent).map((x) => x.email).join(', ');
+    try { await navigator.clipboard.writeText(em); toast(`Copied ${em ? em.split(', ').length : 0} emails: paste them into the Google Calendar event's guests`); } catch { prompt('Copy these emails', em); }
+  },
+  exportRegs: () => {
+    const csv = ['name,email,attended_last,calendar_invite,registered', ...(ui.regs || []).map((x) => [x.name, x.email, x.attended, x.consent ? 'yes' : 'no', x.created].map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','))].join('
+');
+    Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })), download: `community-meet-2-registrations-${new Date().toISOString().slice(0, 10)}.csv` }).click();
+  },
   exportMembers: async () => {
     const ms = await A.listMembers();
     const csv = ['name,email,joined,last_seen,visits,device', ...ms.map((m) => [m.name, m.email, m.firstSeen, m.lastSeen, m.visits, m.device].map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','))].join('\n');

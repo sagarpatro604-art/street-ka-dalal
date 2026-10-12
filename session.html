@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Community Meet 2 · Street ka Dalal</title>
+<meta name="description" content="Street ka Dalal Community Meet 2: Sunday 18 October, 9 PM on Google Meet. The week in markets, quarterly results, the data centre theme and the week's trending story.">
+<meta property="og:title" content="Street ka Dalal · Community Meet 2">
+<meta property="og:description" content="Sunday 18 October, 9:00 PM IST on Google Meet. Free for our community. Register here.">
+<meta property="og:image" content="https://street-ka-dalal.pages.dev/icons/icon-512.png">
+<meta name="theme-color" content="#1F4D3A">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="preload" as="image" href="icons/dalal-peek.webp" fetchpriority="high">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" media="print" onload="this.media='all'">
+<style>
+:root{--bg:#f6f1e7;--paper:#fffdf8;--paper-2:#f1ebdf;--line:#e4dccb;--ink:#1d2a23;--muted:#6c786f;--green:#1f4d3a;--green-2:#2f6b4f;--sage:#dfe9d6;--gold:#b08d57;--gold-soft:#f3ead9;--up:#23794f;--up-bg:#e3f1e6;--down:#b4442f;--down-bg:#f8e6e1;
+--serif:"Fraunces",Georgia,"Times New Roman",serif;--sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;--shadow:0 1px 2px rgba(31,46,36,.05),0 10px 30px rgba(31,46,36,.08)}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:var(--green-2)}
+h1,h2,h3{font-family:var(--serif);color:var(--green);margin:0;letter-spacing:-.01em}
+.wrap{max-width:1160px;margin:0 auto;padding:0 18px}
+.top{position:sticky;top:0;z-index:20;background:rgba(246,241,231,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:12px;height:60px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--green);font:700 19px var(--serif)}
+.brand em{color:var(--gold);font-style:italic}
+.grow{flex:1}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;padding:12px 20px;font:600 15px var(--sans);cursor:pointer;text-decoration:none;transition:transform .15s ease,box-shadow .15s ease,background .15s}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--green);color:#fff;box-shadow:0 6px 18px rgba(31,77,58,.25)}
+.btn.primary:hover{background:var(--green-2)}
+.btn.ghost{background:var(--paper);color:var(--green);border:1px solid var(--line)}
+.btn.gold{background:var(--gold);color:#fff}
+.btn.sm{padding:8px 14px;font-size:14px}
+
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.8fr);gap:36px 130px;align-items:start;padding:44px 0 30px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font:700 12px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--down);box-shadow:0 0 0 0 rgba(180,68,47,.5);animation:ping 1.8s infinite}
+@keyframes ping{70%{box-shadow:0 0 0 10px rgba(180,68,47,0)}100%{box-shadow:0 0 0 0 rgba(180,68,47,0)}}
+.hero h1{font-size:clamp(34px,5.4vw,60px);line-height:1.04;margin:12px 0 14px}
+.hero h1 span{color:var(--gold);font-style:italic}
+.when{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 18px}
+.pill{display:inline-flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-weight:600;font-size:15px}
+.pill svg{color:var(--green-2)}
+.lede{font-size:18px;color:#3d4a42;max-width:560px;margin:0 0 22px}
+.count{display:flex;gap:10px;margin:0 0 24px}
+.count div{background:var(--green);color:#fff;border-radius:14px;padding:10px 0;width:74px;text-align:center}
+.count b{display:block;font:700 26px var(--serif);line-height:1.1}
+.count small{font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.8}
+.ctas{display:flex;flex-wrap:wrap;gap:10px}
+
+/* form + mascot */
+.form-zone{position:relative}
+.peek{position:absolute;left:-116px;top:40px;width:122px;height:auto;z-index:1;transform:translateX(120px) rotate(4deg);animation:peekin 1s .5s cubic-bezier(.2,.9,.3,1.2) forwards, sway 4s 1.6s ease-in-out infinite;transform-origin:100% 30%;pointer-events:none}
+@keyframes peekin{to{transform:translateX(0) rotate(0)}}
+@keyframes sway{0%,100%{transform:translateX(0) rotate(0)}50%{transform:translateX(-6px) rotate(-3deg)}}
+.bubble{position:absolute;left:-150px;top:-14px;z-index:3;background:var(--paper);border:1px solid var(--line);border-radius:16px 16px 4px 16px;padding:9px 13px;font-weight:600;font-size:14px;color:var(--green);box-shadow:var(--shadow);max-width:190px;opacity:0;animation:pop .4s 1.5s forwards}
+@keyframes pop{from{opacity:0;transform:translateY(6px) scale(.95)}to{opacity:1;transform:none}}
+.bubble.swap{animation:pop .35s forwards}
+.card{position:relative;z-index:2;background:var(--paper);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:24px}
+.form h2{font-size:26px}
+.form p.sub{margin:4px 0 16px;color:var(--muted);font-size:14px}
+label.f{display:block;font-weight:600;font-size:14px;margin:0 0 6px}
+.in{width:100%;border:1px solid var(--line);background:#fff;border-radius:12px;padding:12px 14px;font:16px var(--sans);color:var(--ink);margin:0 0 14px;outline:none;transition:border .15s,box-shadow .15s}
+.in:focus{border-color:var(--green-2);box-shadow:0 0 0 3px rgba(47,107,79,.15)}
+.choice{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 14px}
+.choice input{position:absolute;opacity:0;pointer-events:none}
+.choice label{display:block;text-align:center;border:1px solid var(--line);border-radius:12px;padding:11px;font-weight:600;cursor:pointer;background:#fff;transition:all .15s}
+.choice input:checked+label{background:var(--green);border-color:var(--green);color:#fff}
+.choice input:focus-visible+label{box-shadow:0 0 0 3px rgba(47,107,79,.25)}
+.consent{display:flex;gap:10px;align-items:flex-start;background:var(--sage);border-radius:12px;padding:12px;margin:0 0 16px;font-size:14px;cursor:pointer}
+.consent input{width:20px;height:20px;margin:1px 0 0;accent-color:var(--green);flex:none}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.err{color:var(--down);font-size:14px;font-weight:600;min-height:20px;margin:0 0 8px}
+.form .btn.primary{width:100%;padding:14px;font-size:16px}
+.fine{font-size:12px;color:var(--muted);margin:10px 0 0}
+.done{text-align:center;padding:10px 4px}
+.done .tick{width:64px;height:64px;border-radius:50%;background:var(--up-bg);color:var(--up);display:grid;place-items:center;margin:0 auto 12px;animation:pop .4s}
+.done h2{font-size:26px}
+.done .btns{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.meet{display:block;word-break:break-all;background:var(--gold-soft);border-radius:12px;padding:10px;margin:12px 0 0;font-weight:600;font-size:14px;text-decoration:none}
+
+/* agenda */
+section.block{padding:30px 0}
+.sec-h{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:0 0 18px}
+.sec-h h2{font-size:clamp(26px,3.4vw,36px)}
+.sec-h p{margin:4px 0 0;color:var(--muted)}
+.agenda{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.ag{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:18px;text-decoration:none;color:inherit;box-shadow:var(--shadow);transition:transform .2s ease,box-shadow .2s ease;opacity:0;transform:translateY(16px)}
+.ag.in-view{opacity:1;transform:none;transition:opacity .5s ease,transform .5s ease}
+.ag:hover{transform:translateY(-3px)}
+.ag .n{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:10px;background:var(--green);color:#fff;font:700 17px var(--serif);margin:0 0 10px}
+.ag h3{font-size:19px;line-height:1.2;margin:0 0 6px}
+.ag p{margin:0;color:var(--muted);font-size:14px}
+.topic{background:var(--paper);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:22px;margin:0 0 18px;scroll-margin-top:76px;position:relative}
+.topic-h{display:flex;align-items:center;gap:12px;margin:0 0 14px}
+.topic-h .n{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--green);color:#fff;font:700 20px var(--serif)}
+.topic-h h3{font-size:clamp(20px,2.6vw,26px)}
+.topic-h p{margin:2px 0 0;color:var(--muted);font-size:14px}
+.say{display:flex;align-items:center;gap:10px;margin:14px 0 0;font-size:14px;color:#3d4a42}
+.say img{width:38px;height:38px;border-radius:50%;flex:none;border:2px solid var(--gold-soft);animation:bob 3s ease-in-out infinite}
+.say span{background:var(--gold-soft);border-radius:14px 14px 14px 4px;padding:8px 12px}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.tile{background:var(--paper-2);border-radius:14px;padding:12px 14px;min-width:0}
+.tile .k{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile .v{font:700 22px var(--serif);color:var(--green);margin:2px 0}
+.tile .c{font-weight:700;font-size:14px}
+.tile svg{display:block;width:100%;height:30px;margin-top:6px}
+.up{color:var(--up)}.down{color:var(--down)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.two>div,.dc>div,.trend-card>div,.hero>div{min-width:0}
+.list{list-style:none;padding:0;margin:0}
+.list li{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:15px}
+.list li:last-child{border-bottom:0}
+.list .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.list .nm small{display:block;color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis}
+.list b{white-space:nowrap}
+h4{margin:0 0 6px;font:700 13px var(--sans);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.chip{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700;background:var(--paper-2);color:var(--muted);white-space:nowrap}
+.chip.good{background:var(--up-bg);color:var(--up)}
+.chip.bad{background:var(--down-bg);color:var(--down)}
+.res-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.res{background:var(--paper-2);border-radius:14px;padding:12px 14px;min-width:0}
+.res .t{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.res .t b{font:700 17px var(--serif);color:var(--green)}
+.res .s{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.res .nums{display:flex;gap:12px;margin-top:6px;font-size:13px;flex-wrap:wrap}
+.dc{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:16px}
+.points{margin:0;padding-left:18px}
+.points li{margin:0 0 8px}
+.trend-card{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:center}
+.vs{display:flex;align-items:center;gap:8px;font:700 22px var(--serif);color:var(--green)}
+.vs i{font-style:normal;background:var(--gold);color:#fff;border-radius:50%;width:34px;height:34px;display:grid;place-items:center;font:700 13px var(--sans)}
+.ghostline{height:14px;border-radius:7px;background:linear-gradient(90deg,var(--paper-2),#ece4d4,var(--paper-2));background-size:200% 100%;animation:sh 1.2s infinite;margin:8px 0}
+@keyframes sh{to{background-position:-200% 0}}
+.asof{font-size:12px;color:var(--muted);margin:10px 0 0}
+.terminal{background:var(--green);color:#e9dcc3;border-radius:22px;padding:28px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:center;overflow:hidden;position:relative}
+.terminal h2{color:#fff;font-size:clamp(24px,3vw,32px)}
+.terminal p{margin:6px 0 0}
+.terminal .btn{background:#e9dcc3;color:var(--green)}
+footer{padding:26px 0 90px;color:var(--muted);font-size:13px;text-align:center}
+.float-cta{display:none}
+@media (max-width:960px){
+  .hero{grid-template-columns:1fr;gap:28px;padding-top:28px}
+  .agenda{grid-template-columns:1fr 1fr}
+  .tiles{grid-template-columns:1fr 1fr}
+  .res-grid{grid-template-columns:1fr 1fr}
+  .peek{left:auto;right:14px;top:-112px;width:80px;transform:none;opacity:0;animation:fadein .6s .4s forwards, bob 3s 1s ease-in-out infinite}
+  @keyframes fadein{to{opacity:1}}
+  .bubble{left:auto;right:100px;top:-86px}
+  .form-zone{margin-top:96px}
+}
+@media (max-width:640px){
+  .wrap{padding:0 16px}
+  .top .brand span{font-size:17px}
+  .two,.dc,.trend-card{grid-template-columns:1fr}
+  .res-grid{grid-template-columns:1fr}
+  .count div{width:64px}
+  .terminal{grid-template-columns:1fr;padding:22px 22px 26px}
+  .float-cta{display:flex;position:fixed;left:16px;right:16px;bottom:14px;z-index:30;transition:transform .3s,opacity .3s}
+  .float-cta.hide{transform:translateY(90px);opacity:0}
+  .float-cta .btn{width:100%;padding:14px}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.peek{transform:none}.ag{opacity:1;transform:none}.bubble{opacity:1}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="./" aria-label="Street ka Dalal">
+    <svg width="34" height="34" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="10" fill="#1F4D3A"/><rect x="9" y="19.5" width="4" height="6" rx="1" fill="#E9DCC3"/><path d="M20 26V13" stroke="#C9A96E" stroke-width="1.6" stroke-linecap="round"/><rect x="18" y="15" width="4" height="8.5" rx="1" fill="#C9A96E"/><path d="M29 22V8" stroke="#E9DCC3" stroke-width="1.6" stroke-linecap="round"/><rect x="27" y="10" width="4" height="9" rx="1" fill="#E9DCC3"/><path d="M8 31h24" stroke="#C9A96E" stroke-width="1.6" stroke-linecap="round"/></svg>
+    <span>Street <em>ka</em> Dalal</span></a>
+  <span class="grow"></span>
+  <a class="btn ghost sm" href="./">Open terminal</a>
+</div></header>
+
+<main class="wrap">
+  <div class="hero">
+    <div>
+      <span class="eyebrow"><i class="live-dot"></i> Community Meet 2</span>
+      <h1>One hour. <span>Four big</span> market stories.</h1>
+      <div class="when">
+        <span class="pill"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Sunday, 18 October</span>
+        <span class="pill"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>9:00 to 10:00 PM IST</span>
+        <span class="pill"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="m16 10 6-3v10l-6-3"/></svg>Google Meet</span>
+      </div>
+      <p class="lede">The week in markets, the quarterly results worth knowing, the data centre theme, and the story everyone is talking about. Free for our community. Register once and we add you to the calendar.</p>
+      <div class="count" id="count" aria-label="Time left"><div><b id="cd-d">-</b><small>days</small></div><div><b id="cd-h">-</b><small>hours</small></div><div><b id="cd-m">-</b><small>mins</small></div><div><b id="cd-s">-</b><small>secs</small></div></div>
+      <div class="ctas"><a class="btn primary" href="#register">Register now</a><a class="btn ghost" href="#agenda">See what we will cover</a></div>
+    </div>
+
+    <div class="form-zone" id="register">
+      <div class="bubble" id="bubble">Arre, register kar lo!</div>
+      <img class="peek" src="icons/dalal-peek.webp" alt="" width="263" height="720" decoding="async">
+      <div class="card form" id="formCard">
+        <form id="regForm" novalidate>
+          <h2>Save your seat</h2>
+          <p class="sub">Takes 20 seconds.</p>
+          <label class="f" for="name">Your name</label>
+          <input class="in" id="name" name="name" autocomplete="name" maxlength="80" placeholder="Full name" required>
+          <label class="f" for="email">Email (for the calendar invite)</label>
+          <input class="in" id="email" name="email" type="email" inputmode="email" autocomplete="email" maxlength="120" placeholder="you@gmail.com" required>
+          <label class="f">Did you attend the last session?</label>
+          <div class="choice"><input type="radio" name="attended" id="att-y" value="yes"><label for="att-y">Yes, I did</label><input type="radio" name="attended" id="att-n" value="no"><label for="att-n">No, first time</label></div>
+          <label class="consent"><input type="checkbox" id="consent" checked><span>Yes, add me to the calendar invite for this session (and send me the Meet link).</span></label>
+          <div class="hp" aria-hidden="true"><label>Website <input name="website" tabindex="-1" autocomplete="off"></label></div>
+          <p class="err" id="err" role="alert"></p>
+          <button class="btn primary" id="sub" type="submit">Register for Sunday</button>
+          <p class="fine">We use your name and email only for this session's invite. No spam.</p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <section class="block" id="agenda">
+    <div class="sec-h"><div><h2>What we will talk about</h2><p>Sunday 18 October, 9 PM. Live data below, updated through the week.</p></div></div>
+    <div class="agenda">
+      <a class="ag" href="#t1"><span class="n">1</span><h3>What happened this week</h3><p>Nifty, the indices, and the stocks we are tracking.</p></a>
+      <a class="ag" href="#t2"><span class="n">2</span><h3>Quarterly results</h3><p>The results worth discussing from this season.</p></a>
+      <a class="ag" href="#t3"><span class="n">3</span><h3>Data centre theme</h3><p>Why it keeps showing up, and where it stands.</p></a>
+      <a class="ag" href="#t4"><span class="n">4</span><h3>Trending topic</h3><p>Ambani x Elon Musk, and what the market makes of it.</p></a>
+    </div>
+  </section>
+
+  <section class="block">
+    <article class="topic" id="t1">
+      <div class="topic-h"><span class="n">1</span><div><h3>What happened this week</h3><p id="t1-sub">Nifty movement, the indices and the stocks on our radar</p></div></div>
+      <div class="tiles" id="idx"><div class="tile"><div class="ghostline"></div><div class="ghostline"></div></div><div class="tile"><div class="ghostline"></div><div class="ghostline"></div></div><div class="tile"><div class="ghostline"></div><div class="ghostline"></div></div><div class="tile"><div class="ghostline"></div><div class="ghostline"></div></div></div>
+      <div class="two">
+        <div><h4>Sectors this week</h4><ul class="list" id="secs"><li><div class="ghostline" style="width:100%"></div></li></ul></div>
+        <div><h4>Stocks on our radar</h4><ul class="list" id="radar"><li><div class="ghostline" style="width:100%"></div></li></ul><p class="asof">Market leaders by relative strength (strongest 12-month performers, liquid stocks). For discussion, not a recommendation.</p></div>
+      </div>
+      <div class="say"><img src="icons/dalal-head.webp" alt="" width="38" height="38" loading="lazy"><span>Sunday ko poora hafta ek saath dekhenge: kya chala, kya gira, aur kyun.</span></div>
+    </article>
+
+    <article class="topic" id="t2">
+      <div class="topic-h"><span class="n">2</span><div><h3>Quarterly results</h3><p id="t2-sub">The September quarter season so far</p></div></div>
+      <div class="res-grid" id="res"><div class="res"><div class="ghostline"></div><div class="ghostline"></div></div><div class="res"><div class="ghostline"></div><div class="ghostline"></div></div><div class="res"><div class="ghostline"></div><div class="ghostline"></div></div></div>
+      <p class="asof">Revenue and net profit vs the same quarter last year, from the companies' NSE filings. Biggest companies first.</p>
+      <div class="say"><img src="icons/dalal-head.webp" alt="" width="38" height="38" loading="lazy"><span>Kaunsa result sach mein achha tha, aur kahan sirf headline achhi thi: Sunday ko.</span></div>
+    </article>
+
+    <article class="topic" id="t3">
+      <div class="topic-h"><span class="n">3</span><div><h3>Data centre theme</h3><p>India's data centre build-out and the listed companies around it</p></div></div>
+      <div class="dc">
+        <div class="tiles" id="dc" style="grid-template-columns:1fr 1fr"><div class="tile"><div class="ghostline"></div></div><div class="tile"><div class="ghostline"></div></div><div class="tile"><div class="ghostline"></div></div><div class="tile"><div class="ghostline"></div></div></div>
+        <div><h4>What we will cover</h4><ul class="points">
+          <li>Why data centres need so much power, cooling and cables, and who supplies them</li>
+          <li>The listed names in the theme and how they have moved</li>
+          <li>Where the theme sits now: leading, cooling off, or crowded</li>
+          <li>What to watch in the coming quarters</li></ul></div>
+      </div>
+      <div class="say"><img src="icons/dalal-head.webp" alt="" width="38" height="38" loading="lazy"><span>Hamari data centre research ka short version, seedha Sunday ko.</span></div>
+    </article>
+
+    <article class="topic" id="t4">
+      <div class="topic-h"><span class="n">4</span><div><h3>Trending topic</h3><p>The story the whole market is talking about</p></div></div>
+      <div class="trend-card">
+        <div class="vs">Ambani <i>x</i> Musk</div>
+        <div><p style="margin:0">Two of the world's richest people and India's next big race. What the story is, why it matters for Indian listed companies, and what is noise. Plus whatever else is trending by Sunday.</p></div>
+      </div>
+      <div class="say"><img src="icons/dalal-head.webp" alt="" width="38" height="38" loading="lazy"><span>Headline se aage ki baat karenge.</span></div>
+    </article>
+  </section>
+
+  <section class="block">
+    <div class="terminal">
+      <div><div class="say" style="margin:0 0 10px"><img src="icons/dalal-head.webp" alt="" width="38" height="38" loading="lazy"><span style="background:rgba(255,255,255,.12);color:#fff">Session se pehle ek baar ghoom aao.</span></div><h2>Explore the Street ka Dalal terminal</h2><p>Screeners, sectors, results, news and the pre-market page. Free with Google sign-in.</p></div>
+      <a class="btn" href="./">Open the terminal</a>
+    </div>
+  </section>
+</main>
+<footer class="wrap">Street ka Dalal · For learning and discussion only. Not investment advice, and no buy or sell calls.</footer>
+<div class="float-cta" id="floatCta"><a class="btn primary" href="#register">Register for Sunday 9 PM</a></div>
+
+<script>
+(() => {
+  const EVENT = 'meet-2';
+  const START = Date.parse('2026-10-18T21:00:00+05:30'), END = Date.parse('2026-10-18T22:00:00+05:30');
+  const MEET = 'https://meet.google.com/yie-korm-qdu';
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  const num = (n, d = 0) => (n == null || isNaN(n) ? '-' : Number(n).toLocaleString('en-IN', { maximumFractionDigits: d, minimumFractionDigits: d }));
+  const pct = (n, d = 2) => (n == null || isNaN(n) ? '-' : `${n > 0 ? '+' : ''}${Number(n).toFixed(d)}%`);
+  const tone = (n) => (n > 0 ? 'up' : n < 0 ? 'down' : '');
+  const store = { get: (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
+
+  /* countdown */
+  const pad = (n) => String(n).padStart(2, '0');
+  function tick() {
+    const t = START - Date.now();
+    if (t <= 0) {
+      $('#count').innerHTML = Date.now() < END ? `<a class="btn gold" href="${MEET}" target="_blank" rel="noopener">We are live: join now</a>` : '<span class="pill">This session is over. See you at the next one.</span>';
+      return;
+    }
+    $('#cd-d').textContent = Math.floor(t / 864e5); $('#cd-h').textContent = pad(Math.floor(t / 36e5) % 24);
+    $('#cd-m').textContent = pad(Math.floor(t / 6e4) % 60); $('#cd-s').textContent = pad(Math.floor(t / 1e3) % 60);
+    setTimeout(tick, 1000);
+  }
+  tick();
+
+  /* Dalal's speech bubble */
+  const lines = ['Arre, register kar lo!', 'Sunday, 9 baje. Milte hain.', 'Seat free hai, bas naam likho.', 'Calendar mein daal denge, tension mat lo.'];
+  let li = 0;
+  setInterval(() => { const b = $('#bubble'); if (!b) return; li = (li + 1) % lines.length; b.classList.remove('swap'); void b.offsetWidth; b.textContent = lines[li]; b.classList.add('swap'); }, 4200);
+
+  /* registration */
+  const gcal = () => 'https://calendar.google.com/calendar/render?action=TEMPLATE'
+    + '&text=' + encodeURIComponent('Street ka Dalal Community Meet 2')
+    + '&dates=20261018T153000Z/20261018T163000Z'
+    + '&details=' + encodeURIComponent('This week in markets, quarterly results, the data centre theme and the trending topic.\nJoin: ' + MEET)
+    + '&location=' + encodeURIComponent(MEET);
+  function done(name, again) {
+    $('#formCard').innerHTML = `<div class="done"><div class="tick"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg></div>
+      <h2>You are in${name ? `, ${esc(name.split(' ')[0])}` : ''}!</h2>
+      <p class="sub" style="color:var(--muted)">${again ? 'Your registration is updated.' : 'See you on Sunday, 18 October at 9:00 PM.'}</p>
+      <a class="meet" href="${MEET}" target="_blank" rel="noopener">Meet link: ${MEET.replace('https://', '')}</a>
+      <div class="btns"><a class="btn primary" href="${gcal()}" target="_blank" rel="noopener">Add to my Google Calendar</a><a class="btn ghost" href="./">Open the terminal</a></div></div>`;
+    $('#bubble').textContent = 'Badhiya! Sunday ko milte hain.';
+    const f = $('#floatCta'); if (f) f.remove();
+  }
+  const saved = store.get('skd-reg-' + EVENT);
+  if (saved) done(saved.name, true);
+  $('#regForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = e.target, err = $('#err'), btn = $('#sub');
+    const body = { event: EVENT, name: f.name.value.trim(), email: f.email.value.trim(), attended: (f.querySelector('input[name=attended]:checked') || {}).value, consent: $('#consent').checked, website: f.website.value };
+    if (body.name.length < 2) { err.textContent = 'Please write your name.'; f.name.focus(); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(body.email)) { err.textContent = 'Please check your email address.'; f.email.focus(); return; }
+    if (!body.attended) { err.textContent = 'Please tell us if you attended the last session.'; return; }
+    err.textContent = ''; btn.disabled = true; btn.textContent = 'Saving...';
+    try {
+      const r = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout ? AbortSignal.timeout(15000) : undefined });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.ok) throw new Error(j.error || 'Could not save right now. Please try again.');
+      store.set('skd-reg-' + EVENT, { name: body.name, at: Date.now() });
+      done(body.name, j.again);
+    } catch (x) {
+      err.textContent = x.name === 'TimeoutError' ? 'The network is slow. Please try again.' : x.message;
+      btn.disabled = false; btn.textContent = 'Register for Sunday';
+    }
+  });
+
+  /* floating button hides when the form is on screen (phones) */
+  const fc = $('#floatCta');
+  if (fc && 'IntersectionObserver' in window) new IntersectionObserver(([en]) => fc.classList.toggle('hide', en.isIntersecting), { threshold: 0.2 }).observe($('#register'));
+
+  /* agenda cards fade in; data loads only when its block comes near the screen */
+  const io = 'IntersectionObserver' in window ? new IntersectionObserver((ens) => ens.forEach((en) => { if (en.isIntersecting) { en.target.classList.add('in-view'); io.unobserve(en.target); } }), { threshold: 0.15 }) : null;
+  document.querySelectorAll('.ag').forEach((el, i) => { el.style.transitionDelay = `${i * 90}ms`; io ? io.observe(el) : el.classList.add('in-view'); });
+  const cache = {};
+  const data = (p) => (cache[p] = cache[p] || fetch(`data/${p}.json`).then((r) => (r.ok ? r.json() : Promise.reject(new Error(r.status)))));
+  function whenNear(sel, fn) {
+    const el = $(sel);
+    if (!('IntersectionObserver' in window)) return fn();
+    const o = new IntersectionObserver(([en]) => { if (en.isIntersecting) { o.disconnect(); fn(); } }, { rootMargin: '400px 0px' });
+    o.observe(el);
+  }
+  const fail = (sel, msg) => { const el = $(sel); if (el) el.innerHTML = `<p class="asof">${msg}</p>`; };
+  const spark = (v) => {
+    v = (v || []).filter((x) => x != null).slice(-20);
+    if (v.length < 2) return '';
+    const mn = Math.min(...v), mx = Math.max(...v), w = 100, h = 30;
+    const pts = v.map((x, i) => `${(i * w / (v.length - 1)).toFixed(1)},${(h - 2 - ((x - mn) / (mx - mn || 1)) * (h - 4)).toFixed(1)}`).join(' ');
+    return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${v[v.length - 1] >= v[0] ? '#23794f' : '#b4442f'}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`;
+  };
+  const fdate = (s) => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }); };
+
+  whenNear('#t1', () => {
+    data('market').then((m) => {
+      const names = { 'NIFTY 50': 'Nifty 50', 'NIFTY 500': 'Nifty 500', 'NIFTY MIDCAP 150': 'Midcap 150', 'NIFTY SMALLCAP 250': 'Smallcap 250' };
+      $('#idx').innerHTML = (m.indices || []).map((i) => `<div class="tile"><div class="k">${esc(names[i.name] || i.name)}</div><div class="v">${num(i.last, 0)}</div><div class="c ${tone(i.returns?.['1W'])}">${pct(i.returns?.['1W'])} <span style="color:var(--muted);font-weight:500">this week</span></div>${spark(i.spark)}</div>`).join('');
+      $('#t1-sub').textContent = `Week so far, as of the ${fdate(m.as_of)} close. Updated every evening.`;
+    }).catch(() => fail('#idx', 'Index data could not load. It will be on the terminal.'));
+    data('sectors').then((s) => {
+      const xs = (s.sectors || []).filter((x) => x.returns?.['1W'] != null).sort((a, b) => b.returns['1W'] - a.returns['1W']);
+      const pick = [...xs.slice(0, 3), ...xs.slice(-3)];
+      $('#secs').innerHTML = pick.map((x) => `<li><span class="nm">${esc(x.name)}<small>${esc(x.trend || '')}</small></span><b class="${tone(x.returns['1W'])}">${pct(x.returns['1W'], 1)}</b></li>`).join('');
+      const dc = (s.themes || []).find((t) => /data cent/i.test(t.name));
+      if (dc) $('#dc').innerHTML = `<div class="tile"><div class="k">This week</div><div class="v ${tone(dc.ret_1w)}">${pct(dc.ret_1w, 1)}</div></div><div class="tile"><div class="k">This month</div><div class="v ${tone(dc.ret_1m)}">${pct(dc.ret_1m, 1)}</div></div><div class="tile"><div class="k">Trend</div><div class="v" style="font-size:17px">${esc(dc.trend || '-')}</div></div><div class="tile"><div class="k">Rotation</div><div class="v" style="font-size:17px">${esc(dc.quadrant || '-')}</div></div>`;
+      else fail('#dc', 'Theme data could not load.');
+    }).catch(() => { fail('#secs', 'Sector data could not load.'); fail('#dc', 'Theme data could not load.'); });
+    data('screeners').then((sc) => {
+      const L = (sc.leadership?.leaders || []).slice(0, 6);
+      $('#radar').innerHTML = L.map((x) => `<li><span class="nm">${esc(x.sym)}<small>${esc(x.name)} · ${esc(x.sector || '')}</small></span><b class="${tone(x.ret_3m)}">${pct(x.ret_3m, 0)} <small style="color:var(--muted);font-weight:500">3M</small></b></li>`).join('') || '<li>No list this week.</li>';
+    }).catch(() => fail('#radar', 'The list could not load.'));
+  });
+
+  whenNear('#t2', () => {
+    data('results/hub').then((h) => {
+      const rows = (h.announced || []).filter((r) => r.q === h.current_q && r.rev_y != null && r.pat_y != null).sort((a, b) => (b.mcap || 0) - (a.mcap || 0)).slice(0, 6);
+      const lab = (l) => (/strong|good/i.test(l || '') ? `<span class="chip good">${esc(l)}</span>` : /weak|poor|miss/i.test(l || '') ? `<span class="chip bad">${esc(l)}</span>` : '');
+      $('#res').innerHTML = rows.map((r) => `<div class="res"><div class="t"><b>${esc(r.sym)}</b>${lab(r.label)}</div><div class="s">${esc(r.name)}</div>
+        <div class="nums"><span>Revenue <b class="${tone(r.rev_y)}">${pct(r.rev_y, 1)}</b></span><span>Profit <b class="${tone(r.pat_y)}">${pct(r.pat_y, 1)}</b></span></div></div>`).join('') || '<p class="asof">Results season is just starting. The big names report this week.</p>';
+      const n = (h.announced || []).filter((r) => r.q === h.current_q).length;
+      $('#t2-sub').textContent = `${h.current_label || 'This season'}: ${num(n)} companies have reported so far`;
+    }).catch(() => fail('#res', 'Results could not load. They are on the terminal under Results.'));
+  });
+})();
+</script>
+</body>
+</html>
