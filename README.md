@@ -9,6 +9,7 @@ Plain HTML/CSS/JS on GitHub Pages; Firebase for Google sign-in, members, login l
 | Sign-in | Firebase Auth, Google provider. Anyone with a Google account can join. |
 | Members / login log / posts | Firestore `users`, `logins`, `posts`; rules in `firestore.rules` (admin = the email in `ADMIN_EMAILS`, `js/config.js`, and in the rules). |
 | Admin terminal | `#/admin` — publisher, members, login log, data status. |
+| Library (`#/library`) | Meet-up decks, our research PDFs, recommended books. Shelf list = `library/catalog.json`, files in `library/<shelf>/`; reader `js/library.js` (pdf.js from cdnjs, progress in the browser only). Locked rows show a lock card; to open one set `locked` false and add `file` + `pages`. Paid books are listed with a buy link, never uploaded. |
 
 Not published on purpose: pattern entry/stop/target prices and filing buy/sell signals (SEBI), My Book, paper books.
 Local preview without Firebase: leave `projectId` empty in `js/config.js` (demo sign-in, posts kept in the browser).

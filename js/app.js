@@ -3,6 +3,7 @@ import { SITE, DALAL_API } from './config.js';
 import { mountDalal } from './dalal.js';
 import * as CH from './charts.js';
 import * as RS from './research.js';
+import * as LB from './library.js';
 
 /* ---------------- helpers ---------------- */
 const $ = (s, r = document) => r.querySelector(s);
@@ -70,6 +71,7 @@ const ICONS = {
   lab: '<path d="M9 3h6M10 3v6l-5.5 9.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3"/><path d="M7.5 15h9"/>',
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
   refresh: '<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',
+  book: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/><path d="M9 7h7"/>',
 };
 const ic = (n, s = 18) => `<svg class="ic" viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ''}</svg>`;
 const GOOGLE = '<svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
@@ -1640,10 +1642,14 @@ async function viewResearchItem(id) {
   return `<div class="empty card">That research page does not exist. <a href="#/research">All research →</a></div>`;
 }
 
+/* ---------------- library ---------------- */
+const lbHelp = () => ({ esc, pageHead, fDate, ic, after });
+const viewLibrary = () => LB.libraryHome(lbHelp());
+
 /* ---------------- shell, routing ---------------- */
-const NAV = [['premarket', 'Pre-market', 'sun'], ['', 'Market', 'market'], ['screeners', 'Screeners', 'screen'], ['sectors', 'Sectors', 'sector'], ['funds', 'Mutual funds', 'funds'], ['equity', 'Research', 'search'], ['results', 'Results', 'file'], ['news', 'News', 'news'], ['research', 'Prop. Research', 'lab'], ['insights', 'Insights', 'pen']];
+const NAV = [['premarket', 'Pre-market', 'sun'], ['', 'Market', 'market'], ['screeners', 'Screeners', 'screen'], ['sectors', 'Sectors', 'sector'], ['funds', 'Mutual funds', 'funds'], ['equity', 'Research', 'search'], ['results', 'Results', 'file'], ['news', 'News', 'news'], ['research', 'Prop. Research', 'lab'], ['library', 'Library', 'book'], ['insights', 'Insights', 'pen']];
 const route = () => location.hash.replace(/^#\/?/, '');
-const VIEWS = { premarket: viewPremarket, '': viewMarket, screeners: viewScreeners, sectors: viewSectors, funds: viewFunds, equity: viewEquity, stocks: () => { ui.eq.tab = 'companies'; return viewEquity(); }, results: viewResults, news: viewNews, insights: viewInsights, admin: viewAdmin, research: viewResearch };
+const VIEWS = { premarket: viewPremarket, '': viewMarket, screeners: viewScreeners, sectors: viewSectors, funds: viewFunds, equity: viewEquity, stocks: () => { ui.eq.tab = 'companies'; return viewEquity(); }, results: viewResults, news: viewNews, insights: viewInsights, admin: viewAdmin, research: viewResearch, library: viewLibrary };
 
 function shell() {
   const u = A.state.user;
@@ -1668,7 +1674,7 @@ async function render() {
   const keep = view.dataset.route === r ? window.scrollY : 0;
   if (view.dataset.route !== r) view.innerHTML = '<div class="loading"><span class="dots"><i></i><i></i><i></i></span></div>';
   try {
-    const html = top === 'research' && r.split('/')[1] ? await viewResearchItem(r.split('/')[1]) : top === 'post' ? await viewPost(r.split('/')[1]) : top === 'stock' ? await viewStock(r.split('/')[1]) : top === 'results' && r.split('/')[1] === 'co' ? await viewResCo(r.split('/')[2]) : await (VIEWS[top] || viewMarket)();
+    const html = top === 'library' && r.split('/')[1] ? await LB.libraryReader(lbHelp(), decodeURIComponent(r.split('/')[1])) : top === 'research' && r.split('/')[1] ? await viewResearchItem(r.split('/')[1]) : top === 'post' ? await viewPost(r.split('/')[1]) : top === 'stock' ? await viewStock(r.split('/')[1]) : top === 'results' && r.split('/')[1] === 'co' ? await viewResCo(r.split('/')[2]) : await (VIEWS[top] || viewMarket)();
     if (seq !== renderSeq) return;
     CH.disposeCharts();
     view.innerHTML = html;
@@ -1688,6 +1694,8 @@ let toastT;
 function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2400); }
 
 const ACTS = {
+  libTab: (el) => { LB.libSetTab(el.dataset.v); render(); },
+  libDone: (el) => LB.libToggleDone(el),
   signIn: async () => { try { await A.signIn(); } catch (e) { A.state.error = e.message; render(); } },
   signOut: async () => { await A.signOut(); location.hash = '#/'; },
   menu: () => { const m = $('#menu'); m.hidden = !m.hidden; },
@@ -1774,6 +1782,7 @@ const ACTS = {
   },
 };
 const INPUTS = {
+  libQ: (el) => LB.libSearch(lbHelp(), el.value),
   scrQ: (el) => { ui.scr.q = el.value; rerenderKeepingFocus(el); },
   newsQ: (el) => { ui.news.q = el.value; rerenderKeepingFocus(el); },
   resQ: (el) => { ui.res.q = el.value; rerenderKeepingFocus(el); },
@@ -1826,7 +1835,7 @@ window.addEventListener('beforeunload', (e) => { if (ui.edit?.dirty) { e.prevent
 // A tab left open for days (common on phones) never reloads on its own. When the reader comes back to
 // the tab, and every 10 minutes while it is open: new site code -> reload (unless they are typing);
 // new evening data -> redraw the page with it.
-const CODE = ['./', 'js/app.js', 'js/auth.js', 'js/dalal.js', 'js/charts.js', 'js/config.js', 'css/style.css'];
+const CODE = ['./', 'js/app.js', 'js/auth.js', 'js/dalal.js', 'js/charts.js', 'js/config.js', 'js/library.js', 'css/style.css'];
 let codeSig = null;
 async function codeVersion() {
   // Cloudflare answers HEAD with 503. A GET with cache 'no-cache' asks "changed since my copy?" (If-None-Match):
@@ -1846,7 +1855,7 @@ async function checkFresh() {
     } else if (v && !codeSig) codeSig = v;
     const before = meta?.published_at;
     const m = await loadMeta(true);
-    if (before && m?.published_at && m.published_at !== before && A.state.user) { await render(); toast('Fresh market data loaded'); }
+    if (before && m?.published_at && m.published_at !== before && A.state.user && route().split('/')[0] !== 'library') { await render(); toast('Fresh market data loaded'); }
   } catch {} finally { checking = false; }
 }
 codeVersion().then((v) => { codeSig = v; });
