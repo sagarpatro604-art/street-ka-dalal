@@ -1,80 +1,168 @@
 {
   "updated": "2026-10-18",
-  "note": "Library shelf. To add an item, put the PDF in library/<shelf>/ and add a row here. A locked row shows a lock card and no file; to open it, set locked to false and add file + pages.",
+  "note": "Library shelf. To add an item, put the file in library/<shelf>/ and add a row here. download true = members may download it (meet-up decks only). protect true = file is stored scrambled (.bin, XOR key in js/library.js) and can only be read in the site reader. A locked row shows a lock card and has no file on the site; to open it, add the file and set locked false.",
   "shelves": [
-    { "id": "meetups", "title": "Community meet-ups", "sub": "The decks from our live community sessions." },
-    { "id": "research", "title": "Our research", "sub": "Industry studies we built for our own research work. Facts with sources, no stock picks." },
-    { "id": "books", "title": "Books we recommend", "sub": "Books we read for our own research, with what each one teaches. Get your own copy from the link." }
+    {
+      "id": "meetups",
+      "title": "Community meet-ups",
+      "sub": "The decks from our live community sessions."
+    },
+    {
+      "id": "research",
+      "title": "Our research",
+      "sub": "Industry studies we built for our own research work. Facts with sources, no stock picks. Read here on the site; more open soon."
+    },
+    {
+      "id": "books",
+      "title": "Books we recommend",
+      "sub": "Books we read for our own research, with what each one teaches. Get your own copy from the link."
+    }
   ],
   "items": [
     {
-      "id": "meetup-1", "shelf": "meetups", "kind": "pdf",
-      "title": "Community Meet Up #1", "date": "2026-10-07",
+      "id": "meetup-1",
+      "shelf": "meetups",
+      "kind": "pdf",
+      "title": "Community Meet Up #1",
+      "date": "2026-10-07",
       "by": "Sagar Patro and Bhuvan",
       "sub": "RBI's first repo rate hike since 2023, what it means for your home and car loan EMI, the Nifty, Midcap and Smallcap report, and which sectors were winning.",
-      "tags": ["RBI", "Loans", "Index report", "Sectors"],
-      "file": "library/meetups/community-meetup-1.pdf", "pages": 19, "mb": 3.4
+      "tags": [
+        "RBI",
+        "Loans",
+        "Index report",
+        "Sectors"
+      ],
+      "file": "library/meetups/community-meetup-1.pdf",
+      "pages": 19,
+      "mb": 3.4,
+      "download": true
     },
     {
-      "id": "meetup-2", "shelf": "meetups", "kind": "pdf", "locked": true,
-      "title": "Community Meet Up #2", "date": "2026-10-18",
+      "id": "meetup-2",
+      "shelf": "meetups",
+      "kind": "pdf",
+      "locked": true,
+      "title": "Community Meet Up #2",
+      "date": "2026-10-18",
       "by": "Sagar Patro and Bhuvan",
       "sub": "The data centre story, the market week, and how to read mutual funds without falling for the common traps.",
-      "tags": ["Data centres", "Markets", "Mutual funds"],
+      "tags": [
+        "Data centres",
+        "Markets",
+        "Mutual funds"
+      ],
       "lock_note": "Opens here once the session is done and the deck is final."
     },
     {
-      "id": "data-centre", "shelf": "research", "kind": "pdf",
-      "title": "India Data Centre Theme", "date": "2026-09-16",
+      "id": "data-centre",
+      "shelf": "research",
+      "kind": "pdf",
+      "title": "India Data Centre Theme",
+      "date": "2026-09-16",
       "sub": "The industry, who builds and who rents, power and land, the value chain, and the listed companies with real data centre business, each with its evidence.",
-      "tags": ["Data centres", "Industry map"],
-      "file": "library/research/india-data-centre-theme.pdf", "pages": 106, "mb": 0.6
+      "tags": [
+        "Data centres",
+        "Industry map"
+      ],
+      "file": "library/research/data-centre.bin",
+      "pages": 106,
+      "protect": true
     },
     {
-      "id": "semiconductor", "shelf": "research", "kind": "pdf",
-      "title": "India Semiconductor Theme", "date": "2026-09-20",
+      "id": "semiconductor",
+      "shelf": "research",
+      "kind": "pdf",
+      "title": "India Semiconductor Theme",
+      "date": "2026-09-20",
       "sub": "Policy and the approved fab and assembly projects, what a chip plant costs, the value chain, and the listed company universe with how much each really earns from chips.",
-      "tags": ["Semiconductors", "Policy", "Industry map"],
-      "file": "library/research/india-semiconductor-theme.pdf", "pages": 248, "mb": 1.2
+      "tags": [
+        "Semiconductors",
+        "Policy",
+        "Industry map"
+      ],
+      "locked": true,
+      "lock_note": "Coming soon to the library."
     },
     {
-      "id": "capital-markets", "shelf": "research", "kind": "pdf",
-      "title": "India Capital Markets Theme", "date": "2026-09-21",
+      "id": "capital-markets",
+      "shelf": "research",
+      "kind": "pdf",
+      "title": "India Capital Markets Theme",
+      "date": "2026-09-21",
       "sub": "Exchanges, depositories, brokers, AMCs, registrars and wealth firms: how each one earns, the SEBI rules that move them, and the listed universe.",
-      "tags": ["Capital markets", "SEBI", "Industry map"],
-      "file": "library/research/india-capital-markets-theme.pdf", "pages": 216, "mb": 1.1
+      "tags": [
+        "Capital markets",
+        "SEBI",
+        "Industry map"
+      ],
+      "locked": true,
+      "lock_note": "Coming soon to the library."
     },
     {
-      "id": "healthcare", "shelf": "research", "kind": "pdf",
-      "title": "India Healthcare Theme", "date": "2026-09-28",
+      "id": "healthcare",
+      "shelf": "research",
+      "kind": "pdf",
+      "title": "India Healthcare Theme",
+      "date": "2026-09-28",
       "sub": "Pharma, hospitals, diagnostics, devices, insurance and more in fifteen categories: regulation, the US FDA, who pays, and the listed universe.",
-      "tags": ["Healthcare", "Pharma", "Industry map"],
-      "file": "library/research/india-healthcare-theme.pdf", "pages": 350, "mb": 1.7
+      "tags": [
+        "Healthcare",
+        "Pharma",
+        "Industry map"
+      ],
+      "locked": true,
+      "lock_note": "Coming soon to the library."
     },
     {
-      "id": "chemicals", "shelf": "research", "kind": "pdf",
-      "title": "India Chemicals Theme", "date": "2026-09-28",
+      "id": "chemicals",
+      "shelf": "research",
+      "kind": "pdf",
+      "title": "India Chemicals Theme",
+      "date": "2026-09-28",
       "sub": "Specialty and bulk chemicals, China and trade rules, anti-dumping duties, the value chain by category, and the listed universe.",
-      "tags": ["Chemicals", "Trade", "Industry map"],
-      "file": "library/research/india-chemicals-theme.pdf", "pages": 405, "mb": 1.9
+      "tags": [
+        "Chemicals",
+        "Trade",
+        "Industry map"
+      ],
+      "locked": true,
+      "lock_note": "Coming soon to the library."
     },
     {
-      "id": "multi-timeframe", "shelf": "research", "kind": "pdf",
-      "title": "Multi-Timeframe Analysis: what the books and research say", "date": "2026-10-16",
+      "id": "multi-timeframe",
+      "shelf": "research",
+      "kind": "pdf",
+      "title": "Multi-Timeframe Analysis: what the books and research say",
+      "date": "2026-10-16",
       "sub": "Elder, Minervini, Weinstein, Shannon and Bulkowski side by side, what academic tests found, and how to test any chart rule without fooling yourself.",
-      "tags": ["Technical analysis", "Research review"],
-      "file": "library/research/multi-timeframe-analysis.pdf", "pages": 4, "mb": 0.3
+      "tags": [
+        "Technical analysis",
+        "Research review"
+      ],
+      "locked": true,
+      "lock_note": "Coming soon to the library."
     },
     {
-      "id": "retail-participation", "shelf": "research", "kind": "link",
-      "title": "Do retail investors run away at the bottom?", "date": "2026-10-05",
+      "id": "retail-participation",
+      "shelf": "research",
+      "kind": "link",
+      "title": "Do retail investors run away at the bottom?",
+      "date": "2026-10-05",
       "sub": "Twenty years of NSE and NSDL data on who trades, who sells and who buys when the market falls. Live figures, updated every evening.",
-      "tags": ["Market participation", "Live study"],
+      "tags": [
+        "Market participation",
+        "Live study"
+      ],
       "href": "#/research/participation"
     },
     {
-      "id": "book-minervini", "shelf": "books", "kind": "book",
-      "title": "Trade Like a Stock Market Wizard", "author": "Mark Minervini", "year": 2013,
+      "id": "book-minervini",
+      "shelf": "books",
+      "kind": "book",
+      "title": "Trade Like a Stock Market Wizard",
+      "author": "Mark Minervini",
+      "year": 2013,
       "sub": "How a stock looks before a big move: the trend template and the volatility contraction pattern.",
       "learn": [
         "Trend template: price above the 50, 150 and 200 day averages, the 200 day rising, at least 30% above the yearly low and within 25% of the high.",
@@ -82,12 +170,19 @@
         "Small fixed losses (7 to 8%) matter more than being right often."
       ],
       "caution": "The results in the book are the author's own record, with winners picked as examples.",
-      "tags": ["Technical analysis", "Momentum"],
+      "tags": [
+        "Technical analysis",
+        "Momentum"
+      ],
       "buy": "https://www.amazon.in/s?k=Trade+Like+a+Stock+Market+Wizard+Minervini"
     },
     {
-      "id": "book-shannon", "shelf": "books", "kind": "book",
-      "title": "Technical Analysis Using Multiple Timeframes", "author": "Brian Shannon", "year": 2008,
+      "id": "book-shannon",
+      "shelf": "books",
+      "kind": "book",
+      "title": "Technical Analysis Using Multiple Timeframes",
+      "author": "Brian Shannon",
+      "year": 2008,
       "sub": "Use a slow chart for direction and a fast chart for timing, so the charts agree before you act.",
       "learn": [
         "The direction of a moving average matters more than whether price is above it.",
@@ -95,12 +190,19 @@
         "When the timeframes disagree, staying in cash is a position too."
       ],
       "caution": "The author gives rules and chart examples, not tested results.",
-      "tags": ["Technical analysis", "Multi-timeframe"],
+      "tags": [
+        "Technical analysis",
+        "Multi-timeframe"
+      ],
       "buy": "https://www.amazon.in/s?k=Technical+Analysis+Using+Multiple+Timeframes+Brian+Shannon"
     },
     {
-      "id": "book-elder", "shelf": "books", "kind": "book",
-      "title": "The New Trading for a Living", "author": "Alexander Elder", "year": 2014,
+      "id": "book-elder",
+      "shelf": "books",
+      "kind": "book",
+      "title": "The New Trading for a Living",
+      "author": "Alexander Elder",
+      "year": 2014,
       "sub": "Trading psychology, risk control and the Triple Screen method in one book.",
       "learn": [
         "Triple Screen: the weekly chart decides the side, the daily chart finds the dip, then you set the entry.",
@@ -108,12 +210,20 @@
         "The 2% rule per trade and the 6% rule per month keep one bad patch from ending your account."
       ],
       "caution": "The Triple Screen has never been tested in a published study.",
-      "tags": ["Psychology", "Risk", "Multi-timeframe"],
+      "tags": [
+        "Psychology",
+        "Risk",
+        "Multi-timeframe"
+      ],
       "buy": "https://www.amazon.in/s?k=The+New+Trading+for+a+Living+Alexander+Elder"
     },
     {
-      "id": "book-bulkowski", "shelf": "books", "kind": "book",
-      "title": "Encyclopedia of Candlestick Charts", "author": "Thomas N. Bulkowski", "year": 2008,
+      "id": "book-bulkowski",
+      "shelf": "books",
+      "kind": "book",
+      "title": "Encyclopedia of Candlestick Charts",
+      "author": "Thomas N. Bulkowski",
+      "year": 2008,
       "sub": "More than 100 candle patterns, each measured on thousands of real charts. A Hindi edition is also available.",
       "learn": [
         "Most popular patterns are weak: the hammer ranks 65 of 103, a doji works about half the time.",
@@ -121,12 +231,18 @@
         "Candles work better with context: with the bigger trend and at the end of a pullback."
       ],
       "caution": "Use it as a reference to look up a pattern, not as a list of signals.",
-      "tags": ["Candlesticks", "Pattern statistics"],
+      "tags": [
+        "Candlesticks",
+        "Pattern statistics"
+      ],
       "buy": "https://www.amazon.in/s?k=Encyclopedia+of+Candlestick+Charts+Bulkowski"
     },
     {
-      "id": "book-abbott", "shelf": "books", "kind": "book",
-      "title": "Japanese Candlestick Charting Techniques", "author": "James Abbott",
+      "id": "book-abbott",
+      "shelf": "books",
+      "kind": "book",
+      "title": "Japanese Candlestick Charting Techniques",
+      "author": "James Abbott",
       "sub": "A short beginner guide to reading candles: body, wick and the common one, two and three candle patterns.",
       "learn": [
         "What each part of a candle tells you about buyers and sellers that day.",
@@ -134,7 +250,10 @@
         "Wait for the next candle to confirm before acting."
       ],
       "caution": "Good to learn the names. Tests on Indian and other markets find little edge from candles alone.",
-      "tags": ["Candlesticks", "Beginner"],
+      "tags": [
+        "Candlesticks",
+        "Beginner"
+      ],
       "buy": "https://www.amazon.in/s?k=Japanese+Candlestick+Charting+Techniques+James+Abbott"
     }
   ]

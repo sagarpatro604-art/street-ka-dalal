@@ -754,7 +754,19 @@ a.lib-card:hover, .lib-card:has(.lib-cover:hover) { border-color: var(--green-2)
 .lib-rbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .lib-rbar .lib-bar { width: 110px; }
 .lib-pageno { font-weight: 600; font-size: 13.5px; color: var(--muted); white-space: nowrap; }
-.lib-pages { display: grid; gap: 14px; max-width: 980px; margin: 0 auto 30px; }
+.lib-scroll { overflow-x: auto; overscroll-behavior-x: contain; }
+.lib-pages { display: grid; gap: 14px; width: 100%; max-width: none; margin: 0 auto 30px; }
+.lib-page { scroll-margin-top: 150px; }
+.lib-zoom { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 11px; background: var(--paper); }
+.lib-zoom .btn { border: 0; min-width: 34px; padding: 0 8px; }
+.lib-zoom .lib-zb { font-size: 18px; line-height: 1; }
+.lib-zoom .lib-zl { min-width: 58px; font-variant-numeric: tabular-nums; border-left: 1px solid var(--line); border-right: 1px solid var(--line); border-radius: 0; }
+.lib-reader.lib-focus { position: fixed; inset: 0; z-index: 1000; overflow: auto; background: var(--bg); padding: 0 18px 24px; }
+.lib-focus .lib-rhead { position: sticky; top: 0; border-radius: 0 0 var(--radius) var(--radius); margin-bottom: 14px; }
+.lib-focus .lib-page { scroll-margin-top: 90px; }
+.lib-focus .lib-rtitle .eyebrow { display: none; }
+.lib-focus .lib-rhead h1 { font-size: 18px; }
+body.lib-noscroll { overflow: hidden; }
 .lib-page { position: relative; width: 100%; background: #fff; border: 1px solid var(--line); border-radius: 6px; box-shadow: var(--shadow); overflow: hidden; }
 .lib-page canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 .lib-pnum { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: var(--line); font: 600 28px var(--serif); }
@@ -766,4 +778,5 @@ a.lib-card:hover, .lib-card:has(.lib-cover:hover) { border-color: var(--green-2)
   .lib-rhead h1 { font-size: 17px; }
   .lib-rbar .lib-bar { width: 70px; }
   .lib-pages { gap: 8px; }
+  .lib-page { scroll-margin-top: 110px; }
 }
