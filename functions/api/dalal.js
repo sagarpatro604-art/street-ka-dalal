@@ -7,7 +7,10 @@
 // sections are picked up automatically) plus the published Insights; Gemini may add Google Search.
 //
 // Settings (Cloudflare → Pages project → Settings → Variables and secrets):
-//   GEMINI_API_KEY  (secret, required)      DALAL_DAILY_LIMIT  (default 10)
+//   GEMINI_API_KEY  (secret, first choice)  DALAL_DAILY_LIMIT  (default 10)
+//   GROQ_API_KEY    (secret, first backup, free)  GROQ_MODELS (optional), GROQ_CONTEXT_CHARS (default 10000)
+//   ANTHROPIC_API_KEY (secret, last backup, paid: Haiku then Sonnet only)  CLAUDE_MODELS (optional, haiku/sonnet only),
+//                   CLAUDE_DAILY_MAX (default 200 answers a day), CLAUDE_CONTEXT_CHARS (default 60000)
 //   GEMINI_MODELS   (optional preferred models, tried first; otherwise Dalal picks the newest available "flash" models)
 //   FIREBASE_PROJECT_ID (default street-ka-dalal)
 
@@ -492,6 +495,125 @@ async function askGemini(env, models, sys, contents, only) {
   throw new Error(lastErr.replace(/^ \| /, '') || 'no model answered');
 }
 
+/* ------------------------------------------------------------ backups: Groq, then Claude */
+// Order (Sagar, 2026-10-18): Gemini first, then Groq (free), then Claude (paid, Haiku / Sonnet only).
+// Neither backup searches the web; they answer from the site data and the news headlines Dalal read.
+// Groq's free tier allows 8,000 tokens a minute per model, so it gets a smaller copy of the site data,
+// keeping the parts most tied to the question (stocks asked about, latest news) first.
+function slimContext(s, max) {
+  if (s.length <= max) return s;
+  let ctx;
+  try { ctx = JSON.parse(s); } catch { return s.slice(0, max); }
+  const order = ['data_as_of_close', 'published_at', 'stocks_asked_about', 'latest_news', 'market', 'announcements', 'sectors', 'screeners', 'mutual_funds', 'insights_by_sagar'];
+  const keys = [...order.filter((k) => k in ctx), ...Object.keys(ctx).filter((k) => !order.includes(k))];
+  const out = {};
+  let left = max - 2;
+  for (const k of keys) {
+    const v = JSON.stringify(ctx[k]);
+    if (v == null) continue;
+    if (v.length + k.length + 4 <= left) { out[k] = ctx[k]; left -= v.length + k.length + 4; }
+    else if (left > 400) { out[k] = clip(v, left - k.length - 10); left = 0; }
+  }
+  return JSON.stringify(out);
+}
+
+// the conversation as alternating user / assistant turns, starting with the user (both APIs need that)
+function chatTurns(history, userText) {
+  const turns = [];
+  for (const h of [...history, { role: 'user', text: userText }]) {
+    const role = h.role === 'user' ? 'user' : 'assistant';
+    if (!turns.length && role !== 'user') continue;
+    if (turns.length && turns[turns.length - 1].role === role) turns[turns.length - 1].content += `\n\n${h.text}`;
+    else turns.push({ role, content: h.text });
+  }
+  return turns;
+}
+
+const GROQ_MODELS = ['openai/gpt-oss-120b', 'qwen/qwen3.8-27b', 'openai/gpt-oss-20b'];
+async function askGroq(env, sys, history, userText) {
+  const models = (env.GROQ_MODELS || '').split(',').map((x) => x.trim()).filter(Boolean);
+  const messages = [{ role: 'system', content: sys }, ...chatTurns(history, userText)];
+  let lastErr = '';
+  for (const model of models.length ? models : GROQ_MODELS) {
+    let r;
+    try {
+      r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.GROQ_API_KEY}` },
+        body: JSON.stringify({ model, messages, temperature: 0.3, max_tokens: 1200 }), signal: AbortSignal.timeout(30000),
+      });
+    } catch (e) { lastErr += ` | ${model}: ${e.name === 'TimeoutError' ? 'no answer in 30 s' : e.message}`; continue; }
+    if (r.ok) {
+      const d = await r.json();
+      const text = (d.choices?.[0]?.message?.content || '').replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+      if (text) return { text, sources: [], web: false, model, searchOn: false };
+      lastErr += ` | ${model}: empty answer`;
+      continue;
+    }
+    lastErr += ` | ${model}: ${r.status} ${(await r.text()).replace(/\s+/g, ' ').slice(0, 140)}`;
+  }
+  throw new Error(lastErr.replace(/^ \| /, '') || 'no Groq model answered');
+}
+
+// Claude: only the lower models (Haiku, then Sonnet), never Opus. A daily cap on Claude answers
+// (CLAUDE_DAILY_MAX, default 200) keeps the paid API credit safe if Gemini and Groq are both down for long.
+const CLAUDE_MODELS = ['claude-haiku-5-5', 'claude-sonnet-5-5'];
+async function askClaude(env, sys, history, userText) {
+  const wanted = (env.CLAUDE_MODELS || '').split(',').map((x) => x.trim()).filter((m) => /^claude-(haiku|sonnet)-/.test(m));
+  const messages = chatTurns(history, userText);
+  let lastErr = '';
+  for (const model of wanted.length ? wanted : CLAUDE_MODELS) {
+    // thinking off for quick answers (Haiku: "disabled"; Sonnet 5.5 does not take "disabled", it takes "between_tools")
+    for (const think of [/haiku/.test(model) ? { type: 'disabled' } : { type: 'between_tools' }, null]) {
+      let r;
+      try {
+        r = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+          body: JSON.stringify({ model, max_tokens: 2000, system: sys, messages, output_config: { effort: 'low' }, ...(think ? { thinking: think } : {}) }),
+          signal: AbortSignal.timeout(40000),
+        });
+      } catch (e) { lastErr += ` | ${model}: ${e.name === 'TimeoutError' ? 'no answer in 40 s' : e.message}`; break; }
+      if (r.ok) {
+        const d = await r.json();
+        const text = (d.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('').trim();
+        if (text && d.stop_reason !== 'refusal') return { text, sources: [], web: false, model, searchOn: false };
+        lastErr += ` | ${model}: ${d.stop_reason || 'empty answer'}`;
+        break;
+      }
+      const errText = await r.text();
+      lastErr += ` | ${model}: ${r.status} ${errText.replace(/\s+/g, ' ').slice(0, 140)}`;
+      if (!(r.status === 400 && think && /thinking/i.test(errText))) break; // a refused thinking setting: try once without it
+    }
+  }
+  throw new Error(lastErr.replace(/^ \| /, '') || 'no Claude model answered');
+}
+
+// Gemini -> Groq -> Claude. Returns the first answer; the error lists why each one failed.
+async function askChain(env, sys, history, context, questionText) {
+  const errs = [];
+  if (env.GEMINI_API_KEY) {
+    const contents = [...history.map((h) => ({ role: h.role, parts: [{ text: h.text }] })), { role: 'user', parts: [{ text: `SITE DATA (JSON):\n${context}\n\n${questionText}` }] }];
+    try { return await askGemini(env, await pickModels(env), sys, contents); } catch (e) { errs.push(`Gemini: ${e.message}`); }
+  }
+  if (env.GROQ_API_KEY) {
+    // about 10,000 characters of site data fit in 8,000 tokens with the rules and the answer; less when the chat is long
+    const room = Math.max(5000, +(env.GROQ_CONTEXT_CHARS || 10000) - history.reduce((n, h) => n + h.text.length, 0));
+    try { return await askGroq(env, sys, history, `SITE DATA (JSON):\n${slimContext(context, room)}\n\n${questionText}`); } catch (e) { errs.push(`Groq: ${e.message}`); }
+  }
+  if (env.ANTHROPIC_API_KEY) {
+    const cap = +(env.CLAUDE_DAILY_MAX || 200);
+    const used = await getUsed(env, '_claude');
+    if (used >= cap) errs.push(`Claude: daily cap of ${cap} answers reached`);
+    else {
+      try {
+        const r = await askClaude(env, sys, history, `SITE DATA (JSON):\n${slimContext(context, +(env.CLAUDE_CONTEXT_CHARS || 60000))}\n\n${questionText}`);
+        await addUsed(env, '_claude', used);
+        return r;
+      } catch (e) { errs.push(`Claude: ${e.message}`); }
+    }
+  }
+  throw new Error(errs.join(' || ') || 'no AI key set');
+}
+
 /* ------------------------------------------------------------ handlers */
 export async function onRequestOptions({ request }) {
   return new Response(null, { status: 204, headers: cors(request.headers.get('Origin')) });
@@ -518,6 +640,10 @@ export async function onRequestGet({ request, env }) {
       }
       out.health.gemini = res.join(' | ');
     }
+    // the backups, one short test each (a Claude test costs a fraction of a paisa and is not counted in the cap)
+    const ping = async (fn) => { const t0 = Date.now(); try { const r = await fn(env, 'Reply with the single word OK.', [], 'ping'); return `${r.model}: ok ${((Date.now() - t0) / 1000).toFixed(1)}s`; } catch (e) { return clip(e.message, 200); } };
+    out.health.groq = env.GROQ_API_KEY ? await ping(askGroq) : 'no key';
+    out.health.claude = env.ANTHROPIC_API_KEY ? `${await ping(askClaude)} · used today ${await getUsed(env, '_claude')} of ${+(env.CLAUDE_DAILY_MAX || 200)}` : 'no key';
   }
   return json(out, 200, origin);
 }
@@ -528,7 +654,7 @@ export async function onRequestPost({ request, env }) {
   const token = (request.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
   const user = await verifyToken(token, projectId);
   if (!user) return json({ error: 'signin', message: 'Please sign in again to talk to Dalal.' }, 401, origin);
-  if (!env.GEMINI_API_KEY) return json({ error: 'setup', message: 'Dalal is being set up. Please try again a little later.' }, 503, origin);
+  if (!env.GEMINI_API_KEY && !env.GROQ_API_KEY && !env.ANTHROPIC_API_KEY) return json({ error: 'setup', message: 'Dalal is being set up. Please try again a little later.' }, 503, origin);
 
   let body;
   try { body = await request.json(); } catch { return json({ error: 'bad' }, 400, origin); }
@@ -539,7 +665,7 @@ export async function onRequestPost({ request, env }) {
   const isAdmin = ADMIN_EMAILS.includes(user.email.toLowerCase());
   const key = `n:${user.uid}:${istDate()}`;
   const used = await getUsed(env, user.uid);
-  if (!isAdmin && used >= limit) return json({ error: 'limit', message: `You've used all ${limit} questions for today. Dalal will be back tomorrow morning! 🙏`, left: 0 }, 429, origin);
+  if (!isAdmin && used >= limit) return json({ error: 'limit', message: `You've used all ${limit} questions for today. Dalal will be back tomorrow morning!`, left: 0 }, 429, origin);
 
   // the site's knowledge: every data file the publisher lists, plus published insights
   const selfOrigin = new URL(request.url).origin;
@@ -577,18 +703,16 @@ export async function onRequestPost({ request, env }) {
 
   const history = (Array.isArray(body.history) ? body.history : []).slice(-6)
     .filter((h) => h && h.text && (h.role === 'user' || h.role === 'model'))
-    .map((h) => ({ role: h.role, parts: [{ text: clip(h.text, 700) }] }));
-  const contents = [...history, { role: 'user', parts: [{ text: `SITE DATA (JSON):\n${context}\n\nQUESTION from ${clip(user.name || 'a member', 40)}:\n${q}` }] }];
+    .map((h) => ({ role: h.role, text: clip(h.text, 700) }));
 
   try {
-    const models = await pickModels(env);
-    const r = await askGemini(env, models, SYSTEM(meta?.as_of, istDate()), contents);
+    const r = await askChain(env, SYSTEM(meta?.as_of, istDate()), history, context, `QUESTION from ${clip(user.name || 'a member', 40)}:\n${q}`);
     if (!isAdmin) await addUsed(env, user.uid, used);
-    // when Gemini did not search the web itself, show the news links Dalal read
+    // when the answer did not come from a web search, show the news links Dalal read
     const newsLinks = [...Object.values(news?.by_stock || {}).flat(), ...(news?.topic || [])].filter((x) => x.link).slice(0, 4).map((x) => ({ title: `${x.source}: ${x.title}`.slice(0, 90), uri: x.link }));
     return json({ answer: r.text, sources: r.sources?.length ? r.sources : newsLinks, web: r.web || !!newsLinks.length, model: r.model, asOf: meta?.as_of, left: isAdmin ? limit : Math.max(0, limit - used - 1) }, 200, origin);
   } catch (e) {
     const busy = /429|RESOURCE_EXHAUSTED|quota/i.test(e.message);
-    return json({ error: busy ? 'busy' : 'ai', message: busy ? 'Dalal is getting a lot of questions right now. Please try again in a minute. 🙏' : 'Dalal could not answer just now. Please try again.', detail: clip(e.message, 600) }, busy ? 429 : 502, origin);
+    return json({ error: busy ? 'busy' : 'ai', message: busy ? 'Dalal is getting a lot of questions right now. Please try again in a minute.' : 'Dalal could not answer just now. Please try again.', detail: clip(e.message, 600) }, busy ? 429 : 502, origin);
   }
 }
