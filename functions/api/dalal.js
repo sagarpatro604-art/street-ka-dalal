@@ -10,7 +10,7 @@
 //   GEMINI_API_KEY  (secret, first choice)  DALAL_DAILY_LIMIT  (default 10)
 //   GROQ_API_KEY    (secret, first backup, free)  GROQ_MODELS (optional), GROQ_CONTEXT_CHARS (default 10000)
 //   ANTHROPIC_API_KEY (secret, last backup, paid: Haiku then Sonnet only)  CLAUDE_MODELS (optional, haiku/sonnet only),
-//                   CLAUDE_DAILY_MAX (default 200 answers a day), CLAUDE_CONTEXT_CHARS (default 60000)
+//                   CLAUDE_DAILY_MAX (default 100 answers a day), CLAUDE_CONTEXT_CHARS (default 60000)
 //   GEMINI_MODELS   (optional preferred models, tried first; otherwise Dalal picks the newest available "flash" models)
 //   FIREBASE_PROJECT_ID (default street-ka-dalal)
 
@@ -555,7 +555,7 @@ async function askGroq(env, sys, history, userText) {
 }
 
 // Claude: only the lower models (Haiku, then Sonnet), never Opus. A daily cap on Claude answers
-// (CLAUDE_DAILY_MAX, default 200) keeps the paid API credit safe if Gemini and Groq are both down for long.
+// (CLAUDE_DAILY_MAX, default 100; about USD 0.0025 a Haiku answer) keeps the paid API credit safe if Gemini and Groq are both down for long.
 const CLAUDE_MODELS = ['claude-haiku-5-5', 'claude-sonnet-5-5'];
 async function askClaude(env, sys, history, userText) {
   const wanted = (env.CLAUDE_MODELS || '').split(',').map((x) => x.trim()).filter((m) => /^claude-(haiku|sonnet)-/.test(m));
@@ -600,7 +600,7 @@ async function askChain(env, sys, history, context, questionText) {
     try { return await askGroq(env, sys, history, `SITE DATA (JSON):\n${slimContext(context, room)}\n\n${questionText}`); } catch (e) { errs.push(`Groq: ${e.message}`); }
   }
   if (env.ANTHROPIC_API_KEY) {
-    const cap = +(env.CLAUDE_DAILY_MAX || 200);
+    const cap = +(env.CLAUDE_DAILY_MAX || 100);
     const used = await getUsed(env, '_claude');
     if (used >= cap) errs.push(`Claude: daily cap of ${cap} answers reached`);
     else {
@@ -643,7 +643,7 @@ export async function onRequestGet({ request, env }) {
     // the backups, one short test each (a Claude test costs a fraction of a paisa and is not counted in the cap)
     const ping = async (fn) => { const t0 = Date.now(); try { const r = await fn(env, 'Reply with the single word OK.', [], 'ping'); return `${r.model}: ok ${((Date.now() - t0) / 1000).toFixed(1)}s`; } catch (e) { return clip(e.message, 200); } };
     out.health.groq = env.GROQ_API_KEY ? await ping(askGroq) : 'no key';
-    out.health.claude = env.ANTHROPIC_API_KEY ? `${await ping(askClaude)} · used today ${await getUsed(env, '_claude')} of ${+(env.CLAUDE_DAILY_MAX || 200)}` : 'no key';
+    out.health.claude = env.ANTHROPIC_API_KEY ? `${await ping(askClaude)} · used today ${await getUsed(env, '_claude')} of ${+(env.CLAUDE_DAILY_MAX || 100)}` : 'no key';
   }
   return json(out, 200, origin);
 }
