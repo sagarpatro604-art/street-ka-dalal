@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Community Meet 3 · Street ka Dalal</title>
-<meta name="description" content="Street ka Dalal Community Meet 3: Sunday 25 October, 9 PM on Google Meet. Free for our community. Register here.">
+<meta name="description" content="Street ka Dalal Community Meet 3: Sunday 25 October, 9 PM on Google Meet. Investing strategies, and what happened in the market this week. Free for our community. Register here.">
 <meta property="og:title" content="Street ka Dalal · Community Meet 3">
-<meta property="og:description" content="Sunday 25 October, 9:00 PM IST on Google Meet. Free for our community. Register here.">
+<meta property="og:description" content="Sunday 25 October, 9:00 PM IST on Google Meet. Investing strategies, and what happened in the market this week. Free. Register here.">
 <meta property="og:image" content="https://street-ka-dalal.pages.dev/icons/icon-512.png">
 <meta name="theme-color" content="#1F4D3A">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
@@ -235,7 +235,7 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
       </div>
 
       <div class="more">
-        <p class="lede">One hour, live, with the Street ka Dalal community: what is going on in the markets, what we are learning, and your questions answered. Free. Register once and we send you the calendar invite and the Meet link.</p>
+        <p class="lede">One hour, live, with the Street ka Dalal community. This time: <b style="color:#fff">investing strategies</b>, and <b style="color:#fff">what happened in the market this week</b>. Free. Register once and we send you the calendar invite and the Meet link.</p>
         <div class="count" id="count" aria-label="Time left">
           <div class="cell"><b class="face" id="cd-d">-</b><small>days</small></div><div class="cell"><b class="face" id="cd-h">-</b><small>hours</small></div><div class="cell"><b class="face" id="cd-m">-</b><small>mins</small></div><div class="cell"><b class="face" id="cd-s">-</b><small>secs</small></div>
         </div>
@@ -441,7 +441,7 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
   const gcal = () => 'https://calendar.google.com/calendar/render?action=TEMPLATE'
     + '&text=' + encodeURIComponent('Street ka Dalal Community Meet 3')
     + '&dates=20261025T153000Z/20261025T163000Z'
-    + '&details=' + encodeURIComponent('Street ka Dalal Community Meet 3, live on Google Meet.' + (MEET ? '\nJoin: ' + MEET : '\nThe Meet link comes with the calendar invite and on our WhatsApp community.'))
+    + '&details=' + encodeURIComponent('Street ka Dalal Community Meet 3, live on Google Meet: investing strategies, and what happened in the market this week.' + (MEET ? '\nJoin: ' + MEET : '\nThe Meet link comes with the calendar invite and on our WhatsApp community.'))
     + (MEET ? '&location=' + encodeURIComponent(MEET) : '');
   const DIYA = '<svg class="diya" viewBox="0 0 96 80" aria-hidden="true"><ellipse class="glow" cx="48" cy="24" rx="26" ry="22" fill="#ffcf6b" opacity=".5"/><path class="flame" d="M48 6c6 9 9 15 9 20a9 9 0 0 1-18 0c0-5 3-11 9-20Z" fill="#ff9b2e"/><path class="flame" d="M48 15c3 5 4.5 8 4.5 11a4.5 4.5 0 0 1-9 0c0-3 1.5-6 4.5-11Z" fill="#ffe7a0"/><path d="M10 46h76c-3 15-18 26-38 26S13 61 10 46Z" fill="#b4442f"/><path d="M10 46h76" stroke="#d9b878" stroke-width="5" stroke-linecap="round"/><path d="M26 58h44" stroke="#d9b878" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="4 6"/></svg>';
   function done(name, again) {
