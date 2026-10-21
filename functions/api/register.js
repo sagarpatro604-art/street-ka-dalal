@@ -9,7 +9,7 @@
 
 const ALLOWED_ORIGINS = ['https://street-ka-dalal.pages.dev'];
 const ADMIN_EMAILS = ['sagarpatro604@gmail.com'];
-const EVENTS = ['meet-2'];
+const EVENTS = ['meet-3'];   // open for sign-up now; older events stay readable in Admin (GET takes any event id)
 
 const cors = (origin) => ({
   'Access-Control-Allow-Origin': ALLOWED_ORIGINS.includes(origin) || /\.street-ka-dalal\.pages\.dev$/.test(origin || '') || /^http:\/\/localhost(:\d+)?$/.test(origin || '') ? origin : ALLOWED_ORIGINS[0],

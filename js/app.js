@@ -78,6 +78,8 @@ const GOOGLE = '<svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="tru
 const LOGO = '<svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="10" fill="#1F4D3A"/><path d="M11 27v-6M11 21v-3" stroke="#E9DCC3" stroke-width="1.6" stroke-linecap="round"/><rect x="9" y="19.5" width="4" height="6" rx="1" fill="#E9DCC3"/><path d="M20 26V13" stroke="#C9A96E" stroke-width="1.6" stroke-linecap="round"/><rect x="18" y="15" width="4" height="8.5" rx="1" fill="#C9A96E"/><path d="M29 22V8" stroke="#E9DCC3" stroke-width="1.6" stroke-linecap="round"/><rect x="27" y="10" width="4" height="9" rx="1" fill="#E9DCC3"/><path d="M8 31h24" stroke="#C9A96E" stroke-width="1.6" stroke-linecap="round"/></svg>';
 
 /* ---------------- data ---------------- */
+// Community sessions with a sign-up page (newest first): event id, admin tab label, line under it
+const REG_EVENTS = [['meet-3', 'Meet 3', 'Community Meet 3 · Sunday 25 October, 9 PM'], ['meet-2', 'Meet 2', 'Community Meet 2 · Sunday 18 October, 9 PM']];
 const cache = {};
 let meta = null;
 async function loadMeta(force) {
@@ -1564,11 +1566,12 @@ async function viewAdmin() {
     ], 'No members yet.')}</section>`;
   } else if (t === 'regs') {
     // Community session sign-ups from session.html (functions/api/register.js, D1 table registrations)
-    const r = await fetch('/api/register?event=meet-2', { headers: { Authorization: `Bearer ${await A.idToken()}` } }).then((x) => x.json()).catch((e) => ({ error: e.message }));
+    const ev = ui.admin.regEv || REG_EVENTS[0][0], evInfo = REG_EVENTS.find((x) => x[0] === ev) || REG_EVENTS[0];
+    const r = await fetch(`/api/register?event=${ev}`, { headers: { Authorization: `Bearer ${await A.idToken()}` } }).then((x) => x.json()).catch((e) => ({ error: e.message }));
     const rows = r.rows || [];
     ui.regs = rows;
     body = r.error ? `<div class="card empty">Could not load registrations: ${esc(r.error)}</div>` : `<div class="stats big"><div><b>${rows.length}</b><span>registered</span></div><div><b>${rows.filter((x) => x.consent).length}</b><span>want the calendar invite</span></div><div><b>${rows.filter((x) => x.attended === 'yes').length}</b><span>came last time</span></div><div><b>${rows.filter((x) => x.attended === 'no').length}</b><span>first time</span></div></div>
-    <div class="toolbar"><span class="sub">Community Meet 2 · Sunday 18 October, 9 PM · sign-up page <a href="session" target="_blank" rel="noopener">street-ka-dalal.pages.dev/session</a></span><span class="grow"></span><button class="btn sm" data-act="copyInvite">Copy invite emails</button> <button class="btn sm ghost" data-act="exportRegs">Download CSV</button></div>
+    <div class="toolbar"><div class="seg">${REG_EVENTS.map(([k, l]) => `<button class="${k === ev ? 'on' : ''}" data-act="regEv" data-v="${k}">${l}</button>`).join('')}</div><span class="sub">${evInfo[2]}${ev === REG_EVENTS[0][0] ? ' · sign-up page <a href="session" target="_blank" rel="noopener">street-ka-dalal.pages.dev/session</a>' : ''}</span><span class="grow"></span><button class="btn sm" data-act="copyInvite">Copy invite emails</button> <button class="btn sm ghost" data-act="exportRegs">Download CSV</button></div>
     <section class="card flush">${table('regs', rows, [
       { k: 'name', label: 'Name', fmt: (x) => `<b>${esc(x.name)}</b><span class="sub">${esc(x.email)}${x.via === 'google' ? ' · Google sign-in' : ''}</span>` },
       { k: 'attended', label: 'Last session', fmt: (x) => chip(x.attended === 'yes' ? 'Attended' : 'First time', x.attended === 'yes' ? 'good' : '') },
@@ -1711,6 +1714,7 @@ const ACTS = {
   mktItab: (el) => { ui.mkt.itab = el.dataset.v; render(); },
   mfGrp: (el) => { ui.mf.grp = el.dataset.v; ui.mf.sel = null; render(); },
   mfSel: (el) => { ui.mf.sel = el.dataset.v; render(); },
+  regEv: (el) => { ui.admin.regEv = el.dataset.v; render(); },
   resTab: (el) => { ui.res.tab = el.dataset.v; ui.res.group = ''; if (route().split('/')[0] !== 'results') { location.hash = '#/results'; return; } render(); },
   resWhen: (el) => { ui.res.when = el.dataset.v; render(); },
   resConf: (el) => { ui.res.conf = el.dataset.v; render(); },
@@ -1772,7 +1776,7 @@ const ACTS = {
   },
   exportRegs: () => {
     const csv = ['name,email,attended_last,calendar_invite,registered', ...(ui.regs || []).map((x) => [x.name, x.email, x.attended, x.consent ? 'yes' : 'no', x.created].map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','))].join(String.fromCharCode(10));
-    Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })), download: `community-meet-2-registrations-${new Date().toISOString().slice(0, 10)}.csv` }).click();
+    Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })), download: `community-${ui.admin.regEv || REG_EVENTS[0][0]}-registrations-${new Date().toISOString().slice(0, 10)}.csv` }).click();
   },
   exportMembers: async () => {
     const ms = await A.listMembers();

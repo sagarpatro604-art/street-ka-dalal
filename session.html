@@ -3,19 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Community Meet 2 · Street ka Dalal</title>
-<meta name="description" content="Street ka Dalal Community Meet 2: Sunday 18 October, 9 PM on Google Meet. The week in markets, quarterly results, the data centre theme and the week's trending story.">
-<meta property="og:title" content="Street ka Dalal · Community Meet 2">
-<meta property="og:description" content="Sunday 18 October, 9:00 PM IST on Google Meet. Free for our community. Register here.">
+<title>Community Meet 3 · Street ka Dalal</title>
+<meta name="description" content="Street ka Dalal Community Meet 3: Sunday 25 October, 9 PM on Google Meet. Investment strategies, the trending stories, last week's technicals and the stocks we are discussing.">
+<meta property="og:title" content="Street ka Dalal · Community Meet 3">
+<meta property="og:description" content="Sunday 25 October, 9:00 PM IST on Google Meet. Strategies, stories, charts and stocks. Free for our community. Register here.">
 <meta property="og:image" content="https://street-ka-dalal.pages.dev/icons/icon-512.png">
 <meta name="theme-color" content="#1F4D3A">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="preload" as="image" href="icons/dalal-peek.webp" fetchpriority="high">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,700&display=swap" media="print" onload="this.media='all'">
 <style>
-:root{--bg:#f6f1e7;--paper:#fffdf8;--paper-2:#f1ebdf;--line:#e4dccb;--ink:#1d2a23;--muted:#6c786f;--green:#1f4d3a;--green-2:#2f6b4f;--sage:#dfe9d6;--gold:#b08d57;--gold-soft:#f3ead9;--up:#23794f;--up-bg:#e3f1e6;--down:#b4442f;--down-bg:#f8e6e1;
+:root{--bg:#f6f1e7;--paper:#fffdf8;--paper-2:#f1ebdf;--line:#e4dccb;--ink:#1d2a23;--muted:#6c786f;--green:#1f4d3a;--green-2:#2f6b4f;--deep:#12301f;--sage:#dfe9d6;--gold:#b08d57;--gold-2:#d9b878;--gold-soft:#f3ead9;--cream:#e9dcc3;--up:#23794f;--up-bg:#e3f1e6;--down:#b4442f;--down-bg:#f8e6e1;
 --serif:"Fraunces",Georgia,"Times New Roman",serif;--sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;--shadow:0 1px 2px rgba(31,46,36,.05),0 10px 30px rgba(31,46,36,.08)}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -23,46 +23,92 @@ html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
 a{color:var(--green-2)}
 h1,h2,h3{font-family:var(--serif);color:var(--green);margin:0;letter-spacing:-.01em}
-.wrap{max-width:1160px;margin:0 auto;padding:0 18px}
-.top{position:sticky;top:0;z-index:20;background:rgba(246,241,231,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-.top .wrap{display:flex;align-items:center;gap:12px;height:60px}
-.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--green);font:700 19px var(--serif)}
-.brand em{color:var(--gold);font-style:italic}
-.grow{flex:1}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;padding:12px 20px;font:600 15px var(--sans);cursor:pointer;text-decoration:none;transition:transform .15s ease,box-shadow .15s ease,background .15s}
+.wrap{max-width:1180px;margin:0 auto;padding:0 18px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;padding:13px 22px;font:700 15px var(--sans);cursor:pointer;text-decoration:none;transition:transform .15s ease,box-shadow .15s ease,background .15s}
+.btn:hover{transform:translateY(-2px)}
 .btn:active{transform:scale(.97)}
 .btn.primary{background:var(--green);color:#fff;box-shadow:0 6px 18px rgba(31,77,58,.25)}
 .btn.primary:hover{background:var(--green-2)}
-.btn.ghost{background:var(--paper);color:var(--green);border:1px solid var(--line)}
-.btn.gold{background:var(--gold);color:#fff}
+.btn.gold{background:linear-gradient(135deg,var(--gold-2),var(--gold));color:var(--deep);box-shadow:0 8px 24px rgba(217,184,120,.35)}
+.btn.ghost{background:transparent;color:var(--cream);border:1px solid rgba(233,220,195,.35)}
+.btn.ghost:hover{background:rgba(233,220,195,.08)}
 .btn.sm{padding:8px 14px;font-size:14px}
+.btn.light{background:var(--paper);color:var(--green);border:1px solid var(--line)}
 
-/* hero */
-.hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.8fr);gap:36px 130px;align-items:start;padding:44px 0 30px}
-.eyebrow{display:inline-flex;align-items:center;gap:8px;font:700 12px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
-.live-dot{width:8px;height:8px;border-radius:50%;background:var(--down);box-shadow:0 0 0 0 rgba(180,68,47,.5);animation:ping 1.8s infinite}
-@keyframes ping{70%{box-shadow:0 0 0 10px rgba(180,68,47,0)}100%{box-shadow:0 0 0 0 rgba(180,68,47,0)}}
-.hero h1{font-size:clamp(34px,5.4vw,60px);line-height:1.04;margin:12px 0 14px}
-.hero h1 span{color:var(--gold);font-style:italic}
-.when{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 18px}
-.pill{display:inline-flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-weight:600;font-size:15px}
-.pill svg{color:var(--green-2)}
-.lede{font-size:18px;color:#3d4a42;max-width:560px;margin:0 0 22px}
-.count{display:flex;gap:10px;margin:0 0 24px}
-.count div{background:var(--green);color:#fff;border-radius:14px;padding:10px 0;width:74px;text-align:center}
-.count b{display:block;font:700 26px var(--serif);line-height:1.1}
-.count small{font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.8}
+/* scroll progress + ticker */
+.progress{position:fixed;left:0;top:0;height:3px;width:100%;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,var(--gold-2),var(--gold));z-index:50}
+.ticker{background:var(--deep);color:var(--cream);overflow:hidden;white-space:nowrap;font-size:13px;font-weight:600;height:32px;display:flex;align-items:center}
+.ticker-track{display:inline-flex;gap:34px;padding-left:34px;animation:tape 40s linear infinite;will-change:transform}
+.ticker:hover .ticker-track{animation-play-state:paused}
+.ticker span{display:inline-flex;gap:6px;align-items:center}
+.ticker b{color:#fff}
+.ticker .up{color:#7fd3a0}.ticker .down{color:#f2a08f}
+.ticker i{width:5px;height:5px;border-radius:50%;background:var(--gold-2);display:inline-block}
+@keyframes tape{to{transform:translateX(-50%)}}
+
+.top{position:sticky;top:0;z-index:20;background:rgba(246,241,231,.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:12px;height:58px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--green);font:700 19px var(--serif)}
+.brand em{color:var(--gold);font-style:italic}
+.grow{flex:1}
+
+/* hero stage */
+.stage{position:relative;margin:18px 0 0;border-radius:28px;background:radial-gradient(120% 90% at 85% 0%,#2f6b4f 0%,var(--green) 38%,var(--deep) 100%);color:var(--cream);overflow:hidden;isolation:isolate}
+.stage-bg{position:absolute;inset:0;z-index:-1;pointer-events:none}
+.grid-bg{position:absolute;inset:-40px;background-image:linear-gradient(rgba(233,220,195,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(233,220,195,.06) 1px,transparent 1px);background-size:40px 40px;animation:gridmove 12s linear infinite}
+@keyframes gridmove{to{transform:translate(40px,40px)}}
+.chart{position:absolute;left:0;right:0;bottom:0;width:100%;height:62%;opacity:.55}
+.chart .cdl{transform-box:fill-box;transform-origin:50% 100%;transform:scaleY(0);animation:grow .5s cubic-bezier(.2,.9,.3,1.3) forwards}
+@keyframes grow{to{transform:scaleY(1)}}
+.chart .trend{fill:none;stroke:var(--gold-2);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:var(--len);stroke-dashoffset:var(--len);animation:draw 3.2s .6s ease-out forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.chart .tip{fill:var(--gold-2);opacity:0;animation:tipin .3s 3.7s forwards}
+.chart .tip-ring{fill:none;stroke:var(--gold-2);stroke-width:2;opacity:0;transform-box:fill-box;transform-origin:center;animation:ring 1.8s 3.8s ease-out infinite}
+@keyframes tipin{to{opacity:1}}
+@keyframes ring{0%{opacity:.8;transform:scale(1)}100%{opacity:0;transform:scale(3.2)}}
+.coin{position:absolute;bottom:-50px;width:var(--s,34px);height:var(--s,34px);border-radius:50%;background:radial-gradient(circle at 35% 30%,#f3dca8,var(--gold) 70%);color:var(--deep);display:grid;place-items:center;font:700 calc(var(--s,34px)*.5) var(--sans);opacity:.0;box-shadow:inset 0 -3px 0 rgba(0,0,0,.15);animation:floatup var(--d,11s) var(--dl,0s) linear infinite}
+@keyframes floatup{0%{transform:translateY(0) rotate(0);opacity:0}10%{opacity:.5}80%{opacity:.35}100%{transform:translateY(-640px) rotate(240deg);opacity:0}}
+
+.hero{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,.82fr);gap:30px 90px;align-items:center;padding:46px 46px 52px}
+.hero>div{min-width:0}
+.eyebrow{display:inline-flex;align-items:center;gap:9px;background:rgba(233,220,195,.1);border:1px solid rgba(233,220,195,.2);border-radius:999px;padding:6px 14px 6px 10px;font:700 12px var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--gold-2)}
+.live-dot{width:8px;height:8px;border-radius:50%;background:#f06a4f;box-shadow:0 0 0 0 rgba(240,106,79,.6);animation:ping 1.8s infinite}
+@keyframes ping{70%{box-shadow:0 0 0 10px rgba(240,106,79,0)}100%{box-shadow:0 0 0 0 rgba(240,106,79,0)}}
+.hero h1{color:#fff;font-size:clamp(36px,5.6vw,66px);line-height:1.02;margin:16px 0 14px}
+.hero h1 .word{display:block;color:var(--gold-2);font-style:italic}
+.rot{display:inline-block;position:relative;height:1.06em;overflow:hidden;vertical-align:bottom}
+.rot span{display:block;height:1.06em;transition:transform .55s cubic-bezier(.7,-.3,.3,1.3)}
+.h1-in>*{display:inline-block;opacity:0;transform:translateY(24px);animation:rise .7s cubic-bezier(.2,.9,.3,1.2) forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+.when{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 20px}
+.pill{display:inline-flex;align-items:center;gap:8px;background:rgba(233,220,195,.1);border:1px solid rgba(233,220,195,.18);border-radius:999px;padding:8px 14px;font-weight:600;font-size:15px;color:#fff}
+.pill svg{color:var(--gold-2)}
+.lede{font-size:18px;color:rgba(233,220,195,.92);max-width:560px;margin:0 0 22px}
+.count{display:flex;gap:10px;margin:0 0 26px}
+.count .cell{position:relative;width:76px;text-align:center;perspective:300px}
+.count .face{display:block;background:var(--cream);color:var(--deep);border-radius:14px;padding:9px 0 6px;font:700 30px var(--serif);line-height:1.1;box-shadow:0 6px 0 rgba(0,0,0,.18)}
+.count .face.turn{animation:turn .45s ease}
+@keyframes turn{0%{transform:rotateX(0)}50%{transform:rotateX(-90deg)}100%{transform:rotateX(0)}}
+.count small{display:block;margin-top:8px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(233,220,195,.75)}
 .ctas{display:flex;flex-wrap:wrap;gap:10px}
+.join{margin:22px 0 0;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;font-size:14px;font-weight:600;color:rgba(233,220,195,.85)}
+.jb{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:8px 14px;color:#fff;text-decoration:none;font-weight:700;font-size:14px;transition:transform .15s}
+.jb:hover{transform:translateY(-2px)}
+.jb svg{width:17px;height:17px}
 
 /* form + mascot */
 .form-zone{position:relative}
-.peek{position:absolute;left:-116px;top:40px;width:122px;height:auto;z-index:1;transform:translateX(120px) rotate(4deg);animation:peekin 1s .5s cubic-bezier(.2,.9,.3,1.2) forwards, sway 4s 1.6s ease-in-out infinite;transform-origin:100% 30%;pointer-events:none}
+.peek{position:absolute;left:-104px;top:58px;width:116px;height:auto;z-index:1;transform:translateX(120px) rotate(4deg);animation:peekin 1s 1s cubic-bezier(.2,.9,.3,1.2) forwards, sway 4s 2.1s ease-in-out infinite;transform-origin:100% 30%;pointer-events:none}
 @keyframes peekin{to{transform:translateX(0) rotate(0)}}
 @keyframes sway{0%,100%{transform:translateX(0) rotate(0)}50%{transform:translateX(-6px) rotate(-3deg)}}
-.bubble{position:absolute;left:-150px;top:-14px;z-index:3;background:var(--paper);border:1px solid var(--line);border-radius:16px 16px 4px 16px;padding:9px 13px;font-weight:600;font-size:14px;color:var(--green);box-shadow:var(--shadow);max-width:190px;opacity:0;animation:pop .4s 1.5s forwards}
-@keyframes pop{from{opacity:0;transform:translateY(6px) scale(.95)}to{opacity:1;transform:none}}
+.bubble{position:absolute;left:-182px;top:6px;z-index:3;background:var(--paper);color:var(--green);border-radius:16px 16px 4px 16px;padding:9px 13px;font-weight:700;font-size:14px;box-shadow:var(--shadow);max-width:172px;opacity:0;animation:pop .4s 2s forwards}
+@keyframes pop{from{opacity:0;transform:translateY(6px) scale(.9)}to{opacity:1;transform:none}}
 .bubble.swap{animation:pop .35s forwards}
-.card{position:relative;z-index:2;background:var(--paper);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:24px}
+.card{position:relative;z-index:2;background:var(--paper);color:var(--ink);border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,.28);padding:24px;animation:cardin .8s .3s cubic-bezier(.2,.9,.3,1.15) both}
+@keyframes cardin{from{opacity:0;transform:translateY(30px) rotate(1.5deg)}to{opacity:1;transform:none}}
+.card::before{content:"";position:absolute;inset:-2px;border-radius:24px;padding:2px;background:conic-gradient(from var(--ang,0deg),var(--gold-2),transparent 30%,transparent 70%,var(--gold-2));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:spin 6s linear infinite;pointer-events:none}
+@property --ang{syntax:"<angle>";inherits:false;initial-value:0deg}
+@keyframes spin{to{--ang:360deg}}
 .form h2{font-size:26px}
 .form p.sub{margin:4px 0 16px;color:var(--muted);font-size:14px}
 label.f{display:block;font-weight:600;font-size:14px;margin:0 0 6px}
@@ -71,7 +117,7 @@ label.f{display:block;font-weight:600;font-size:14px;margin:0 0 6px}
 .choice{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 14px}
 .choice input{position:absolute;opacity:0;pointer-events:none}
 .choice label{display:block;text-align:center;border:1px solid var(--line);border-radius:12px;padding:11px;font-weight:600;cursor:pointer;background:#fff;transition:all .15s}
-.choice input:checked+label{background:var(--green);border-color:var(--green);color:#fff}
+.choice input:checked+label{background:var(--green);border-color:var(--green);color:#fff;animation:pop .25s}
 .choice input:focus-visible+label{box-shadow:0 0 0 3px rgba(47,107,79,.25)}
 .consent{display:flex;gap:10px;align-items:flex-start;background:var(--sage);border-radius:12px;padding:12px;margin:0 0 16px;font-size:14px;cursor:pointer}
 .consent input{width:20px;height:20px;margin:1px 0 0;accent-color:var(--green);flex:none}
@@ -86,254 +132,375 @@ label.f{display:block;font-weight:600;font-size:14px;margin:0 0 6px}
 .sw input:focus-visible+i{box-shadow:0 0 0 3px rgba(47,107,79,.25)}
 .fill{font-size:13px;color:var(--muted);margin:-8px 0 14px}
 .linkbtn{background:none;border:0;padding:0;font:inherit;font-weight:700;color:var(--green-2);text-decoration:underline;cursor:pointer}
-.join{margin:20px 0 0;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;font-size:14px;font-weight:600;color:#3d4a42;max-width:560px}
-.join-btns{display:flex;flex-wrap:wrap;gap:8px}
-.jb{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:8px 14px;color:#fff;text-decoration:none;font-weight:700;font-size:14px}
-.jb svg{width:17px;height:17px}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 .err{color:var(--down);font-size:14px;font-weight:600;min-height:20px;margin:0 0 8px}
-.form .btn.primary{width:100%;padding:14px;font-size:16px}
+.err.shake{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.form .btn.primary{width:100%;padding:15px;font-size:16px;position:relative;overflow:hidden}
+.form .btn.primary::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.28),transparent);animation:shine 3.2s 2.5s infinite}
+@keyframes shine{0%{left:-60%}35%,100%{left:130%}}
 .fine{font-size:12px;color:var(--muted);margin:10px 0 0}
 .done{text-align:center;padding:10px 4px}
-.done .tick{width:64px;height:64px;border-radius:50%;background:var(--up-bg);color:var(--up);display:grid;place-items:center;margin:0 auto 12px;animation:pop .4s}
-.done h2{font-size:26px}
+.done .tick{width:70px;height:70px;border-radius:50%;background:var(--up-bg);color:var(--up);display:grid;place-items:center;margin:0 auto 12px;animation:pop .5s cubic-bezier(.2,.9,.3,1.6)}
+.done .tick path{stroke-dasharray:30;stroke-dashoffset:30;animation:draw .5s .25s forwards}
+.done h2{font-size:28px}
 .done .btns{display:flex;flex-direction:column;gap:8px;margin-top:16px}
-.meet{display:block;word-break:break-all;background:var(--gold-soft);border-radius:12px;padding:10px;margin:12px 0 0;font-weight:600;font-size:14px;text-decoration:none}
+.meet{display:block;word-break:break-all;background:var(--gold-soft);border-radius:12px;padding:10px;margin:12px 0 0;font-weight:600;font-size:14px;text-decoration:none;color:var(--green)}
+
+/* marquee band */
+.band{margin:34px -40px 8px;transform:rotate(-1.6deg);background:var(--gold);color:var(--deep);overflow:hidden;white-space:nowrap;padding:14px 0;box-shadow:0 10px 30px rgba(176,141,87,.25)}
+.band-track{display:inline-flex;gap:28px;padding-left:28px;animation:tape 26s linear infinite;font:700 clamp(18px,2.4vw,26px) var(--serif)}
+.band-track span{display:inline-flex;align-items:center;gap:28px}
+.band-track span::after{content:"";width:10px;height:10px;border-radius:3px;background:var(--deep);transform:rotate(45deg)}
 
 /* agenda */
-section.block{padding:30px 0}
-.sec-h{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:0 0 18px}
-.sec-h h2{font-size:clamp(26px,3.4vw,36px)}
-.sec-h p{margin:4px 0 0;color:var(--muted)}
-.agenda{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
-.ag{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:18px;text-decoration:none;color:inherit;box-shadow:var(--shadow);transition:transform .2s ease,box-shadow .2s ease;opacity:0;transform:translateY(16px)}
-.ag.in-view{opacity:1;transform:none;transition:opacity .5s ease,transform .5s ease}
-.ag:hover{transform:translateY(-3px)}
-.ag .n{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:10px;background:var(--green);color:#fff;font:700 17px var(--serif);margin:0 0 10px}
-.ag h3{font-size:19px;line-height:1.2;margin:0 0 6px}
+section.block{padding:34px 0}
+.sec-h{margin:0 0 20px}
+.sec-h h2{font-size:clamp(28px,3.6vw,40px)}
+.sec-h p{margin:6px 0 0;color:var(--muted)}
+.agenda{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;perspective:900px}
+.ag{position:relative;display:block;background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:20px;text-decoration:none;color:inherit;box-shadow:var(--shadow);transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .2s ease,box-shadow .2s;opacity:0;translate:0 26px}
+.ag.in-view{opacity:1;translate:0 0;transition:opacity .6s ease,translate .6s cubic-bezier(.2,.9,.3,1.2),transform .2s ease,box-shadow .2s}
+.ag:hover{box-shadow:0 18px 40px rgba(31,46,36,.16)}
+.ag .ill{height:84px;border-radius:14px;background:var(--paper-2);margin:0 0 14px;display:grid;place-items:center;overflow:hidden}
+.ag .ill svg{width:100%;height:100%}
+.ag .n{position:absolute;top:14px;right:16px;font:700 italic 34px var(--serif);color:var(--gold-soft);-webkit-text-stroke:1px var(--gold)}
+.ag h3{font-size:20px;line-height:1.2;margin:0 0 6px}
 .ag p{margin:0;color:var(--muted);font-size:14px}
-.topic{background:var(--paper);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:22px;margin:0 0 18px;scroll-margin-top:76px;position:relative}
-.topic-h{display:flex;align-items:center;gap:12px;margin:0 0 14px}
-.topic-h .n{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--green);color:#fff;font:700 20px var(--serif)}
-.topic-h h3{font-size:clamp(20px,2.6vw,26px)}
+/* little illustrations */
+.bars rect{transform-box:fill-box;transform-origin:50% 100%;animation:barup 2.4s ease-in-out infinite alternate}
+.bars rect:nth-child(2){animation-delay:.3s}.bars rect:nth-child(3){animation-delay:.6s}.bars rect:nth-child(4){animation-delay:.9s}
+@keyframes barup{from{transform:scaleY(.35)}to{transform:scaleY(1)}}
+.paper-lines rect{animation:shimmer 1.8s ease-in-out infinite}
+.paper-lines rect:nth-child(odd){animation-delay:.4s}
+@keyframes shimmer{50%{opacity:.35}}
+.mini-line{stroke-dasharray:160;stroke-dashoffset:160;animation:minidraw 3s ease-in-out infinite}
+@keyframes minidraw{60%,100%{stroke-dashoffset:0}}
+.lens{animation:scan 3.4s ease-in-out infinite}
+@keyframes scan{0%,100%{transform:translate(0,0)}50%{transform:translate(70px,6px)}}
+
+/* topic blocks */
+.topic{position:relative;background:var(--paper);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:24px;margin:0 0 20px;scroll-margin-top:76px;opacity:0;translate:0 30px;transition:opacity .7s ease,translate .7s cubic-bezier(.2,.9,.3,1.1)}
+.topic.in-view{opacity:1;translate:0 0}
+.topic-h{display:flex;align-items:center;gap:12px;margin:0 0 16px}
+.topic-h .n{flex:none;display:grid;place-items:center;width:44px;height:44px;border-radius:14px;background:var(--green);color:var(--gold-2);font:700 italic 22px var(--serif)}
+.topic-h h3{font-size:clamp(21px,2.6vw,27px)}
 .topic-h p{margin:2px 0 0;color:var(--muted);font-size:14px}
-.say{display:flex;align-items:center;gap:10px;margin:14px 0 0;font-size:14px;color:#3d4a42}
-.say img{width:38px;height:38px;border-radius:50%;flex:none;border:2px solid var(--gold-soft);animation:bob 3s ease-in-out infinite}
+.say{display:flex;align-items:center;gap:10px;margin:16px 0 0;font-size:14px;color:#3d4a42}
+.say img{width:40px;height:40px;border-radius:50%;flex:none;border:2px solid var(--gold-soft);animation:bob 3s ease-in-out infinite}
 .say span{background:var(--gold-soft);border-radius:14px 14px 14px 4px;padding:8px 12px}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+h4{margin:0 0 8px;font:700 13px var(--sans);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.up{color:var(--up)}.down{color:var(--down)}
+
+/* flip cards: strategies */
+.flips{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.flip{display:block;width:100%;perspective:1000px;height:200px;cursor:pointer;background:none;border:0;padding:0;font:inherit;text-align:left;color:inherit}
+.flip-in{display:block;position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.2,.9,.3,1.15)}
+.flip:hover .flip-in,.flip.on .flip-in{transform:rotateY(180deg)}
+.flip .fc,.flip .bc{position:absolute;inset:0;border-radius:18px;padding:18px;-webkit-backface-visibility:hidden;backface-visibility:hidden;display:flex;flex-direction:column}
+.flip .fc{background:var(--paper-2);border:1px solid var(--line)}
+.flip .bc{background:var(--green);color:var(--cream);transform:rotateY(180deg);font-size:14px}
+.flip .fc b{font:700 22px var(--serif);color:var(--green);margin:auto 0 6px}
+.flip .fc span{color:var(--muted);font-size:14px}
+.flip .bc b{color:#fff;font:700 17px var(--serif);margin:0 0 6px}
+.flip .bc ul{margin:0;padding-left:16px}
+.flip .ico{width:42px;height:42px;border-radius:12px;background:var(--paper);display:grid;place-items:center;color:var(--gold)}
+.flip .hint{position:absolute;right:14px;top:16px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+
+/* stories */
+.stories{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.stories li{opacity:0;transform:translateX(-18px);transition:opacity .5s ease,transform .5s ease}
+.stories.go li{opacity:1;transform:none}
+.stories a{display:flex;gap:14px;align-items:flex-start;background:var(--paper-2);border-radius:14px;padding:12px 14px;text-decoration:none;color:var(--ink);transition:background .15s,transform .15s}
+.stories a:hover{background:var(--gold-soft);transform:translateX(4px)}
+.stories .no{flex:none;font:700 italic 22px var(--serif);color:var(--gold);width:26px}
+.stories .hl{font-weight:600;line-height:1.35}
+.stories .src{display:block;font-size:12px;color:var(--muted);margin-top:3px}
+
+/* technicals */
 .tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 .tile{background:var(--paper-2);border-radius:14px;padding:12px 14px;min-width:0}
 .tile .k{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tile .v{font:700 22px var(--serif);color:var(--green);margin:2px 0}
 .tile .c{font-weight:700;font-size:14px}
-.tile svg{display:block;width:100%;height:30px;margin-top:6px}
-.up{color:var(--up)}.down{color:var(--down)}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
-.two>div,.dc>div,.trend-card>div,.hero>div{min-width:0}
+.tile svg{display:block;width:100%;height:32px;margin-top:6px}
+.tile svg polyline{stroke-dasharray:400;stroke-dashoffset:400;animation:draw 1.8s .2s ease-out forwards}
+.tech{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:16px;margin-top:16px}
+.tech>div{min-width:0;background:var(--paper-2);border-radius:16px;padding:16px}
+.gauge{margin:0 0 14px}
+.gauge .row{display:flex;justify-content:space-between;font-size:14px;font-weight:600;margin:0 0 6px}
+.gauge .bar{position:relative;height:12px;border-radius:999px;background:#e6dece;overflow:hidden}
+.gauge .bar i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:999px;background:var(--green-2);transition:width 1.4s cubic-bezier(.2,.9,.3,1)}
+.gauge .bar u{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--gold);left:var(--was,0)}
+.gauge small{display:block;color:var(--muted);font-size:12px;margin-top:4px}
+.hl-box{display:flex;gap:10px;margin:0 0 12px}
+.hl-box div{flex:1;border-radius:12px;padding:10px;text-align:center;background:var(--paper)}
+.hl-box b{display:block;font:700 26px var(--serif)}
+.hl-box small{font-size:12px;color:var(--muted);font-weight:600}
+.mood{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:6px 12px;font-weight:700;font-size:14px;background:var(--paper)}
 .list{list-style:none;padding:0;margin:0}
-.list li{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:15px}
+.list li{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:15px}
 .list li:last-child{border-bottom:0}
 .list .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .list .nm small{display:block;color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis}
 .list b{white-space:nowrap}
-h4{margin:0 0 6px;font:700 13px var(--sans);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
-.chip{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700;background:var(--paper-2);color:var(--muted);white-space:nowrap}
+
+/* stocks */
+.stocks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.stk{background:var(--paper-2);border-radius:16px;padding:14px;min-width:0;opacity:0;transform:scale(.92);transition:opacity .45s ease,transform .45s cubic-bezier(.2,.9,.3,1.4),box-shadow .2s}
+.stocks.go .stk{opacity:1;transform:none}
+.stk:hover{box-shadow:var(--shadow)}
+.stk .t{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.stk .t b{font:700 18px var(--serif);color:var(--green)}
+.stk .s{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stk .nums{display:flex;gap:12px;margin-top:6px;font-size:13px;flex-wrap:wrap}
+.chip{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700;background:var(--paper);color:var(--muted);white-space:nowrap}
 .chip.good{background:var(--up-bg);color:var(--up)}
-.chip.bad{background:var(--down-bg);color:var(--down)}
-.res-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.res{background:var(--paper-2);border-radius:14px;padding:12px 14px;min-width:0}
-.res .t{display:flex;justify-content:space-between;gap:8px;align-items:center}
-.res .t b{font:700 17px var(--serif);color:var(--green)}
-.res .s{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.res .nums{display:flex;gap:12px;margin-top:6px;font-size:13px;flex-wrap:wrap}
-.dc{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:16px}
-.points{margin:0;padding-left:18px}
-.points li{margin:0 0 8px}
-.trend-card{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:center}
-.vs{display:flex;align-items:center;gap:8px;font:700 22px var(--serif);color:var(--green)}
-.vs i{font-style:normal;background:var(--gold);color:#fff;border-radius:50%;width:34px;height:34px;display:grid;place-items:center;font:700 13px var(--sans)}
+.chip.gold{background:var(--gold-soft);color:#8a6a35}
+.seg{display:inline-flex;background:var(--paper-2);border-radius:999px;padding:4px;margin:0 0 14px;gap:4px;flex-wrap:wrap}
+.seg button{border:0;background:none;border-radius:999px;padding:7px 14px;font:600 14px var(--sans);color:var(--muted);cursor:pointer}
+.seg button.on{background:var(--green);color:#fff}
 .ghostline{height:14px;border-radius:7px;background:linear-gradient(90deg,var(--paper-2),#ece4d4,var(--paper-2));background-size:200% 100%;animation:sh 1.2s infinite;margin:8px 0}
 @keyframes sh{to{background-position:-200% 0}}
 .asof{font-size:12px;color:var(--muted);margin:10px 0 0}
-.terminal{background:var(--green);color:#e9dcc3;border-radius:22px;padding:28px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:center;overflow:hidden;position:relative}
+
+.terminal{background:var(--green);color:var(--cream);border-radius:24px;padding:28px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:center;overflow:hidden;position:relative}
 .terminal h2{color:#fff;font-size:clamp(24px,3vw,32px)}
 .terminal p{margin:6px 0 0}
-.terminal .btn{background:#e9dcc3;color:var(--green)}
-footer{padding:26px 0 90px;color:var(--muted);font-size:13px;text-align:center}
+.terminal .btn{background:var(--cream);color:var(--green)}
+footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
 .float-cta{display:none}
-@media (max-width:960px){
-  .hero{grid-template-columns:1fr;gap:28px;padding-top:28px}
-  .agenda{grid-template-columns:1fr 1fr}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
+
+@media (max-width:1000px){
+  .hero{grid-template-columns:1fr;gap:26px;padding:34px 26px 40px}
+  .agenda,.flips{grid-template-columns:1fr 1fr}
   .tiles{grid-template-columns:1fr 1fr}
-  .res-grid{grid-template-columns:1fr 1fr}
-  .peek{left:auto;right:14px;top:-112px;width:80px;transform:none;opacity:0;animation:fadein .6s .4s forwards, bob 3s 1s ease-in-out infinite}
+  .tech{grid-template-columns:1fr}
+  .stocks{grid-template-columns:1fr 1fr}
+  .peek{left:auto;right:14px;top:-104px;width:76px;transform:none;opacity:0;animation:fadein .6s .8s forwards, bob 3s 1.4s ease-in-out infinite}
   @keyframes fadein{to{opacity:1}}
-  .bubble{left:auto;right:100px;top:-86px}
-  .form-zone{margin-top:96px}
+  .bubble{left:auto;right:96px;top:-80px}
+  .form-zone{margin-top:90px}
 }
 @media (max-width:640px){
   .wrap{padding:0 16px}
-  .top .brand span{font-size:17px}
-  .two,.dc,.trend-card{grid-template-columns:1fr}
-  .res-grid{grid-template-columns:1fr}
-  .count div{width:64px}
+  .stage{border-radius:22px;margin-top:12px}
+  .hero{padding:28px 18px 30px}
+  .count .cell{width:64px}
+  .count .face{font-size:26px}
+  .stocks{grid-template-columns:1fr}
+  .flip{height:190px}
+  .band{margin:28px -24px 4px}
   .terminal{grid-template-columns:1fr;padding:22px 22px 26px}
   .float-cta{display:flex;position:fixed;left:16px;right:16px;bottom:14px;z-index:30;transition:transform .3s,opacity .3s}
   .float-cta.hide{transform:translateY(90px);opacity:0}
   .float-cta .btn{width:100%;padding:14px}
 }
-@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.peek{transform:none}.ag{opacity:1;transform:none}.bubble{opacity:1}}
+@media (max-width:420px){ .agenda,.flips{grid-template-columns:1fr} }
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}
+  .peek{transform:none}.bubble,.card,.h1-in>*{opacity:1;transform:none}.ag,.topic,.stories li,.stk{opacity:1;translate:0 0;transform:none}
+  .chart .cdl{transform:none}.chart .trend{stroke-dashoffset:0}.chart .tip{opacity:1}.coin{display:none}.tile svg polyline,.done .tick path{stroke-dashoffset:0}}
 </style>
 </head>
 <body>
+<div class="progress" id="progress"></div>
+<div class="ticker" aria-hidden="true"><div class="ticker-track" id="ticker"></div></div>
 <header class="top"><div class="wrap">
   <a class="brand" href="./" aria-label="Street ka Dalal">
     <svg width="34" height="34" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="10" fill="#1F4D3A"/><rect x="9" y="19.5" width="4" height="6" rx="1" fill="#E9DCC3"/><path d="M20 26V13" stroke="#C9A96E" stroke-width="1.6" stroke-linecap="round"/><rect x="18" y="15" width="4" height="8.5" rx="1" fill="#C9A96E"/><path d="M29 22V8" stroke="#E9DCC3" stroke-width="1.6" stroke-linecap="round"/><rect x="27" y="10" width="4" height="9" rx="1" fill="#E9DCC3"/><path d="M8 31h24" stroke="#C9A96E" stroke-width="1.6" stroke-linecap="round"/></svg>
     <span>Street <em>ka</em> Dalal</span></a>
   <span class="grow"></span>
-  <a class="btn ghost sm" href="./">Open terminal</a>
+  <a class="btn light sm" href="./">Open terminal</a>
 </div></header>
 
 <main class="wrap">
-  <div class="hero">
-    <div>
-      <span class="eyebrow"><i class="live-dot"></i> Community Meet 2</span>
-      <h1>One hour. <span>Four big</span> market stories.</h1>
-      <div class="when">
-        <span class="pill"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Sunday, 18 October</span>
-        <span class="pill"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>9:00 to 10:00 PM IST</span>
-        <span class="pill"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="m16 10 6-3v10l-6-3"/></svg>Google Meet</span>
+  <div class="stage">
+    <div class="stage-bg" aria-hidden="true"><div class="grid-bg"></div><svg class="chart" id="chart" viewBox="0 0 1200 400" preserveAspectRatio="none"></svg><div id="coins"></div></div>
+    <div class="hero">
+      <div>
+        <span class="eyebrow"><i class="live-dot"></i> Community Meet 3 · Free · Live</span>
+        <h1 class="h1-in"><span style="animation-delay:.1s">Sunday night</span> <span style="animation-delay:.25s">is for</span> <span class="word" style="animation-delay:.45s"><span class="rot" id="rot"><span>strategies.</span><span>stories.</span><span>charts.</span><span>stocks.</span><span>strategies.</span></span></span></h1>
+        <div class="when">
+          <span class="pill"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Sunday, 25 October</span>
+          <span class="pill"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>9:00 to 10:00 PM IST</span>
+          <span class="pill"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="m16 10 6-3v10l-6-3"/></svg>Google Meet</span>
+        </div>
+        <p class="lede">One hour with the community: how different investing styles really work, the stories moving the market, what the charts said last week, and the stocks we are talking about. Free. Register once and we send you the calendar invite.</p>
+        <div class="count" id="count" aria-label="Time left">
+          <div class="cell"><b class="face" id="cd-d">-</b><small>days</small></div><div class="cell"><b class="face" id="cd-h">-</b><small>hours</small></div><div class="cell"><b class="face" id="cd-m">-</b><small>mins</small></div><div class="cell"><b class="face" id="cd-s">-</b><small>secs</small></div>
+        </div>
+        <div class="ctas"><a class="btn gold" href="#register">Save my seat</a><a class="btn ghost" href="#agenda">What we will cover</a></div>
+        <div class="join" id="join"><span>Reminders and updates:</span><span id="joinBtns"></span></div>
       </div>
-      <p class="lede">The week in markets, the quarterly results worth knowing, the data centre theme, and the story everyone is talking about. Free for our community. Register once and we add you to the calendar.</p>
-      <div class="count" id="count" aria-label="Time left"><div><b id="cd-d">-</b><small>days</small></div><div><b id="cd-h">-</b><small>hours</small></div><div><b id="cd-m">-</b><small>mins</small></div><div><b id="cd-s">-</b><small>secs</small></div></div>
-      <div class="ctas"><a class="btn primary" href="#register">Register now</a><a class="btn ghost" href="#agenda">See what we will cover</a></div>
-      <div class="join" id="join"><span>For session updates and reminders, join us:</span><div class="join-btns" id="joinBtns"></div></div>
-    </div>
 
-    <div class="form-zone" id="register">
-      <div class="bubble" id="bubble">Arre, register kar lo!</div>
-      <img class="peek" src="icons/dalal-peek.webp" alt="" width="263" height="720" decoding="async">
-      <div class="card form" id="formCard">
-        <form id="regForm" novalidate>
-          <h2>Save your seat</h2>
-          <p class="sub">Takes 20 seconds.</p>
-          <label class="f" for="name">Your name</label>
-          <input class="in" id="name" name="name" autocomplete="name" maxlength="80" placeholder="Full name" required>
-          <label class="f" for="email">Email (for the calendar invite)</label>
-          <label class="acct" id="acct" hidden><span class="sw"><input type="checkbox" id="useLogin" checked><i></i></span><span>Use my sign-in email<b id="acctMail"></b></span></label>
-          <div id="emailWrap"><input class="in" id="email" name="email" type="email" inputmode="email" autocomplete="email" maxlength="120" placeholder="you@gmail.com" required>
-          <p class="fill" id="fillG" hidden>Already a Street ka Dalal member? <button type="button" class="linkbtn" id="gsign">Sign in with Google</button> and we fill this for you.</p></div>
-          <label class="f">Did you attend the last session?</label>
-          <div class="choice"><input type="radio" name="attended" id="att-y" value="yes"><label for="att-y">Yes, I did</label><input type="radio" name="attended" id="att-n" value="no"><label for="att-n">No, first time</label></div>
-          <label class="consent"><input type="checkbox" id="consent" checked><span>Yes, add me to the calendar invite for this session (and send me the Meet link).</span></label>
-          <div class="hp" aria-hidden="true"><label>Website <input name="website" tabindex="-1" autocomplete="off"></label></div>
-          <p class="err" id="err" role="alert"></p>
-          <button class="btn primary" id="sub" type="submit">Register for Sunday</button>
-          <p class="fine">We use your name and email only for this session's invite. No spam.</p>
-        </form>
+      <div class="form-zone" id="register">
+        <div class="bubble" id="bubble">Arre, register kar lo!</div>
+        <img class="peek" src="icons/dalal-peek.webp" alt="" width="263" height="720" decoding="async">
+        <div class="card form" id="formCard">
+          <form id="regForm" novalidate>
+            <h2>Save your seat</h2>
+            <p class="sub">Takes 20 seconds. Free.</p>
+            <label class="f" for="name">Your name</label>
+            <input class="in" id="name" name="name" autocomplete="name" maxlength="80" placeholder="Full name" required>
+            <label class="f" for="email">Email (for the calendar invite)</label>
+            <label class="acct" id="acct" hidden><span class="sw"><input type="checkbox" id="useLogin" checked><i></i></span><span>Use my sign-in email<b id="acctMail"></b></span></label>
+            <div id="emailWrap"><input class="in" id="email" name="email" type="email" inputmode="email" autocomplete="email" maxlength="120" placeholder="you@gmail.com" required>
+            <p class="fill" id="fillG" hidden>Already a Street ka Dalal member? <button type="button" class="linkbtn" id="gsign">Sign in with Google</button> and we fill this for you.</p></div>
+            <label class="f">Did you attend one of our earlier sessions?</label>
+            <div class="choice"><input type="radio" name="attended" id="att-y" value="yes"><label for="att-y">Yes, I did</label><input type="radio" name="attended" id="att-n" value="no"><label for="att-n">No, first time</label></div>
+            <label class="consent"><input type="checkbox" id="consent" checked><span>Yes, add me to the calendar invite for this session (and send me the Meet link).</span></label>
+            <div class="hp" aria-hidden="true"><label>Website <input name="website" tabindex="-1" autocomplete="off"></label></div>
+            <p class="err" id="err" role="alert"></p>
+            <button class="btn primary" id="sub" type="submit">Register for Sunday</button>
+            <p class="fine">We use your name and email only for this session's invite. No spam.</p>
+          </form>
+        </div>
       </div>
     </div>
   </div>
 
+  <div class="band" aria-hidden="true"><div class="band-track"><span>Investment strategies</span><span>Trending stories</span><span>Last week's technicals</span><span>Stocks we are discussing</span><span>Sunday 25 Oct, 9 PM</span><span>Investment strategies</span><span>Trending stories</span><span>Last week's technicals</span><span>Stocks we are discussing</span><span>Sunday 25 Oct, 9 PM</span></div></div>
+
   <section class="block" id="agenda">
-    <div class="sec-h"><div><h2>What we will talk about</h2><p>Sunday 18 October, 9 PM. Live data below, updated through the week.</p></div></div>
+    <div class="sec-h"><h2>Four things, one hour</h2><p>Sunday 25 October, 9 PM. The live data below updates every evening till Sunday.</p></div>
     <div class="agenda">
-      <a class="ag" href="#t1"><span class="n">1</span><h3>What happened this week</h3><p>Nifty, the indices, and the stocks we are tracking.</p></a>
-      <a class="ag" href="#t2"><span class="n">2</span><h3>Quarterly results</h3><p>The results worth discussing from this season.</p></a>
-      <a class="ag" href="#t3"><span class="n">3</span><h3>Data centre theme</h3><p>Why it keeps showing up, and where it stands.</p></a>
-      <a class="ag" href="#t4"><span class="n">4</span><h3>Trending topic</h3><p>Ambani x Elon Musk, and what the market makes of it.</p></a>
+      <a class="ag" href="#t1"><span class="n">01</span><div class="ill"><svg viewBox="0 0 160 84"><g class="bars" fill="#2f6b4f"><rect x="34" y="30" width="16" height="44" rx="3"/><rect x="58" y="22" width="16" height="52" rx="3" fill="#b08d57"/><rect x="82" y="38" width="16" height="36" rx="3"/><rect x="106" y="14" width="16" height="60" rx="3" fill="#b08d57"/></g></svg></div><h3>Investment strategies</h3><p>Momentum, value, quality and mixing them. What works, and when it hurts.</p></a>
+      <a class="ag" href="#t2"><span class="n">02</span><div class="ill"><svg viewBox="0 0 160 84"><rect x="40" y="12" width="80" height="60" rx="6" fill="#fffdf8" stroke="#e4dccb"/><g class="paper-lines" fill="#cdbf9f"><rect x="50" y="22" width="60" height="7" rx="3" fill="#1f4d3a"/><rect x="50" y="35" width="52" height="5" rx="2"/><rect x="50" y="45" width="58" height="5" rx="2"/><rect x="50" y="55" width="40" height="5" rx="2"/></g></svg></div><h3>Trending stories</h3><p>The headlines everyone is talking about, and what is real.</p></a>
+      <a class="ag" href="#t3"><span class="n">03</span><div class="ill"><svg viewBox="0 0 160 84"><g stroke="#6c786f" stroke-width="1.5"><path d="M40 30v24M58 24v30M76 34v26M94 20v26M112 14v26"/></g><g><rect x="36" y="34" width="8" height="14" fill="#b4442f"/><rect x="54" y="28" width="8" height="18" fill="#23794f"/><rect x="72" y="38" width="8" height="14" fill="#b4442f"/><rect x="90" y="24" width="8" height="16" fill="#23794f"/><rect x="108" y="18" width="8" height="16" fill="#23794f"/></g><polyline class="mini-line" points="30,60 60,50 90,52 130,22" fill="none" stroke="#b08d57" stroke-width="3" stroke-linecap="round"/></svg></div><h3>Last week's technicals</h3><p>Nifty, breadth, sectors and what the charts were saying.</p></a>
+      <a class="ag" href="#t4"><span class="n">04</span><div class="ill"><svg viewBox="0 0 160 84"><g fill="#e4dccb"><rect x="24" y="26" width="26" height="32" rx="5"/><rect x="58" y="26" width="26" height="32" rx="5"/><rect x="92" y="26" width="26" height="32" rx="5"/><rect x="126" y="26" width="26" height="32" rx="5"/></g><g class="lens"><circle cx="38" cy="40" r="15" fill="rgba(176,141,87,.18)" stroke="#1f4d3a" stroke-width="4"/><path d="M49 51l10 10" stroke="#1f4d3a" stroke-width="5" stroke-linecap="round"/></g></svg></div><h3>Stocks we are discussing</h3><p>Names that broke out or lead their sectors. For discussion only.</p></a>
     </div>
   </section>
 
-  <section class="block">
+  <section class="block" style="padding-top:6px">
     <article class="topic" id="t1">
-      <div class="topic-h"><span class="n">1</span><div><h3>What happened this week</h3><p id="t1-sub">Nifty movement, the indices and the stocks on our radar</p></div></div>
-      <div class="tiles" id="idx"><div class="tile"><div class="ghostline"></div><div class="ghostline"></div></div><div class="tile"><div class="ghostline"></div><div class="ghostline"></div></div><div class="tile"><div class="ghostline"></div><div class="ghostline"></div></div><div class="tile"><div class="ghostline"></div><div class="ghostline"></div></div></div>
-      <div class="two">
-        <div><h4>Sectors this week</h4><ul class="list" id="secs"><li><div class="ghostline" style="width:100%"></div></li></ul></div>
-        <div><h4>Stocks on our radar</h4><ul class="list" id="radar"><li><div class="ghostline" style="width:100%"></div></li></ul><p class="asof">Market leaders by relative strength (strongest 12-month performers, liquid stocks). For discussion, not a recommendation.</p></div>
+      <div class="topic-h"><span class="n">1</span><div><h3>Investment strategies</h3><p>Four ways to pick stocks. Tap a card to see what we will discuss.</p></div></div>
+      <div class="flips">
+        <button class="flip" type="button"><span class="flip-in"><span class="fc"><span class="hint">Tap</span><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17 9 11l4 4 8-8"/><path d="M15 7h6v6"/></svg></span><b>Momentum</b><span>Buy what is already going up?</span></span><span class="bc"><b>Momentum</b><ul><li>Why strength tends to carry on</li><li>Why it hurts when the trend stops</li><li>How often to check and change</li></ul></span></span></button>
+        <button class="flip" type="button"><span class="flip-in"><span class="fc"><span class="hint">Tap</span><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12 12 20l-8-8V4h8z"/><circle cx="8" cy="8" r="1.5"/></svg></span><b>Value</b><span>Cheap for a reason, or cheap by mistake?</span></span><span class="bc"><b>Value</b><ul><li>What "cheap" really means</li><li>Value traps and how to spot them</li><li>Why value needs patience</li></ul></span></span></button>
+        <button class="flip" type="button"><span class="flip-in"><span class="fc"><span class="hint">Tap</span><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v5c0 5 3.4 8 8 9 4.6-1 8-4 8-9V7z"/><path d="m9 12 2 2 4-4"/></svg></span><b>Quality</b><span>Does it pay to own boring, steady businesses?</span></span><span class="bc"><b>Quality</b><ul><li>Steady profits, low debt, good returns on capital</li><li>Paying up for quality: when it is worth it</li><li>How quality behaves in a falling market</li></ul></span></span></button>
+        <button class="flip" type="button"><span class="flip-in"><span class="fc"><span class="hint">Tap</span><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="9" r="5"/><circle cx="16" cy="9" r="5"/><circle cx="12" cy="16" r="5"/></svg></span><b>Multi-factor</b><span>Mixing styles so the falls are smaller.</span></span><span class="bc"><b>Multi-factor</b><ul><li>Why one style alone can be a rough ride</li><li>How mixing styles smooths the journey</li><li>How we are building ours</li></ul></span></span></button>
       </div>
-      <div class="say"><img src="icons/dalal-head.webp" alt="" width="38" height="38" loading="lazy"><span>Sunday ko poora hafta ek saath dekhenge: kya chala, kya gira, aur kyun.</span></div>
+      <div class="say"><img src="icons/dalal-head.webp" alt="" width="40" height="40" loading="lazy"><span>Strategy wahi jo aap neend kharab kiye bina follow kar sako.</span></div>
     </article>
 
     <article class="topic" id="t2">
-      <div class="topic-h"><span class="n">2</span><div><h3>Quarterly results</h3><p id="t2-sub">The September quarter season so far</p></div></div>
-      <div class="res-grid" id="res"><div class="res"><div class="ghostline"></div><div class="ghostline"></div></div><div class="res"><div class="ghostline"></div><div class="ghostline"></div></div><div class="res"><div class="ghostline"></div><div class="ghostline"></div></div></div>
-      <p class="asof">Revenue and net profit vs the same quarter last year, from the companies' NSE filings. Biggest companies first.</p>
-      <div class="say"><img src="icons/dalal-head.webp" alt="" width="38" height="38" loading="lazy"><span>Kaunsa result sach mein achha tha, aur kahan sirf headline achhi thi: Sunday ko.</span></div>
+      <div class="topic-h"><span class="n">2</span><div><h3>Trending stories</h3><p id="t2-sub">The headlines doing the rounds right now</p></div></div>
+      <ul class="stories" id="stories"><li><div class="ghostline"></div><div class="ghostline" style="width:70%"></div></li><li><div class="ghostline"></div></li><li><div class="ghostline"></div></li></ul>
+      <p class="asof">Live headlines from the market news feed, updated through the day. On Sunday we pick the ones that matter and explain what is noise.</p>
+      <div class="say"><img src="icons/dalal-head.webp" alt="" width="40" height="40" loading="lazy"><span>Headline se aage ki baat karenge.</span></div>
     </article>
 
     <article class="topic" id="t3">
-      <div class="topic-h"><span class="n">3</span><div><h3>Data centre theme</h3><p>India's data centre build-out and the listed companies around it</p></div></div>
-      <div class="dc">
-        <div class="tiles" id="dc" style="grid-template-columns:1fr 1fr"><div class="tile"><div class="ghostline"></div></div><div class="tile"><div class="ghostline"></div></div><div class="tile"><div class="ghostline"></div></div><div class="tile"><div class="ghostline"></div></div></div>
-        <div><h4>What we will cover</h4><ul class="points">
-          <li>Why data centres need so much power, cooling and cables, and who supplies them</li>
-          <li>The listed names in the theme and how they have moved</li>
-          <li>Where the theme sits now: leading, cooling off, or crowded</li>
-          <li>What to watch in the coming quarters</li></ul></div>
+      <div class="topic-h"><span class="n">3</span><div><h3>Last week's technicals</h3><p id="t3-sub">Indices, breadth and sectors</p></div></div>
+      <div class="tiles" id="idx"><div class="tile"><div class="ghostline"></div><div class="ghostline"></div></div><div class="tile"><div class="ghostline"></div><div class="ghostline"></div></div><div class="tile"><div class="ghostline"></div><div class="ghostline"></div></div><div class="tile"><div class="ghostline"></div><div class="ghostline"></div></div></div>
+      <div class="tech">
+        <div><h4>Market breadth</h4><div id="breadth"><div class="ghostline"></div><div class="ghostline"></div></div></div>
+        <div><h4>Highs, lows and mood</h4><div id="hilo"><div class="ghostline"></div><div class="ghostline"></div></div></div>
+        <div><h4>Sectors this week</h4><ul class="list" id="secs"><li><div class="ghostline" style="width:100%"></div></li></ul></div>
       </div>
-      <div class="say"><img src="icons/dalal-head.webp" alt="" width="38" height="38" loading="lazy"><span>Hamari data centre research ka short version, seedha Sunday ko.</span></div>
+      <div class="say"><img src="icons/dalal-head.webp" alt="" width="40" height="40" loading="lazy"><span>Chart kya bol raha tha, aur humne kya miss kiya: Sunday ko.</span></div>
     </article>
 
     <article class="topic" id="t4">
-      <div class="topic-h"><span class="n">4</span><div><h3>Trending topic</h3><p>The story the whole market is talking about</p></div></div>
-      <div class="trend-card">
-        <div class="vs">Ambani <i>x</i> Musk</div>
-        <div><p style="margin:0">Two of the world's richest people and India's next big race. What the story is, why it matters for Indian listed companies, and what is noise. Plus whatever else is trending by Sunday.</p></div>
-      </div>
-      <div class="say"><img src="icons/dalal-head.webp" alt="" width="38" height="38" loading="lazy"><span>Headline se aage ki baat karenge.</span></div>
+      <div class="topic-h"><span class="n">4</span><div><h3>Stocks we are discussing</h3><p>From our screeners. Bring your own names too.</p></div></div>
+      <div class="seg" id="stkSeg"><button class="on" data-v="high_52w" type="button">52-week high breakouts</button><button data-v="leaders" type="button">Market leaders</button><button data-v="rectangle" type="button">Base breakouts</button></div>
+      <div class="stocks" id="stocks"><div class="stk"><div class="ghostline"></div><div class="ghostline"></div></div><div class="stk"><div class="ghostline"></div><div class="ghostline"></div></div><div class="stk"><div class="ghostline"></div><div class="ghostline"></div></div></div>
+      <p class="asof" id="stk-note">For learning and discussion only. Not a recommendation to buy or sell.</p>
+      <div class="say"><img src="icons/dalal-head.webp" alt="" width="40" height="40" loading="lazy"><span>Apne stocks bhi le aana, saath mein discuss karenge.</span></div>
     </article>
   </section>
 
   <section class="block">
     <div class="terminal">
-      <div><div class="say" style="margin:0 0 10px"><img src="icons/dalal-head.webp" alt="" width="38" height="38" loading="lazy"><span style="background:rgba(255,255,255,.12);color:#fff">Session se pehle ek baar ghoom aao.</span></div><h2>Explore the Street ka Dalal terminal</h2><p>Screeners, sectors, results, news and the pre-market page. Free with Google sign-in.</p></div>
+      <div><div class="say" style="margin:0 0 10px"><img src="icons/dalal-head.webp" alt="" width="40" height="40" loading="lazy"><span style="background:rgba(255,255,255,.12);color:#fff">Session se pehle ek baar ghoom aao.</span></div><h2>Explore the Street ka Dalal terminal</h2><p>Screeners, sectors, results, news and the pre-market page. Free with Google sign-in.</p></div>
       <a class="btn" href="./">Open the terminal</a>
     </div>
   </section>
 </main>
 <footer class="wrap">Street ka Dalal · For learning and discussion only. Not investment advice, and no buy or sell calls.</footer>
-<div class="float-cta" id="floatCta"><a class="btn primary" href="#register">Register for Sunday 9 PM</a></div>
+<div class="float-cta" id="floatCta"><a class="btn gold" href="#register">Save my seat for Sunday 9 PM</a></div>
+<canvas id="confetti" aria-hidden="true"></canvas>
 
 <script>
 (() => {
-  const EVENT = 'meet-2';
-  const START = Date.parse('2026-10-18T21:00:00+05:30'), END = Date.parse('2026-10-18T22:00:00+05:30');
-  const MEET = 'https://meet.google.com/yie-korm-qdu';
+  const EVENT = 'meet-3';
+  const START = Date.parse('2026-10-25T21:00:00+05:30'), END = Date.parse('2026-10-25T22:00:00+05:30');
+  const MEET = '';   // Google Meet link for this session; while empty the page says it comes with the calendar invite
+  const WA = 'https://chat.whatsapp.com/DUdUxpofHqE9auMNtDyZYr';
   const $ = (s) => document.querySelector(s);
+  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   const num = (n, d = 0) => (n == null || isNaN(n) ? '-' : Number(n).toLocaleString('en-IN', { maximumFractionDigits: d, minimumFractionDigits: d }));
   const pct = (n, d = 2) => (n == null || isNaN(n) ? '-' : `${n > 0 ? '+' : ''}${Number(n).toFixed(d)}%`);
   const tone = (n) => (n > 0 ? 'up' : n < 0 ? 'down' : '');
   const store = { get: (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
 
-  /* countdown */
+  /* hero background: candles grow one by one, then a gold trend line draws over them */
+  (function chart() {
+    const svg = $('#chart'), W = 1200, H = 400, n = 34;
+    let y = 300, out = '', pts = [];
+    for (let i = 0; i < n; i++) {
+      const x = 20 + i * ((W - 40) / (n - 1));
+      const move = Math.sin(i * 1.7) * 26 - 6 - (i > 22 ? 5 : 0);
+      const o = y, c = Math.max(40, Math.min(360, y + move));
+      const hi = Math.min(o, c) - 10 - (i * 7) % 18, lo = Math.max(o, c) + 10 + (i * 5) % 14;
+      const up = c < o, col = up ? '#7fd3a0' : '#f2a08f';
+      out += `<g class="cdl" style="animation-delay:${(i * 0.06).toFixed(2)}s"><line x1="${x}" x2="${x}" y1="${hi}" y2="${lo}" stroke="${col}" stroke-width="2"/><rect x="${x - 7}" y="${Math.min(o, c)}" width="14" height="${Math.max(4, Math.abs(c - o))}" rx="2" fill="${col}"/></g>`;
+      pts.push(`${x.toFixed(1)},${c.toFixed(1)}`); y = c;
+    }
+    const last = pts[pts.length - 1].split(',');
+    svg.innerHTML = out + `<polyline class="trend" points="${pts.join(' ')}" style="--len:2400"/><circle class="tip-ring" cx="${last[0]}" cy="${last[1]}" r="6"/><circle class="tip" cx="${last[0]}" cy="${last[1]}" r="6"/>`;
+    if (calm) return;
+    const coins = $('#coins');
+    [[6, 34, 12, 0], [22, 26, 14, 3], [41, 40, 11, 6], [63, 30, 15, 1.5], [80, 36, 12, 8], [92, 24, 16, 4.5]].forEach(([l, s, d, dl]) => {
+      const c = document.createElement('span'); c.className = 'coin'; c.textContent = '₹';
+      c.style.cssText = `left:${l}%;--s:${s}px;--d:${d}s;--dl:${dl}s`; coins.appendChild(c);
+    });
+  })();
+
+  /* rotating word in the headline */
+  (function rotate() {
+    const r = $('#rot'); if (!r || calm) return;
+    const spans = r.children, n = spans.length - 1;   // last word repeats the first so the loop is seamless
+    let i = 0;
+    setInterval(() => {
+      i++;
+      [...spans].forEach((s) => { s.style.transform = `translateY(-${i * 100}%)`; });
+      if (i === n) setTimeout(() => { [...spans].forEach((s) => { s.style.transition = 'none'; s.style.transform = 'translateY(0)'; }); i = 0; void r.offsetWidth; [...spans].forEach((s) => { s.style.transition = ''; }); }, 600);
+    }, 2200);
+  })();
+
+  /* countdown with flipping digits */
   const pad = (n) => String(n).padStart(2, '0');
+  const setFace = (id, v) => { const el = $(id); if (!el || el.textContent === String(v)) return; el.textContent = v; if (!calm) { el.classList.remove('turn'); void el.offsetWidth; el.classList.add('turn'); } };
   function tick() {
     const t = START - Date.now();
     if (t <= 0) {
-      $('#count').innerHTML = Date.now() < END ? `<a class="btn gold" href="${MEET}" target="_blank" rel="noopener">We are live: join now</a>` : '<span class="pill">This session is over. See you at the next one.</span>';
+      $('#count').innerHTML = Date.now() < END
+        ? (MEET ? `<a class="btn gold" href="${MEET}" target="_blank" rel="noopener">We are live: join now</a>` : `<a class="btn gold" href="${WA}" target="_blank" rel="noopener">We are live: link in the invite and on WhatsApp</a>`)
+        : '<span class="pill">This session is over. See you at the next one.</span>';
       return;
     }
-    $('#cd-d').textContent = Math.floor(t / 864e5); $('#cd-h').textContent = pad(Math.floor(t / 36e5) % 24);
-    $('#cd-m').textContent = pad(Math.floor(t / 6e4) % 60); $('#cd-s').textContent = pad(Math.floor(t / 1e3) % 60);
+    setFace('#cd-d', Math.floor(t / 864e5)); setFace('#cd-h', pad(Math.floor(t / 36e5) % 24));
+    setFace('#cd-m', pad(Math.floor(t / 6e4) % 60)); setFace('#cd-s', pad(Math.floor(t / 1e3) % 60));
     setTimeout(tick, 1000);
   }
   tick();
 
   /* Dalal's speech bubble */
-  const lines = ['Arre, register kar lo!', 'Sunday, 9 baje. Milte hain.', 'Seat free hai, bas naam likho.', 'Calendar mein daal denge, tension mat lo.'];
+  const lines = ['Arre, register kar lo!', 'Sunday, 9 baje. Milte hain.', 'Seat free hai, bas naam likho.', 'Strategy, charts, stocks: sab ek ghante mein.', 'Calendar mein daal denge, tension mat lo.'];
   let li = 0;
-  setInterval(() => { const b = $('#bubble'); if (!b) return; li = (li + 1) % lines.length; b.classList.remove('swap'); void b.offsetWidth; b.textContent = lines[li]; b.classList.add('swap'); }, 4200);
+  setInterval(() => { const b = $('#bubble'); if (!b || b.dataset.fixed) return; li = (li + 1) % lines.length; b.classList.remove('swap'); void b.offsetWidth; b.textContent = lines[li]; b.classList.add('swap'); }, 4200);
 
-  /* community links (WhatsApp / Telegram); a link left empty is not shown */
-  const JOIN = {
-    whatsapp: ['WhatsApp community', '#25D366', 'https://chat.whatsapp.com/DUdUxpofHqE9auMNtDyZYr', '<path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.5l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.3 2.2 2.2 0 0 0 .1-1.3c0-.1-.2-.2-.5-.3Z"/>'],
-    telegram: ['Telegram', '#229ED9', '', '<path fill="currentColor" d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.8.8l-4.8-3.6-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2L6.4 13.1 1.7 11.6c-1-.3-1-1 .2-1.5L20.6 3c.9-.3 1.6.2 1.3 1.3Z"/>'],
-  };
-  const jb = Object.values(JOIN).filter((x) => x[2]).map(([l, c, u, svg]) => `<a class="jb" style="background:${c}" href="${u}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true">${svg}</svg>${l}</a>`).join('');
-  if (jb) $('#joinBtns').innerHTML = jb; else $('#join').remove();
+  /* community link */
+  $('#joinBtns').innerHTML = `<a class="jb" style="background:#25D366" href="${WA}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.5l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.3 2.2 2.2 0 0 0 .1-1.3c0-.1-.2-.2-.5-.3Z"/></svg>WhatsApp community</a>`;
+
+  /* scroll progress bar */
+  const prog = $('#progress');
+  const onScroll = () => { const h = document.documentElement; prog.style.transform = `scaleX(${Math.min(1, h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight))})`; };
+  addEventListener('scroll', onScroll, { passive: true }); onScroll();
 
   /* signed-in members: their Google email is used by default (toggle off to type another one).
      Firebase loads after the page is on screen, so it never slows the first view. */
@@ -372,32 +539,49 @@ footer{padding:26px 0 90px;color:var(--muted);font-size:13px;text-align:center}
   });
   (window.requestIdleCallback || ((f) => setTimeout(f, 600)))(loadAuth);
 
+  /* confetti when someone registers */
+  function confetti() {
+    if (calm) return;
+    const cv = $('#confetti'), ctx = cv.getContext('2d'), dpr = devicePixelRatio || 1;
+    cv.width = innerWidth * dpr; cv.height = innerHeight * dpr; ctx.scale(dpr, dpr);
+    const box = $('#formCard').getBoundingClientRect(), ox = box.left + box.width / 2, oy = box.top + 80;
+    const cols = ['#d9b878', '#b08d57', '#2f6b4f', '#1f4d3a', '#e9dcc3', '#23794f', '#f2a08f'];
+    const ps = Array.from({ length: 160 }, () => ({ x: ox, y: oy, vx: (Math.random() - 0.5) * 14, vy: -Math.random() * 13 - 4, w: 6 + Math.random() * 6, h: 8 + Math.random() * 8, r: Math.random() * 6, vr: (Math.random() - 0.5) * 0.4, c: cols[(Math.random() * cols.length) | 0] }));
+    const t0 = performance.now();
+    (function frame(t) {
+      ctx.clearRect(0, 0, innerWidth, innerHeight);
+      ps.forEach((p) => { p.vy += 0.35; p.vx *= 0.99; p.x += p.vx; p.y += p.vy; p.r += p.vr; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * Math.abs(Math.cos(p.r * 2))); ctx.restore(); });
+      if (t - t0 < 3200) requestAnimationFrame(frame); else ctx.clearRect(0, 0, innerWidth, innerHeight);
+    })(t0);
+  }
+
   /* registration */
   const gcal = () => 'https://calendar.google.com/calendar/render?action=TEMPLATE'
-    + '&text=' + encodeURIComponent('Street ka Dalal Community Meet 2')
-    + '&dates=20261018T153000Z/20261018T163000Z'
-    + '&details=' + encodeURIComponent('This week in markets, quarterly results, the data centre theme and the trending topic.\nJoin: ' + MEET)
-    + '&location=' + encodeURIComponent(MEET);
+    + '&text=' + encodeURIComponent('Street ka Dalal Community Meet 3')
+    + '&dates=20261025T153000Z/20261025T163000Z'
+    + '&details=' + encodeURIComponent('Investment strategies, the trending stories, last week\'s technicals and the stocks we are discussing.' + (MEET ? '\nJoin: ' + MEET : '\nThe Meet link comes with the calendar invite and on our WhatsApp community.'))
+    + (MEET ? '&location=' + encodeURIComponent(MEET) : '');
   function done(name, again) {
-    $('#formCard').innerHTML = `<div class="done"><div class="tick"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg></div>
+    $('#formCard').innerHTML = `<div class="done"><div class="tick"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg></div>
       <h2>You are in${name ? `, ${esc(name.split(' ')[0])}` : ''}!</h2>
-      <p class="sub" style="color:var(--muted)">${again ? 'Your registration is updated.' : 'See you on Sunday, 18 October at 9:00 PM.'}</p>
-      <a class="meet" href="${MEET}" target="_blank" rel="noopener">Meet link: ${MEET.replace('https://', '')}</a>
-      <div class="btns"><a class="btn primary" href="${gcal()}" target="_blank" rel="noopener">Add to my Google Calendar</a><a class="btn ghost" href="./">Open the terminal</a></div></div>`;
-    $('#bubble').textContent = 'Badhiya! Sunday ko milte hain.';
+      <p class="sub" style="color:var(--muted)">${again ? 'Your registration is saved.' : 'See you on Sunday, 25 October at 9:00 PM.'}</p>
+      ${MEET ? `<a class="meet" href="${MEET}" target="_blank" rel="noopener">Meet link: ${MEET.replace('https://', '')}</a>` : '<p class="meet">The Meet link comes with your calendar invite and on our WhatsApp community.</p>'}
+      <div class="btns"><a class="btn primary" href="${gcal()}" target="_blank" rel="noopener">Add to my Google Calendar</a><a class="btn light" href="${WA}" target="_blank" rel="noopener">Join the WhatsApp community</a></div></div>`;
+    const b = $('#bubble'); b.dataset.fixed = '1'; b.textContent = 'Badhiya! Sunday ko milte hain.';
     const f = $('#floatCta'); if (f) f.remove();
   }
   const saved = store.get('skd-reg-' + EVENT);
   if (saved) done(saved.name, true);
+  const oops = (msg, el) => { const err = $('#err'); err.textContent = msg; err.classList.remove('shake'); void err.offsetWidth; err.classList.add('shake'); el?.focus(); };
   $('#regForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const f = e.target, err = $('#err'), btn = $('#sub');
+    const f = e.target, btn = $('#sub');
     const useLogin = !!fbUser?.email && $('#useLogin').checked;
     const body = { event: EVENT, name: f.name.value.trim(), email: useLogin ? fbUser.email : f.email.value.trim(), login: useLogin, attended: (f.querySelector('input[name=attended]:checked') || {}).value, consent: $('#consent').checked, website: f.website.value };
-    if (body.name.length < 2) { err.textContent = 'Please write your name.'; f.name.focus(); return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(body.email)) { err.textContent = 'Please check your email address.'; f.email.focus(); return; }
-    if (!body.attended) { err.textContent = 'Please tell us if you attended the last session.'; return; }
-    err.textContent = ''; btn.disabled = true; btn.textContent = 'Saving...';
+    if (body.name.length < 2) return oops('Please write your name.', f.name);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(body.email)) return oops('Please check your email address.', f.email);
+    if (!body.attended) return oops('Please tell us if you came to an earlier session.');
+    $('#err').textContent = ''; btn.disabled = true; btn.textContent = 'Saving...';
     try {
       const headers = { 'Content-Type': 'application/json' };
       if (useLogin) headers.Authorization = `Bearer ${await fbUser.getIdToken()}`;
@@ -406,8 +590,9 @@ footer{padding:26px 0 90px;color:var(--muted);font-size:13px;text-align:center}
       if (!r.ok || !j.ok) throw new Error(j.error || 'Could not save right now. Please try again.');
       store.set('skd-reg-' + EVENT, { name: body.name, at: Date.now() });
       done(body.name, j.again);
+      confetti();
     } catch (x) {
-      err.textContent = x.name === 'TimeoutError' ? 'The network is slow. Please try again.' : x.message;
+      oops(x.name === 'TimeoutError' ? 'The network is slow. Please try again.' : x.message);
       btn.disabled = false; btn.textContent = 'Register for Sunday';
     }
   });
@@ -416,56 +601,105 @@ footer{padding:26px 0 90px;color:var(--muted);font-size:13px;text-align:center}
   const fc = $('#floatCta');
   if (fc && 'IntersectionObserver' in window) new IntersectionObserver(([en]) => fc.classList.toggle('hide', en.isIntersecting), { threshold: 0.2 }).observe($('#register'));
 
-  /* agenda cards fade in; data loads only when its block comes near the screen */
-  const io = 'IntersectionObserver' in window ? new IntersectionObserver((ens) => ens.forEach((en) => { if (en.isIntersecting) { en.target.classList.add('in-view'); io.unobserve(en.target); } }), { threshold: 0.15 }) : null;
-  document.querySelectorAll('.ag').forEach((el, i) => { el.style.transitionDelay = `${i * 90}ms`; io ? io.observe(el) : el.classList.add('in-view'); });
+  /* cards and blocks rise in as they come on screen */
+  const io = 'IntersectionObserver' in window ? new IntersectionObserver((ens) => ens.forEach((en) => { if (en.isIntersecting) { en.target.classList.add('in-view'); io.unobserve(en.target); } }), { threshold: 0.12 }) : null;
+  document.querySelectorAll('.ag, .topic').forEach((el, i) => { if (el.classList.contains('ag')) el.style.transitionDelay = `${(i % 4) * 100}ms, ${(i % 4) * 100}ms, 0ms, 0ms`; io ? io.observe(el) : el.classList.add('in-view'); });
+
+  /* agenda cards tilt toward the pointer */
+  if (!calm && matchMedia('(hover: hover)').matches) document.querySelectorAll('.ag').forEach((el) => {
+    el.addEventListener('pointermove', (e) => { const r = el.getBoundingClientRect(); el.style.setProperty('--ry', `${((e.clientX - r.left) / r.width - 0.5) * 14}deg`); el.style.setProperty('--rx', `${-((e.clientY - r.top) / r.height - 0.5) * 14}deg`); });
+    el.addEventListener('pointerleave', () => { el.style.setProperty('--rx', '0deg'); el.style.setProperty('--ry', '0deg'); });
+  });
+
+  /* strategy cards flip on tap (hover flips them on a computer) */
+  document.querySelectorAll('.flip').forEach((b) => b.addEventListener('click', () => b.classList.toggle('on')));
+
+  /* live data: loads only when its block comes near the screen */
   const cache = {};
   const data = (p) => (cache[p] = cache[p] || fetch(`data/${p}.json`).then((r) => (r.ok ? r.json() : Promise.reject(new Error(r.status)))));
   function whenNear(sel, fn) {
     const el = $(sel);
     if (!('IntersectionObserver' in window)) return fn();
-    const o = new IntersectionObserver(([en]) => { if (en.isIntersecting) { o.disconnect(); fn(); } }, { rootMargin: '400px 0px' });
+    const o = new IntersectionObserver(([en]) => { if (en.isIntersecting) { o.disconnect(); fn(); } }, { rootMargin: '300px 0px' });
     o.observe(el);
   }
   const fail = (sel, msg) => { const el = $(sel); if (el) el.innerHTML = `<p class="asof">${msg}</p>`; };
   const spark = (v) => {
     v = (v || []).filter((x) => x != null).slice(-20);
     if (v.length < 2) return '';
-    const mn = Math.min(...v), mx = Math.max(...v), w = 100, h = 30;
+    const mn = Math.min(...v), mx = Math.max(...v), w = 100, h = 32;
     const pts = v.map((x, i) => `${(i * w / (v.length - 1)).toFixed(1)},${(h - 2 - ((x - mn) / (mx - mn || 1)) * (h - 4)).toFixed(1)}`).join(' ');
     return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${v[v.length - 1] >= v[0] ? '#23794f' : '#b4442f'}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`;
   };
   const fdate = (s) => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }); };
+  const stagger = (box) => { [...box.children].forEach((c, i) => { c.style.transitionDelay = `${i * 80}ms`; }); requestAnimationFrame(() => requestAnimationFrame(() => box.classList.add('go'))); };
 
-  whenNear('#t1', () => {
+  /* ticker tape at the very top */
+  data('market').then((m) => {
+    const names = { 'NIFTY 50': 'Nifty 50', 'NIFTY 500': 'Nifty 500', 'NIFTY MIDCAP 150': 'Midcap 150', 'NIFTY SMALLCAP 250': 'Smallcap 250' };
+    const items = [...(m.indices || []).map((i) => [names[i.name] || i.name, num(i.last, 0), i.returns?.['1D']]), ...(m.sectoral || []).filter((s) => s.returns?.['1D'] != null).slice(0, 14).map((s) => [s.name.replace(/^NIFTY /i, 'Nifty '), '', s.returns['1D']])];
+    const html = items.map(([n, v, c]) => `<span><i></i>${esc(n)} ${v ? `<b>${v}</b>` : ''} <em class="${tone(c)}" style="font-style:normal">${pct(c)}</em></span>`).join('') + `<span><i></i><b>Community Meet 3</b> Sunday 25 Oct, 9 PM</span>`;
+    $('#ticker').innerHTML = html + html;
+  }).catch(() => { const s = '<span><i></i><b>Community Meet 3</b> Sunday 25 October, 9 PM IST on Google Meet</span>'; $('#ticker').innerHTML = s.repeat(8); });
+
+  whenNear('#t2', () => {
+    data('news').then((n) => {
+      const hs = (n.headlines || []).filter((h) => h.headline && /^https:\/\//.test(h.link || '')).slice(0, 6);
+      const host = (u) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; } };
+      const when = (ms) => { const d = new Date(ms); return isNaN(d) ? '' : d.toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }); };
+      const box = $('#stories');
+      box.innerHTML = hs.map((h, i) => `<li><a href="${esc(h.link)}" target="_blank" rel="noopener"><span class="no">${i + 1}</span><span><span class="hl">${esc(h.headline)}</span><span class="src">${esc(host(h.link))}${h.published ? ` · ${when(h.published)}` : ''}</span></span></a></li>`).join('') || '<li>No headlines right now. Check back in a bit.</li>';
+      stagger(box);
+    }).catch(() => fail('#stories', 'Headlines could not load. They are on the terminal under News.'));
+  });
+
+  whenNear('#t3', () => {
     data('market').then((m) => {
       const names = { 'NIFTY 50': 'Nifty 50', 'NIFTY 500': 'Nifty 500', 'NIFTY MIDCAP 150': 'Midcap 150', 'NIFTY SMALLCAP 250': 'Smallcap 250' };
-      $('#idx').innerHTML = (m.indices || []).map((i) => `<div class="tile"><div class="k">${esc(names[i.name] || i.name)}</div><div class="v">${num(i.last, 0)}</div><div class="c ${tone(i.returns?.['1W'])}">${pct(i.returns?.['1W'])} <span style="color:var(--muted);font-weight:500">this week</span></div>${spark(i.spark)}</div>`).join('');
-      $('#t1-sub').textContent = `Week so far, as of the ${fdate(m.as_of)} close. Updated every evening.`;
-    }).catch(() => fail('#idx', 'Index data could not load. It will be on the terminal.'));
+      $('#idx').innerHTML = (m.indices || []).map((i) => `<div class="tile"><div class="k">${esc(names[i.name] || i.name)}</div><div class="v">${num(i.last, 0)}</div><div class="c ${tone(i.returns?.['1W'])}">${pct(i.returns?.['1W'])} <span style="color:var(--muted);font-weight:500">1 week</span></div>${spark(i.spark)}</div>`).join('');
+      $('#t3-sub').textContent = `As of the ${fdate(m.as_of)} close. Updates every evening till Sunday.`;
+      const bt = m.breadth_trend || {}, b = m.breadth || {};
+      const g = (lab, x) => (x && x.now != null ? `<div class="gauge"><div class="row"><span>${lab}</span><b>${num(x.now, 0)}%</b></div><div class="bar"><i data-w="${Math.max(0, Math.min(100, x.now))}"></i>${x['1m_ago'] != null ? `<u style="--was:${Math.max(0, Math.min(100, x['1m_ago']))}%"></u>` : ''}</div><small>A month ago: ${num(x['1m_ago'], 0)}% (gold mark)</small></div>` : '');
+      $('#breadth').innerHTML = (g('Stocks above 50-day average', bt.above_50) + g('Stocks above 200-day average', bt.above_200)) || '<p class="asof">Breadth data not in yet.</p>';
+      requestAnimationFrame(() => requestAnimationFrame(() => document.querySelectorAll('#breadth .bar i').forEach((el) => { el.style.width = el.dataset.w + '%'; })));
+      const md = m.mood_detail || {};
+      const moodTone = /off|weak|fear/i.test(md.state || b.state || '') ? 'down' : /on|strong|greed/i.test(md.state || b.state || '') ? 'up' : '';
+      $('#hilo').innerHTML = `<div class="hl-box"><div><b class="up">${num(b.new_highs)}</b><small>new 52-week highs</small></div><div><b class="down">${num(b.new_lows)}</b><small>new 52-week lows</small></div></div>
+        <div class="hl-box"><div><b class="up">${num(b.advances)}</b><small>rose</small></div><div><b class="down">${num(b.declines)}</b><small>fell</small></div></div>
+        ${md.state || b.state ? `<span class="mood ${moodTone}">Market mood: ${esc(md.state || b.state)}</span>` : ''}<p class="asof">Last session, all NSE stocks.</p>`;
+    }).catch(() => { fail('#idx', 'Index data could not load. It is on the terminal.'); fail('#breadth', ''); fail('#hilo', ''); });
     data('sectors').then((s) => {
       const xs = (s.sectors || []).filter((x) => x.returns?.['1W'] != null).sort((a, b) => b.returns['1W'] - a.returns['1W']);
       const pick = [...xs.slice(0, 3), ...xs.slice(-3)];
-      $('#secs').innerHTML = pick.map((x) => `<li><span class="nm">${esc(x.name)}<small>${esc(x.trend || '')}</small></span><b class="${tone(x.returns['1W'])}">${pct(x.returns['1W'], 1)}</b></li>`).join('');
-      const dc = (s.themes || []).find((t) => /data cent/i.test(t.name));
-      if (dc) $('#dc').innerHTML = `<div class="tile"><div class="k">This week</div><div class="v ${tone(dc.ret_1w)}">${pct(dc.ret_1w, 1)}</div></div><div class="tile"><div class="k">This month</div><div class="v ${tone(dc.ret_1m)}">${pct(dc.ret_1m, 1)}</div></div><div class="tile"><div class="k">Trend</div><div class="v" style="font-size:17px">${esc(dc.trend || '-')}</div></div><div class="tile"><div class="k">Rotation</div><div class="v" style="font-size:17px">${esc(dc.quadrant || '-')}</div></div>`;
-      else fail('#dc', 'Theme data could not load.');
-    }).catch(() => { fail('#secs', 'Sector data could not load.'); fail('#dc', 'Theme data could not load.'); });
-    data('screeners').then((sc) => {
-      const L = (sc.leadership?.leaders || []).slice(0, 6);
-      $('#radar').innerHTML = L.map((x) => `<li><span class="nm">${esc(x.sym)}<small>${esc(x.name)} · ${esc(x.sector || '')}</small></span><b class="${tone(x.ret_3m)}">${pct(x.ret_3m, 0)} <small style="color:var(--muted);font-weight:500">3M</small></b></li>`).join('') || '<li>No list this week.</li>';
-    }).catch(() => fail('#radar', 'The list could not load.'));
+      $('#secs').innerHTML = pick.map((x) => `<li><span class="nm">${esc(x.name)}<small>${esc(x.trend || '')}</small></span><b class="${tone(x.returns['1W'])}">${pct(x.returns['1W'], 1)}</b></li>`).join('') || '<li>No sector data yet.</li>';
+    }).catch(() => fail('#secs', 'Sector data could not load.'));
   });
 
-  whenNear('#t2', () => {
-    data('results/hub').then((h) => {
-      const rows = (h.announced || []).filter((r) => r.q === h.current_q && r.rev_y != null && r.pat_y != null).sort((a, b) => (b.mcap || 0) - (a.mcap || 0)).slice(0, 6);
-      const lab = (l) => (/strong|good/i.test(l || '') ? `<span class="chip good">${esc(l)}</span>` : /weak|poor|miss/i.test(l || '') ? `<span class="chip bad">${esc(l)}</span>` : '');
-      $('#res').innerHTML = rows.map((r) => `<div class="res"><div class="t"><b>${esc(r.sym)}</b>${lab(r.label)}</div><div class="s">${esc(r.name)}</div>
-        <div class="nums"><span>Revenue <b class="${tone(r.rev_y)}">${pct(r.rev_y, 1)}</b></span><span>Profit <b class="${tone(r.pat_y)}">${pct(r.pat_y, 1)}</b></span></div></div>`).join('') || '<p class="asof">Results season is just starting. The big names report this week.</p>';
-      const n = (h.announced || []).filter((r) => r.q === h.current_q).length;
-      $('#t2-sub').textContent = `${h.current_label || 'This season'}: ${num(n)} companies have reported so far`;
-    }).catch(() => fail('#res', 'Results could not load. They are on the terminal under Results.'));
+  whenNear('#t4', () => {
+    data('screeners').then((sc) => {
+      const pat = Object.fromEntries((sc.patterns || []).map((p) => [p.key, p]));
+      const card = (x, chips, nums) => `<div class="stk"><div class="t"><b>${esc(x.sym)}</b>${chips}</div><div class="s">${esc(x.name)}${x.sector ? ` · ${esc(x.sector)}` : ''}</div><div class="nums">${nums}</div></div>`;
+      const views = {
+        high_52w: () => (pat.high_52w?.rows || []).slice(0, 9).map((x) => card(x, `<span class="chip gold">${esc(fdate(x.date))}</span>`, `<span>Close <b>${num(x.last, 1)}</b></span><span>52w high <b>${num(x.high_52w, 1)}</b></span>`)),
+        leaders: () => (sc.leadership?.leaders || []).slice(0, 9).map((x) => card(x, `<span class="chip good">RS ${esc(x.rs)}</span>`, `<span>1M <b class="${tone(x.ret_1m)}">${pct(x.ret_1m, 1)}</b></span><span>3M <b class="${tone(x.ret_3m)}">${pct(x.ret_3m, 0)}</b></span>`)),
+        rectangle: () => (pat.rectangle?.rows || []).slice(0, 9).map((x) => card(x, `<span class="chip gold">${esc(fdate(x.date))}</span>`, `<span>Close <b>${num(x.last, 1)}</b></span><span>Base <b>${num(x.base_bars)} days</b></span>`)),
+      };
+      const notes = {
+        high_52w: 'Stocks that closed at a new 52-week high recently, from our screener.',
+        leaders: 'Market leaders by relative strength (strongest 12-month performers, liquid stocks).',
+        rectangle: 'Stocks that broke out of a sideways range recently, from our screener.',
+      };
+      const show = (k) => {
+        const box = $('#stocks');
+        box.classList.remove('go');
+        box.innerHTML = views[k]().join('') || '<p class="asof">Nothing on this list right now.</p>';
+        $('#stk-note').textContent = `${notes[k]} For learning and discussion only. Not a recommendation to buy or sell.`;
+        stagger(box);
+        document.querySelectorAll('#stkSeg button').forEach((b) => b.classList.toggle('on', b.dataset.v === k));
+      };
+      $('#stkSeg').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) show(b.dataset.v); });
+      show('high_52w');
+    }).catch(() => fail('#stocks', 'The lists could not load. They are on the terminal under Screeners.'));
   });
 })();
 </script>
