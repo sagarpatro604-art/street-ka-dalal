@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Community Meet 3 · Street ka Dalal</title>
-<meta name="description" content="Street ka Dalal Community Meet 3: Sunday 25 October, 9 PM on Google Meet. Investment strategies, the trending stories, last week's technicals and the stocks we are discussing.">
+<meta name="description" content="Street ka Dalal Community Meet 3: Sunday 25 October, 9 PM on Google Meet. Free for our community. Register here.">
 <meta property="og:title" content="Street ka Dalal · Community Meet 3">
-<meta property="og:description" content="Sunday 25 October, 9:00 PM IST on Google Meet. Strategies, stories, charts and stocks. Free for our community. Register here.">
+<meta property="og:description" content="Sunday 25 October, 9:00 PM IST on Google Meet. Free for our community. Register here.">
 <meta property="og:image" content="https://street-ka-dalal.pages.dev/icons/icon-512.png">
 <meta name="theme-color" content="#1F4D3A">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,700&display=swap" media="print" onload="this.media='all'">
 <style>
-:root{--bg:#f6f1e7;--paper:#fffdf8;--paper-2:#f1ebdf;--line:#e4dccb;--ink:#1d2a23;--muted:#6c786f;--green:#1f4d3a;--green-2:#2f6b4f;--deep:#12301f;--sage:#dfe9d6;--gold:#b08d57;--gold-2:#d9b878;--gold-soft:#f3ead9;--cream:#e9dcc3;--up:#23794f;--up-bg:#e3f1e6;--down:#b4442f;--down-bg:#f8e6e1;
+:root{--bg:#f6f1e7;--paper:#fffdf8;--paper-2:#f1ebdf;--line:#e4dccb;--ink:#1d2a23;--muted:#6c786f;--green:#1f4d3a;--green-2:#2f6b4f;--deep:#12301f;--sage:#dfe9d6;--gold:#b08d57;--gold-2:#d9b878;--gold-soft:#f3ead9;--cream:#e9dcc3;--up:#23794f;--up-bg:#e3f1e6;--down:#b4442f;
 --serif:"Fraunces",Georgia,"Times New Roman",serif;--sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;--shadow:0 1px 2px rgba(31,46,36,.05),0 10px 30px rgba(31,46,36,.08)}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -30,13 +30,10 @@ h1,h2,h3{font-family:var(--serif);color:var(--green);margin:0;letter-spacing:-.0
 .btn.primary{background:var(--green);color:#fff;box-shadow:0 6px 18px rgba(31,77,58,.25)}
 .btn.primary:hover{background:var(--green-2)}
 .btn.gold{background:linear-gradient(135deg,var(--gold-2),var(--gold));color:var(--deep);box-shadow:0 8px 24px rgba(217,184,120,.35)}
-.btn.ghost{background:transparent;color:var(--cream);border:1px solid rgba(233,220,195,.35)}
-.btn.ghost:hover{background:rgba(233,220,195,.08)}
 .btn.sm{padding:8px 14px;font-size:14px}
 .btn.light{background:var(--paper);color:var(--green);border:1px solid var(--line)}
 
-/* scroll progress + ticker */
-.progress{position:fixed;left:0;top:0;height:3px;width:100%;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,var(--gold-2),var(--gold));z-index:50}
+/* ticker */
 .ticker{background:var(--deep);color:var(--cream);overflow:hidden;white-space:nowrap;font-size:13px;font-weight:600;height:32px;display:flex;align-items:center}
 .ticker-track{display:inline-flex;gap:34px;padding-left:34px;animation:tape 40s linear infinite;will-change:transform}
 .ticker:hover .ticker-track{animation-play-state:paused}
@@ -66,7 +63,7 @@ h1,h2,h3{font-family:var(--serif);color:var(--green);margin:0;letter-spacing:-.0
 .chart .tip-ring{fill:none;stroke:var(--gold-2);stroke-width:2;opacity:0;transform-box:fill-box;transform-origin:center;animation:ring 1.8s 3.8s ease-out infinite}
 @keyframes tipin{to{opacity:1}}
 @keyframes ring{0%{opacity:.8;transform:scale(1)}100%{opacity:0;transform:scale(3.2)}}
-.coin{position:absolute;bottom:-50px;width:var(--s,34px);height:var(--s,34px);border-radius:50%;background:radial-gradient(circle at 35% 30%,#f3dca8,var(--gold) 70%);color:var(--deep);display:grid;place-items:center;font:700 calc(var(--s,34px)*.5) var(--sans);opacity:.0;box-shadow:inset 0 -3px 0 rgba(0,0,0,.15);animation:floatup var(--d,11s) var(--dl,0s) linear infinite}
+.coin{position:absolute;bottom:-50px;width:var(--s,34px);height:var(--s,34px);border-radius:50%;background:radial-gradient(circle at 35% 30%,#f3dca8,var(--gold) 70%);color:var(--deep);display:grid;place-items:center;font:700 calc(var(--s,34px)*.5) var(--sans);opacity:0;box-shadow:inset 0 -3px 0 rgba(0,0,0,.15);animation:floatup var(--d,11s) var(--dl,0s) linear infinite}
 @keyframes floatup{0%{transform:translateY(0) rotate(0);opacity:0}10%{opacity:.5}80%{opacity:.35}100%{transform:translateY(-640px) rotate(240deg);opacity:0}}
 
 .hero{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,.82fr);gap:30px 90px;align-items:center;padding:46px 46px 52px}
@@ -74,16 +71,14 @@ h1,h2,h3{font-family:var(--serif);color:var(--green);margin:0;letter-spacing:-.0
 .eyebrow{display:inline-flex;align-items:center;gap:9px;background:rgba(233,220,195,.1);border:1px solid rgba(233,220,195,.2);border-radius:999px;padding:6px 14px 6px 10px;font:700 12px var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--gold-2)}
 .live-dot{width:8px;height:8px;border-radius:50%;background:#f06a4f;box-shadow:0 0 0 0 rgba(240,106,79,.6);animation:ping 1.8s infinite}
 @keyframes ping{70%{box-shadow:0 0 0 10px rgba(240,106,79,0)}100%{box-shadow:0 0 0 0 rgba(240,106,79,0)}}
-.hero h1{color:#fff;font-size:clamp(36px,5.6vw,66px);line-height:1.02;margin:16px 0 14px}
+.hero h1{color:#fff;font-size:clamp(38px,6vw,70px);line-height:1.02;margin:16px 0 18px}
 .hero h1 .word{display:block;color:var(--gold-2);font-style:italic}
-.rot{display:inline-block;position:relative;height:1.06em;overflow:hidden;vertical-align:bottom}
-.rot span{display:block;height:1.06em;transition:transform .55s cubic-bezier(.7,-.3,.3,1.3)}
 .h1-in>*{display:inline-block;opacity:0;transform:translateY(24px);animation:rise .7s cubic-bezier(.2,.9,.3,1.2) forwards}
 @keyframes rise{to{opacity:1;transform:none}}
 .when{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 20px}
 .pill{display:inline-flex;align-items:center;gap:8px;background:rgba(233,220,195,.1);border:1px solid rgba(233,220,195,.18);border-radius:999px;padding:8px 14px;font-weight:600;font-size:15px;color:#fff}
 .pill svg{color:var(--gold-2)}
-.lede{font-size:18px;color:rgba(233,220,195,.92);max-width:560px;margin:0 0 22px}
+.lede{font-size:18px;color:rgba(233,220,195,.92);max-width:540px;margin:0 0 22px}
 .count{display:flex;gap:10px;margin:0 0 26px}
 .count .cell{position:relative;width:76px;text-align:center;perspective:300px}
 .count .face{display:block;background:var(--cream);color:var(--deep);border-radius:14px;padding:9px 0 6px;font:700 30px var(--serif);line-height:1.1;box-shadow:0 6px 0 rgba(0,0,0,.18)}
@@ -140,145 +135,36 @@ label.f{display:block;font-weight:600;font-size:14px;margin:0 0 6px}
 .form .btn.primary::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.28),transparent);animation:shine 3.2s 2.5s infinite}
 @keyframes shine{0%{left:-60%}35%,100%{left:130%}}
 .fine{font-size:12px;color:var(--muted);margin:10px 0 0}
-.done{text-align:center;padding:10px 4px}
-.done .tick{width:70px;height:70px;border-radius:50%;background:var(--up-bg);color:var(--up);display:grid;place-items:center;margin:0 auto 12px;animation:pop .5s cubic-bezier(.2,.9,.3,1.6)}
-.done .tick path{stroke-dasharray:30;stroke-dashoffset:30;animation:draw .5s .25s forwards}
-.done h2{font-size:28px}
+
+/* after sign-up: the Diwali wish */
+.done{text-align:center;padding:6px 4px}
+.diya{display:block;margin:0 auto 6px;width:96px;height:80px}
+.diya .flame{transform-box:fill-box;transform-origin:50% 100%;animation:flicker 1.1s ease-in-out infinite alternate}
+@keyframes flicker{0%{transform:scale(1,1) rotate(-2deg)}50%{transform:scale(.92,1.08) rotate(2deg)}100%{transform:scale(1.05,.95) rotate(-1deg)}}
+.diya .glow{animation:glow 1.6s ease-in-out infinite alternate}
+@keyframes glow{from{opacity:.35}to{opacity:.8}}
+.wish{font:700 italic clamp(30px,4vw,38px)/1.05 var(--serif);margin:0 0 6px;background:linear-gradient(90deg,#b4442f,#d98a2b,#d9b878,#d98a2b,#b4442f);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:wishin .7s cubic-bezier(.2,.9,.3,1.4) both,sheen 3s linear infinite}
+@keyframes wishin{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+@keyframes sheen{to{background-position:-200% 0}}
+.done h2{font-size:22px;margin:4px 0 0}
 .done .btns{display:flex;flex-direction:column;gap:8px;margin-top:16px}
 .meet{display:block;word-break:break-all;background:var(--gold-soft);border-radius:12px;padding:10px;margin:12px 0 0;font-weight:600;font-size:14px;text-decoration:none;color:var(--green)}
 
-/* marquee band */
-.band{margin:34px -40px 8px;transform:rotate(-1.6deg);background:var(--gold);color:var(--deep);overflow:hidden;white-space:nowrap;padding:14px 0;box-shadow:0 10px 30px rgba(176,141,87,.25)}
-.band-track{display:inline-flex;gap:28px;padding-left:28px;animation:tape 26s linear infinite;font:700 clamp(18px,2.4vw,26px) var(--serif)}
-.band-track span{display:inline-flex;align-items:center;gap:28px}
-.band-track span::after{content:"";width:10px;height:10px;border-radius:3px;background:var(--deep);transform:rotate(45deg)}
-
-/* agenda */
 section.block{padding:34px 0}
-.sec-h{margin:0 0 20px}
-.sec-h h2{font-size:clamp(28px,3.6vw,40px)}
-.sec-h p{margin:6px 0 0;color:var(--muted)}
-.agenda{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;perspective:900px}
-.ag{position:relative;display:block;background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:20px;text-decoration:none;color:inherit;box-shadow:var(--shadow);transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .2s ease,box-shadow .2s;opacity:0;translate:0 26px}
-.ag.in-view{opacity:1;translate:0 0;transition:opacity .6s ease,translate .6s cubic-bezier(.2,.9,.3,1.2),transform .2s ease,box-shadow .2s}
-.ag:hover{box-shadow:0 18px 40px rgba(31,46,36,.16)}
-.ag .ill{height:84px;border-radius:14px;background:var(--paper-2);margin:0 0 14px;display:grid;place-items:center;overflow:hidden}
-.ag .ill svg{width:100%;height:100%}
-.ag .n{position:absolute;top:14px;right:16px;font:700 italic 34px var(--serif);color:var(--gold-soft);-webkit-text-stroke:1px var(--gold)}
-.ag h3{font-size:20px;line-height:1.2;margin:0 0 6px}
-.ag p{margin:0;color:var(--muted);font-size:14px}
-/* little illustrations */
-.bars rect{transform-box:fill-box;transform-origin:50% 100%;animation:barup 2.4s ease-in-out infinite alternate}
-.bars rect:nth-child(2){animation-delay:.3s}.bars rect:nth-child(3){animation-delay:.6s}.bars rect:nth-child(4){animation-delay:.9s}
-@keyframes barup{from{transform:scaleY(.35)}to{transform:scaleY(1)}}
-.paper-lines rect{animation:shimmer 1.8s ease-in-out infinite}
-.paper-lines rect:nth-child(odd){animation-delay:.4s}
-@keyframes shimmer{50%{opacity:.35}}
-.mini-line{stroke-dasharray:160;stroke-dashoffset:160;animation:minidraw 3s ease-in-out infinite}
-@keyframes minidraw{60%,100%{stroke-dashoffset:0}}
-.lens{animation:scan 3.4s ease-in-out infinite}
-@keyframes scan{0%,100%{transform:translate(0,0)}50%{transform:translate(70px,6px)}}
-
-/* topic blocks */
-.topic{position:relative;background:var(--paper);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:24px;margin:0 0 20px;scroll-margin-top:76px;opacity:0;translate:0 30px;transition:opacity .7s ease,translate .7s cubic-bezier(.2,.9,.3,1.1)}
-.topic.in-view{opacity:1;translate:0 0}
-.topic-h{display:flex;align-items:center;gap:12px;margin:0 0 16px}
-.topic-h .n{flex:none;display:grid;place-items:center;width:44px;height:44px;border-radius:14px;background:var(--green);color:var(--gold-2);font:700 italic 22px var(--serif)}
-.topic-h h3{font-size:clamp(21px,2.6vw,27px)}
-.topic-h p{margin:2px 0 0;color:var(--muted);font-size:14px}
-.say{display:flex;align-items:center;gap:10px;margin:16px 0 0;font-size:14px;color:#3d4a42}
+.say{display:flex;align-items:center;gap:10px;font-size:14px;color:#3d4a42}
 .say img{width:40px;height:40px;border-radius:50%;flex:none;border:2px solid var(--gold-soft);animation:bob 3s ease-in-out infinite}
 .say span{background:var(--gold-soft);border-radius:14px 14px 14px 4px;padding:8px 12px}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-h4{margin:0 0 8px;font:700 13px var(--sans);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
-.up{color:var(--up)}.down{color:var(--down)}
-
-/* flip cards: strategies */
-.flips{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
-.flip{display:block;width:100%;perspective:1000px;height:200px;cursor:pointer;background:none;border:0;padding:0;font:inherit;text-align:left;color:inherit}
-.flip-in{display:block;position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.2,.9,.3,1.15)}
-.flip:hover .flip-in,.flip.on .flip-in{transform:rotateY(180deg)}
-.flip .fc,.flip .bc{position:absolute;inset:0;border-radius:18px;padding:18px;-webkit-backface-visibility:hidden;backface-visibility:hidden;display:flex;flex-direction:column}
-.flip .fc{background:var(--paper-2);border:1px solid var(--line)}
-.flip .bc{background:var(--green);color:var(--cream);transform:rotateY(180deg);font-size:14px}
-.flip .fc b{font:700 22px var(--serif);color:var(--green);margin:auto 0 6px}
-.flip .fc span{color:var(--muted);font-size:14px}
-.flip .bc b{color:#fff;font:700 17px var(--serif);margin:0 0 6px}
-.flip .bc ul{margin:0;padding-left:16px}
-.flip .ico{width:42px;height:42px;border-radius:12px;background:var(--paper);display:grid;place-items:center;color:var(--gold)}
-.flip .hint{position:absolute;right:14px;top:16px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
-
-/* stories */
-.stories{list-style:none;margin:0;padding:0;display:grid;gap:10px}
-.stories li{opacity:0;transform:translateX(-18px);transition:opacity .5s ease,transform .5s ease}
-.stories.go li{opacity:1;transform:none}
-.stories a{display:flex;gap:14px;align-items:flex-start;background:var(--paper-2);border-radius:14px;padding:12px 14px;text-decoration:none;color:var(--ink);transition:background .15s,transform .15s}
-.stories a:hover{background:var(--gold-soft);transform:translateX(4px)}
-.stories .no{flex:none;font:700 italic 22px var(--serif);color:var(--gold);width:26px}
-.stories .hl{font-weight:600;line-height:1.35}
-.stories .src{display:block;font-size:12px;color:var(--muted);margin-top:3px}
-
-/* technicals */
-.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-.tile{background:var(--paper-2);border-radius:14px;padding:12px 14px;min-width:0}
-.tile .k{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tile .v{font:700 22px var(--serif);color:var(--green);margin:2px 0}
-.tile .c{font-weight:700;font-size:14px}
-.tile svg{display:block;width:100%;height:32px;margin-top:6px}
-.tile svg polyline{stroke-dasharray:400;stroke-dashoffset:400;animation:draw 1.8s .2s ease-out forwards}
-.tech{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:16px;margin-top:16px}
-.tech>div{min-width:0;background:var(--paper-2);border-radius:16px;padding:16px}
-.gauge{margin:0 0 14px}
-.gauge .row{display:flex;justify-content:space-between;font-size:14px;font-weight:600;margin:0 0 6px}
-.gauge .bar{position:relative;height:12px;border-radius:999px;background:#e6dece;overflow:hidden}
-.gauge .bar i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:999px;background:var(--green-2);transition:width 1.4s cubic-bezier(.2,.9,.3,1)}
-.gauge .bar u{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--gold);left:var(--was,0)}
-.gauge small{display:block;color:var(--muted);font-size:12px;margin-top:4px}
-.hl-box{display:flex;gap:10px;margin:0 0 12px}
-.hl-box div{flex:1;border-radius:12px;padding:10px;text-align:center;background:var(--paper)}
-.hl-box b{display:block;font:700 26px var(--serif)}
-.hl-box small{font-size:12px;color:var(--muted);font-weight:600}
-.mood{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:6px 12px;font-weight:700;font-size:14px;background:var(--paper)}
-.list{list-style:none;padding:0;margin:0}
-.list li{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:15px}
-.list li:last-child{border-bottom:0}
-.list .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.list .nm small{display:block;color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis}
-.list b{white-space:nowrap}
-
-/* stocks */
-.stocks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-.stk{background:var(--paper-2);border-radius:16px;padding:14px;min-width:0;opacity:0;transform:scale(.92);transition:opacity .45s ease,transform .45s cubic-bezier(.2,.9,.3,1.4),box-shadow .2s}
-.stocks.go .stk{opacity:1;transform:none}
-.stk:hover{box-shadow:var(--shadow)}
-.stk .t{display:flex;justify-content:space-between;gap:8px;align-items:center}
-.stk .t b{font:700 18px var(--serif);color:var(--green)}
-.stk .s{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.stk .nums{display:flex;gap:12px;margin-top:6px;font-size:13px;flex-wrap:wrap}
-.chip{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700;background:var(--paper);color:var(--muted);white-space:nowrap}
-.chip.good{background:var(--up-bg);color:var(--up)}
-.chip.gold{background:var(--gold-soft);color:#8a6a35}
-.seg{display:inline-flex;background:var(--paper-2);border-radius:999px;padding:4px;margin:0 0 14px;gap:4px;flex-wrap:wrap}
-.seg button{border:0;background:none;border-radius:999px;padding:7px 14px;font:600 14px var(--sans);color:var(--muted);cursor:pointer}
-.seg button.on{background:var(--green);color:#fff}
-.ghostline{height:14px;border-radius:7px;background:linear-gradient(90deg,var(--paper-2),#ece4d4,var(--paper-2));background-size:200% 100%;animation:sh 1.2s infinite;margin:8px 0}
-@keyframes sh{to{background-position:-200% 0}}
-.asof{font-size:12px;color:var(--muted);margin:10px 0 0}
-
 .terminal{background:var(--green);color:var(--cream);border-radius:24px;padding:28px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:center;overflow:hidden;position:relative}
 .terminal h2{color:#fff;font-size:clamp(24px,3vw,32px)}
 .terminal p{margin:6px 0 0}
 .terminal .btn{background:var(--cream);color:var(--green)}
 footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
 .float-cta{display:none}
-#confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
+#sky{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:60}
 
 @media (max-width:1000px){
   .hero{grid-template-columns:1fr;gap:26px;padding:34px 26px 40px}
-  .agenda,.flips{grid-template-columns:1fr 1fr}
-  .tiles{grid-template-columns:1fr 1fr}
-  .tech{grid-template-columns:1fr}
-  .stocks{grid-template-columns:1fr 1fr}
   .peek{left:auto;right:14px;top:-104px;width:76px;transform:none;opacity:0;animation:fadein .6s .8s forwards, bob 3s 1.4s ease-in-out infinite}
   @keyframes fadein{to{opacity:1}}
   .bubble{left:auto;right:96px;top:-80px}
@@ -290,22 +176,17 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
   .hero{padding:28px 18px 30px}
   .count .cell{width:64px}
   .count .face{font-size:26px}
-  .stocks{grid-template-columns:1fr}
-  .flip{height:190px}
-  .band{margin:28px -24px 4px}
   .terminal{grid-template-columns:1fr;padding:22px 22px 26px}
   .float-cta{display:flex;position:fixed;left:16px;right:16px;bottom:14px;z-index:30;transition:transform .3s,opacity .3s}
   .float-cta.hide{transform:translateY(90px);opacity:0}
   .float-cta .btn{width:100%;padding:14px}
 }
-@media (max-width:420px){ .agenda,.flips{grid-template-columns:1fr} }
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}
-  .peek{transform:none}.bubble,.card,.h1-in>*{opacity:1;transform:none}.ag,.topic,.stories li,.stk{opacity:1;translate:0 0;transform:none}
-  .chart .cdl{transform:none}.chart .trend{stroke-dashoffset:0}.chart .tip{opacity:1}.coin{display:none}.tile svg polyline,.done .tick path{stroke-dashoffset:0}}
+  .peek{transform:none}.bubble,.card,.h1-in>*,.wish{opacity:1;transform:none}
+  .chart .cdl{transform:none}.chart .trend{stroke-dashoffset:0}.chart .tip{opacity:1}.coin{display:none}}
 </style>
 </head>
 <body>
-<div class="progress" id="progress"></div>
 <div class="ticker" aria-hidden="true"><div class="ticker-track" id="ticker"></div></div>
 <header class="top"><div class="wrap">
   <a class="brand" href="./" aria-label="Street ka Dalal">
@@ -321,17 +202,17 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
     <div class="hero">
       <div>
         <span class="eyebrow"><i class="live-dot"></i> Community Meet 3 · Free · Live</span>
-        <h1 class="h1-in"><span style="animation-delay:.1s">Sunday night</span> <span style="animation-delay:.25s">is for</span> <span class="word" style="animation-delay:.45s"><span class="rot" id="rot"><span>strategies.</span><span>stories.</span><span>charts.</span><span>stocks.</span><span>strategies.</span></span></span></h1>
+        <h1 class="h1-in"><span style="animation-delay:.1s">The community</span> <span class="word" style="animation-delay:.35s">meets again.</span></h1>
         <div class="when">
           <span class="pill"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Sunday, 25 October</span>
           <span class="pill"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>9:00 to 10:00 PM IST</span>
           <span class="pill"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="m16 10 6-3v10l-6-3"/></svg>Google Meet</span>
         </div>
-        <p class="lede">One hour with the community: how different investing styles really work, the stories moving the market, what the charts said last week, and the stocks we are talking about. Free. Register once and we send you the calendar invite.</p>
+        <p class="lede">One hour, live, with the Street ka Dalal community. Free. Register once and we send you the calendar invite and the Meet link.</p>
         <div class="count" id="count" aria-label="Time left">
           <div class="cell"><b class="face" id="cd-d">-</b><small>days</small></div><div class="cell"><b class="face" id="cd-h">-</b><small>hours</small></div><div class="cell"><b class="face" id="cd-m">-</b><small>mins</small></div><div class="cell"><b class="face" id="cd-s">-</b><small>secs</small></div>
         </div>
-        <div class="ctas"><a class="btn gold" href="#register">Save my seat</a><a class="btn ghost" href="#agenda">What we will cover</a></div>
+        <div class="ctas"><a class="btn gold" href="#register">Save my seat</a></div>
         <div class="join" id="join"><span>Reminders and updates:</span><span id="joinBtns"></span></div>
       </div>
 
@@ -361,57 +242,6 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
     </div>
   </div>
 
-  <div class="band" aria-hidden="true"><div class="band-track"><span>Investment strategies</span><span>Trending stories</span><span>Last week's technicals</span><span>Stocks we are discussing</span><span>Sunday 25 Oct, 9 PM</span><span>Investment strategies</span><span>Trending stories</span><span>Last week's technicals</span><span>Stocks we are discussing</span><span>Sunday 25 Oct, 9 PM</span></div></div>
-
-  <section class="block" id="agenda">
-    <div class="sec-h"><h2>Four things, one hour</h2><p>Sunday 25 October, 9 PM. The live data below updates every evening till Sunday.</p></div>
-    <div class="agenda">
-      <a class="ag" href="#t1"><span class="n">01</span><div class="ill"><svg viewBox="0 0 160 84"><g class="bars" fill="#2f6b4f"><rect x="34" y="30" width="16" height="44" rx="3"/><rect x="58" y="22" width="16" height="52" rx="3" fill="#b08d57"/><rect x="82" y="38" width="16" height="36" rx="3"/><rect x="106" y="14" width="16" height="60" rx="3" fill="#b08d57"/></g></svg></div><h3>Investment strategies</h3><p>Momentum, value, quality and mixing them. What works, and when it hurts.</p></a>
-      <a class="ag" href="#t2"><span class="n">02</span><div class="ill"><svg viewBox="0 0 160 84"><rect x="40" y="12" width="80" height="60" rx="6" fill="#fffdf8" stroke="#e4dccb"/><g class="paper-lines" fill="#cdbf9f"><rect x="50" y="22" width="60" height="7" rx="3" fill="#1f4d3a"/><rect x="50" y="35" width="52" height="5" rx="2"/><rect x="50" y="45" width="58" height="5" rx="2"/><rect x="50" y="55" width="40" height="5" rx="2"/></g></svg></div><h3>Trending stories</h3><p>The headlines everyone is talking about, and what is real.</p></a>
-      <a class="ag" href="#t3"><span class="n">03</span><div class="ill"><svg viewBox="0 0 160 84"><g stroke="#6c786f" stroke-width="1.5"><path d="M40 30v24M58 24v30M76 34v26M94 20v26M112 14v26"/></g><g><rect x="36" y="34" width="8" height="14" fill="#b4442f"/><rect x="54" y="28" width="8" height="18" fill="#23794f"/><rect x="72" y="38" width="8" height="14" fill="#b4442f"/><rect x="90" y="24" width="8" height="16" fill="#23794f"/><rect x="108" y="18" width="8" height="16" fill="#23794f"/></g><polyline class="mini-line" points="30,60 60,50 90,52 130,22" fill="none" stroke="#b08d57" stroke-width="3" stroke-linecap="round"/></svg></div><h3>Last week's technicals</h3><p>Nifty, breadth, sectors and what the charts were saying.</p></a>
-      <a class="ag" href="#t4"><span class="n">04</span><div class="ill"><svg viewBox="0 0 160 84"><g fill="#e4dccb"><rect x="24" y="26" width="26" height="32" rx="5"/><rect x="58" y="26" width="26" height="32" rx="5"/><rect x="92" y="26" width="26" height="32" rx="5"/><rect x="126" y="26" width="26" height="32" rx="5"/></g><g class="lens"><circle cx="38" cy="40" r="15" fill="rgba(176,141,87,.18)" stroke="#1f4d3a" stroke-width="4"/><path d="M49 51l10 10" stroke="#1f4d3a" stroke-width="5" stroke-linecap="round"/></g></svg></div><h3>Stocks we are discussing</h3><p>Names that broke out or lead their sectors. For discussion only.</p></a>
-    </div>
-  </section>
-
-  <section class="block" style="padding-top:6px">
-    <article class="topic" id="t1">
-      <div class="topic-h"><span class="n">1</span><div><h3>Investment strategies</h3><p>Four ways to pick stocks. Tap a card to see what we will discuss.</p></div></div>
-      <div class="flips">
-        <button class="flip" type="button"><span class="flip-in"><span class="fc"><span class="hint">Tap</span><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17 9 11l4 4 8-8"/><path d="M15 7h6v6"/></svg></span><b>Momentum</b><span>Buy what is already going up?</span></span><span class="bc"><b>Momentum</b><ul><li>Why strength tends to carry on</li><li>Why it hurts when the trend stops</li><li>How often to check and change</li></ul></span></span></button>
-        <button class="flip" type="button"><span class="flip-in"><span class="fc"><span class="hint">Tap</span><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12 12 20l-8-8V4h8z"/><circle cx="8" cy="8" r="1.5"/></svg></span><b>Value</b><span>Cheap for a reason, or cheap by mistake?</span></span><span class="bc"><b>Value</b><ul><li>What "cheap" really means</li><li>Value traps and how to spot them</li><li>Why value needs patience</li></ul></span></span></button>
-        <button class="flip" type="button"><span class="flip-in"><span class="fc"><span class="hint">Tap</span><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v5c0 5 3.4 8 8 9 4.6-1 8-4 8-9V7z"/><path d="m9 12 2 2 4-4"/></svg></span><b>Quality</b><span>Does it pay to own boring, steady businesses?</span></span><span class="bc"><b>Quality</b><ul><li>Steady profits, low debt, good returns on capital</li><li>Paying up for quality: when it is worth it</li><li>How quality behaves in a falling market</li></ul></span></span></button>
-        <button class="flip" type="button"><span class="flip-in"><span class="fc"><span class="hint">Tap</span><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="9" r="5"/><circle cx="16" cy="9" r="5"/><circle cx="12" cy="16" r="5"/></svg></span><b>Multi-factor</b><span>Mixing styles so the falls are smaller.</span></span><span class="bc"><b>Multi-factor</b><ul><li>Why one style alone can be a rough ride</li><li>How mixing styles smooths the journey</li><li>How we are building ours</li></ul></span></span></button>
-      </div>
-      <div class="say"><img src="icons/dalal-head.webp" alt="" width="40" height="40" loading="lazy"><span>Strategy wahi jo aap neend kharab kiye bina follow kar sako.</span></div>
-    </article>
-
-    <article class="topic" id="t2">
-      <div class="topic-h"><span class="n">2</span><div><h3>Trending stories</h3><p id="t2-sub">The headlines doing the rounds right now</p></div></div>
-      <ul class="stories" id="stories"><li><div class="ghostline"></div><div class="ghostline" style="width:70%"></div></li><li><div class="ghostline"></div></li><li><div class="ghostline"></div></li></ul>
-      <p class="asof">Live headlines from the market news feed, updated through the day. On Sunday we pick the ones that matter and explain what is noise.</p>
-      <div class="say"><img src="icons/dalal-head.webp" alt="" width="40" height="40" loading="lazy"><span>Headline se aage ki baat karenge.</span></div>
-    </article>
-
-    <article class="topic" id="t3">
-      <div class="topic-h"><span class="n">3</span><div><h3>Last week's technicals</h3><p id="t3-sub">Indices, breadth and sectors</p></div></div>
-      <div class="tiles" id="idx"><div class="tile"><div class="ghostline"></div><div class="ghostline"></div></div><div class="tile"><div class="ghostline"></div><div class="ghostline"></div></div><div class="tile"><div class="ghostline"></div><div class="ghostline"></div></div><div class="tile"><div class="ghostline"></div><div class="ghostline"></div></div></div>
-      <div class="tech">
-        <div><h4>Market breadth</h4><div id="breadth"><div class="ghostline"></div><div class="ghostline"></div></div></div>
-        <div><h4>Highs, lows and mood</h4><div id="hilo"><div class="ghostline"></div><div class="ghostline"></div></div></div>
-        <div><h4>Sectors this week</h4><ul class="list" id="secs"><li><div class="ghostline" style="width:100%"></div></li></ul></div>
-      </div>
-      <div class="say"><img src="icons/dalal-head.webp" alt="" width="40" height="40" loading="lazy"><span>Chart kya bol raha tha, aur humne kya miss kiya: Sunday ko.</span></div>
-    </article>
-
-    <article class="topic" id="t4">
-      <div class="topic-h"><span class="n">4</span><div><h3>Stocks we are discussing</h3><p>From our screeners. Bring your own names too.</p></div></div>
-      <div class="seg" id="stkSeg"><button class="on" data-v="high_52w" type="button">52-week high breakouts</button><button data-v="leaders" type="button">Market leaders</button><button data-v="rectangle" type="button">Base breakouts</button></div>
-      <div class="stocks" id="stocks"><div class="stk"><div class="ghostline"></div><div class="ghostline"></div></div><div class="stk"><div class="ghostline"></div><div class="ghostline"></div></div><div class="stk"><div class="ghostline"></div><div class="ghostline"></div></div></div>
-      <p class="asof" id="stk-note">For learning and discussion only. Not a recommendation to buy or sell.</p>
-      <div class="say"><img src="icons/dalal-head.webp" alt="" width="40" height="40" loading="lazy"><span>Apne stocks bhi le aana, saath mein discuss karenge.</span></div>
-    </article>
-  </section>
-
   <section class="block">
     <div class="terminal">
       <div><div class="say" style="margin:0 0 10px"><img src="icons/dalal-head.webp" alt="" width="40" height="40" loading="lazy"><span style="background:rgba(255,255,255,.12);color:#fff">Session se pehle ek baar ghoom aao.</span></div><h2>Explore the Street ka Dalal terminal</h2><p>Screeners, sectors, results, news and the pre-market page. Free with Google sign-in.</p></div>
@@ -421,7 +251,7 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
 </main>
 <footer class="wrap">Street ka Dalal · For learning and discussion only. Not investment advice, and no buy or sell calls.</footer>
 <div class="float-cta" id="floatCta"><a class="btn gold" href="#register">Save my seat for Sunday 9 PM</a></div>
-<canvas id="confetti" aria-hidden="true"></canvas>
+<canvas id="sky" aria-hidden="true"></canvas>
 
 <script>
 (() => {
@@ -437,16 +267,64 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
   const tone = (n) => (n > 0 ? 'up' : n < 0 ? 'down' : '');
   const store = { get: (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
 
+  /* fireworks over the whole page: a show when the page opens, a bigger one after sign-up */
+  const sky = (() => {
+    const cv = $('#sky'), ctx = cv.getContext('2d');
+    const cols = ['#ffd27a', '#ff8a3d', '#ff4f5e', '#ff7ad9', '#7fd3a0', '#8fd0ff', '#ffffff', '#d9b878'];
+    let rockets = [], sparks = [], running = false, W = 0, H = 0;
+    const fit = () => { const dpr = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); };
+    addEventListener('resize', fit); fit();
+    const rnd = (a, b) => a + Math.random() * (b - a);
+    function burst(x, y) {
+      const c1 = cols[(Math.random() * cols.length) | 0], c2 = cols[(Math.random() * cols.length) | 0];
+      const n = W < 600 ? 55 : 80, ring = Math.random() < 0.35;
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2 + rnd(-0.05, 0.05), sp = ring ? 4.2 : rnd(1.2, 5.5);
+        sparks.push({ x, y, px: x, py: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: rnd(55, 85), age: 0, c: Math.random() < 0.7 ? c1 : c2, tw: Math.random() < 0.3 });
+      }
+    }
+    function launch() {
+      const x = rnd(W * 0.12, W * 0.88), ty = rnd(H * 0.12, H * 0.42);
+      rockets.push({ x, y: H + 10, px: x, py: H + 10, vx: rnd(-1, 1), vy: -Math.sqrt(2 * 0.12 * (H + 10 - ty)), c: '#ffe2a8' });
+    }
+    function frame() {
+      ctx.clearRect(0, 0, W, H);
+      ctx.globalCompositeOperation = 'lighter';
+      rockets = rockets.filter((r) => {
+        r.px = r.x; r.py = r.y; r.x += r.vx; r.y += r.vy; r.vy += 0.12;
+        ctx.strokeStyle = r.c; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(r.px, r.py + 8); ctx.lineTo(r.x, r.y); ctx.stroke();
+        if (r.vy >= -0.5) { burst(r.x, r.y); return false; }
+        return true;
+      });
+      sparks = sparks.filter((p) => {
+        p.px = p.x; p.py = p.y; p.vx *= 0.975; p.vy = p.vy * 0.975 + 0.06; p.x += p.vx; p.y += p.vy; p.age++;
+        const k = 1 - p.age / p.life;
+        if (k <= 0) return false;
+        ctx.globalAlpha = p.tw ? k * (0.4 + Math.random() * 0.6) : k;
+        ctx.strokeStyle = p.c; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(p.px - p.vx * 2, p.py - p.vy * 2); ctx.lineTo(p.x, p.y); ctx.stroke();
+        return true;
+      });
+      ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+      if (rockets.length || sparks.length) requestAnimationFrame(frame); else { running = false; ctx.clearRect(0, 0, W, H); }
+    }
+    return function show(count, every) {
+      if (calm) return;
+      for (let i = 0; i < count; i++) setTimeout(() => { launch(); if (!running) { running = true; requestAnimationFrame(frame); } }, i * every + rnd(0, every * 0.6));
+    };
+  })();
+  setTimeout(() => sky(9, 420), 500);
+
   /* hero background: candles grow one by one, then a gold trend line draws over them */
   (function chart() {
-    const svg = $('#chart'), W = 1200, H = 400, n = 34;
-    let y = 300, out = '', pts = [];
+    const svg = $('#chart'), W = 1200, n = 34;
+    let y = 300, out = '';
+    const pts = [];
     for (let i = 0; i < n; i++) {
       const x = 20 + i * ((W - 40) / (n - 1));
       const move = Math.sin(i * 1.7) * 26 - 6 - (i > 22 ? 5 : 0);
       const o = y, c = Math.max(40, Math.min(360, y + move));
       const hi = Math.min(o, c) - 10 - (i * 7) % 18, lo = Math.max(o, c) + 10 + (i * 5) % 14;
-      const up = c < o, col = up ? '#7fd3a0' : '#f2a08f';
+      const col = c < o ? '#7fd3a0' : '#f2a08f';
       out += `<g class="cdl" style="animation-delay:${(i * 0.06).toFixed(2)}s"><line x1="${x}" x2="${x}" y1="${hi}" y2="${lo}" stroke="${col}" stroke-width="2"/><rect x="${x - 7}" y="${Math.min(o, c)}" width="14" height="${Math.max(4, Math.abs(c - o))}" rx="2" fill="${col}"/></g>`;
       pts.push(`${x.toFixed(1)},${c.toFixed(1)}`); y = c;
     }
@@ -458,18 +336,6 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
       const c = document.createElement('span'); c.className = 'coin'; c.textContent = '₹';
       c.style.cssText = `left:${l}%;--s:${s}px;--d:${d}s;--dl:${dl}s`; coins.appendChild(c);
     });
-  })();
-
-  /* rotating word in the headline */
-  (function rotate() {
-    const r = $('#rot'); if (!r || calm) return;
-    const spans = r.children, n = spans.length - 1;   // last word repeats the first so the loop is seamless
-    let i = 0;
-    setInterval(() => {
-      i++;
-      [...spans].forEach((s) => { s.style.transform = `translateY(-${i * 100}%)`; });
-      if (i === n) setTimeout(() => { [...spans].forEach((s) => { s.style.transition = 'none'; s.style.transform = 'translateY(0)'; }); i = 0; void r.offsetWidth; [...spans].forEach((s) => { s.style.transition = ''; }); }, 600);
-    }, 2200);
   })();
 
   /* countdown with flipping digits */
@@ -490,17 +356,12 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
   tick();
 
   /* Dalal's speech bubble */
-  const lines = ['Arre, register kar lo!', 'Sunday, 9 baje. Milte hain.', 'Seat free hai, bas naam likho.', 'Strategy, charts, stocks: sab ek ghante mein.', 'Calendar mein daal denge, tension mat lo.'];
+  const lines = ['Arre, register kar lo!', 'Sunday, 9 baje. Milte hain.', 'Seat free hai, bas naam likho.', 'Calendar mein daal denge, tension mat lo.'];
   let li = 0;
   setInterval(() => { const b = $('#bubble'); if (!b || b.dataset.fixed) return; li = (li + 1) % lines.length; b.classList.remove('swap'); void b.offsetWidth; b.textContent = lines[li]; b.classList.add('swap'); }, 4200);
 
   /* community link */
   $('#joinBtns').innerHTML = `<a class="jb" style="background:#25D366" href="${WA}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.5l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.3 2.2 2.2 0 0 0 .1-1.3c0-.1-.2-.2-.5-.3Z"/></svg>WhatsApp community</a>`;
-
-  /* scroll progress bar */
-  const prog = $('#progress');
-  const onScroll = () => { const h = document.documentElement; prog.style.transform = `scaleX(${Math.min(1, h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight))})`; };
-  addEventListener('scroll', onScroll, { passive: true }); onScroll();
 
   /* signed-in members: their Google email is used by default (toggle off to type another one).
      Firebase loads after the page is on screen, so it never slows the first view. */
@@ -539,35 +400,22 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
   });
   (window.requestIdleCallback || ((f) => setTimeout(f, 600)))(loadAuth);
 
-  /* confetti when someone registers */
-  function confetti() {
-    if (calm) return;
-    const cv = $('#confetti'), ctx = cv.getContext('2d'), dpr = devicePixelRatio || 1;
-    cv.width = innerWidth * dpr; cv.height = innerHeight * dpr; ctx.scale(dpr, dpr);
-    const box = $('#formCard').getBoundingClientRect(), ox = box.left + box.width / 2, oy = box.top + 80;
-    const cols = ['#d9b878', '#b08d57', '#2f6b4f', '#1f4d3a', '#e9dcc3', '#23794f', '#f2a08f'];
-    const ps = Array.from({ length: 160 }, () => ({ x: ox, y: oy, vx: (Math.random() - 0.5) * 14, vy: -Math.random() * 13 - 4, w: 6 + Math.random() * 6, h: 8 + Math.random() * 8, r: Math.random() * 6, vr: (Math.random() - 0.5) * 0.4, c: cols[(Math.random() * cols.length) | 0] }));
-    const t0 = performance.now();
-    (function frame(t) {
-      ctx.clearRect(0, 0, innerWidth, innerHeight);
-      ps.forEach((p) => { p.vy += 0.35; p.vx *= 0.99; p.x += p.vx; p.y += p.vy; p.r += p.vr; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * Math.abs(Math.cos(p.r * 2))); ctx.restore(); });
-      if (t - t0 < 3200) requestAnimationFrame(frame); else ctx.clearRect(0, 0, innerWidth, innerHeight);
-    })(t0);
-  }
-
   /* registration */
   const gcal = () => 'https://calendar.google.com/calendar/render?action=TEMPLATE'
     + '&text=' + encodeURIComponent('Street ka Dalal Community Meet 3')
     + '&dates=20261025T153000Z/20261025T163000Z'
-    + '&details=' + encodeURIComponent('Investment strategies, the trending stories, last week\'s technicals and the stocks we are discussing.' + (MEET ? '\nJoin: ' + MEET : '\nThe Meet link comes with the calendar invite and on our WhatsApp community.'))
+    + '&details=' + encodeURIComponent('Street ka Dalal Community Meet 3, live on Google Meet.' + (MEET ? '\nJoin: ' + MEET : '\nThe Meet link comes with the calendar invite and on our WhatsApp community.'))
     + (MEET ? '&location=' + encodeURIComponent(MEET) : '');
+  const DIYA = '<svg class="diya" viewBox="0 0 96 80" aria-hidden="true"><ellipse class="glow" cx="48" cy="24" rx="26" ry="22" fill="#ffcf6b" opacity=".5"/><path class="flame" d="M48 6c6 9 9 15 9 20a9 9 0 0 1-18 0c0-5 3-11 9-20Z" fill="#ff9b2e"/><path class="flame" d="M48 15c3 5 4.5 8 4.5 11a4.5 4.5 0 0 1-9 0c0-3 1.5-6 4.5-11Z" fill="#ffe7a0"/><path d="M10 46h76c-3 15-18 26-38 26S13 61 10 46Z" fill="#b4442f"/><path d="M10 46h76" stroke="#d9b878" stroke-width="5" stroke-linecap="round"/><path d="M26 58h44" stroke="#d9b878" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="4 6"/></svg>';
   function done(name, again) {
-    $('#formCard').innerHTML = `<div class="done"><div class="tick"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg></div>
-      <h2>You are in${name ? `, ${esc(name.split(' ')[0])}` : ''}!</h2>
-      <p class="sub" style="color:var(--muted)">${again ? 'Your registration is saved.' : 'See you on Sunday, 25 October at 9:00 PM.'}</p>
+    const first = name ? esc(name.split(' ')[0]) : '';
+    $('#formCard').innerHTML = `<div class="done">${DIYA}
+      <p class="wish">Happy Diwali${first ? `, ${first}` : ''}!</p>
+      <h2>You are in for Community Meet 3</h2>
+      <p class="sub" style="color:var(--muted);margin:6px 0 0">${again ? 'Your registration is saved.' : 'See you on Sunday, 25 October at 9:00 PM.'} Wishing you and your family a bright, happy and prosperous Diwali.</p>
       ${MEET ? `<a class="meet" href="${MEET}" target="_blank" rel="noopener">Meet link: ${MEET.replace('https://', '')}</a>` : '<p class="meet">The Meet link comes with your calendar invite and on our WhatsApp community.</p>'}
       <div class="btns"><a class="btn primary" href="${gcal()}" target="_blank" rel="noopener">Add to my Google Calendar</a><a class="btn light" href="${WA}" target="_blank" rel="noopener">Join the WhatsApp community</a></div></div>`;
-    const b = $('#bubble'); b.dataset.fixed = '1'; b.textContent = 'Badhiya! Sunday ko milte hain.';
+    const b = $('#bubble'); b.dataset.fixed = '1'; b.textContent = 'Happy Diwali! Sunday ko milte hain.';
     const f = $('#floatCta'); if (f) f.remove();
   }
   const saved = store.get('skd-reg-' + EVENT);
@@ -590,7 +438,7 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
       if (!r.ok || !j.ok) throw new Error(j.error || 'Could not save right now. Please try again.');
       store.set('skd-reg-' + EVENT, { name: body.name, at: Date.now() });
       done(body.name, j.again);
-      confetti();
+      sky(16, 260);
     } catch (x) {
       oops(x.name === 'TimeoutError' ? 'The network is slow. Please try again.' : x.message);
       btn.disabled = false; btn.textContent = 'Register for Sunday';
@@ -601,106 +449,13 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
   const fc = $('#floatCta');
   if (fc && 'IntersectionObserver' in window) new IntersectionObserver(([en]) => fc.classList.toggle('hide', en.isIntersecting), { threshold: 0.2 }).observe($('#register'));
 
-  /* cards and blocks rise in as they come on screen */
-  const io = 'IntersectionObserver' in window ? new IntersectionObserver((ens) => ens.forEach((en) => { if (en.isIntersecting) { en.target.classList.add('in-view'); io.unobserve(en.target); } }), { threshold: 0.12 }) : null;
-  document.querySelectorAll('.ag, .topic').forEach((el, i) => { if (el.classList.contains('ag')) el.style.transitionDelay = `${(i % 4) * 100}ms, ${(i % 4) * 100}ms, 0ms, 0ms`; io ? io.observe(el) : el.classList.add('in-view'); });
-
-  /* agenda cards tilt toward the pointer */
-  if (!calm && matchMedia('(hover: hover)').matches) document.querySelectorAll('.ag').forEach((el) => {
-    el.addEventListener('pointermove', (e) => { const r = el.getBoundingClientRect(); el.style.setProperty('--ry', `${((e.clientX - r.left) / r.width - 0.5) * 14}deg`); el.style.setProperty('--rx', `${-((e.clientY - r.top) / r.height - 0.5) * 14}deg`); });
-    el.addEventListener('pointerleave', () => { el.style.setProperty('--rx', '0deg'); el.style.setProperty('--ry', '0deg'); });
-  });
-
-  /* strategy cards flip on tap (hover flips them on a computer) */
-  document.querySelectorAll('.flip').forEach((b) => b.addEventListener('click', () => b.classList.toggle('on')));
-
-  /* live data: loads only when its block comes near the screen */
-  const cache = {};
-  const data = (p) => (cache[p] = cache[p] || fetch(`data/${p}.json`).then((r) => (r.ok ? r.json() : Promise.reject(new Error(r.status)))));
-  function whenNear(sel, fn) {
-    const el = $(sel);
-    if (!('IntersectionObserver' in window)) return fn();
-    const o = new IntersectionObserver(([en]) => { if (en.isIntersecting) { o.disconnect(); fn(); } }, { rootMargin: '300px 0px' });
-    o.observe(el);
-  }
-  const fail = (sel, msg) => { const el = $(sel); if (el) el.innerHTML = `<p class="asof">${msg}</p>`; };
-  const spark = (v) => {
-    v = (v || []).filter((x) => x != null).slice(-20);
-    if (v.length < 2) return '';
-    const mn = Math.min(...v), mx = Math.max(...v), w = 100, h = 32;
-    const pts = v.map((x, i) => `${(i * w / (v.length - 1)).toFixed(1)},${(h - 2 - ((x - mn) / (mx - mn || 1)) * (h - 4)).toFixed(1)}`).join(' ');
-    return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${v[v.length - 1] >= v[0] ? '#23794f' : '#b4442f'}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`;
-  };
-  const fdate = (s) => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }); };
-  const stagger = (box) => { [...box.children].forEach((c, i) => { c.style.transitionDelay = `${i * 80}ms`; }); requestAnimationFrame(() => requestAnimationFrame(() => box.classList.add('go'))); };
-
   /* ticker tape at the very top */
-  data('market').then((m) => {
+  fetch('data/market.json').then((r) => (r.ok ? r.json() : Promise.reject(new Error(r.status)))).then((m) => {
     const names = { 'NIFTY 50': 'Nifty 50', 'NIFTY 500': 'Nifty 500', 'NIFTY MIDCAP 150': 'Midcap 150', 'NIFTY SMALLCAP 250': 'Smallcap 250' };
     const items = [...(m.indices || []).map((i) => [names[i.name] || i.name, num(i.last, 0), i.returns?.['1D']]), ...(m.sectoral || []).filter((s) => s.returns?.['1D'] != null).slice(0, 14).map((s) => [s.name.replace(/^NIFTY /i, 'Nifty '), '', s.returns['1D']])];
-    const html = items.map(([n, v, c]) => `<span><i></i>${esc(n)} ${v ? `<b>${v}</b>` : ''} <em class="${tone(c)}" style="font-style:normal">${pct(c)}</em></span>`).join('') + `<span><i></i><b>Community Meet 3</b> Sunday 25 Oct, 9 PM</span>`;
+    const html = items.map(([n, v, c]) => `<span><i></i>${esc(n)} ${v ? `<b>${v}</b>` : ''} <em class="${tone(c)}" style="font-style:normal">${pct(c)}</em></span>`).join('') + '<span><i></i><b>Community Meet 3</b> Sunday 25 Oct, 9 PM</span>';
     $('#ticker').innerHTML = html + html;
   }).catch(() => { const s = '<span><i></i><b>Community Meet 3</b> Sunday 25 October, 9 PM IST on Google Meet</span>'; $('#ticker').innerHTML = s.repeat(8); });
-
-  whenNear('#t2', () => {
-    data('news').then((n) => {
-      const hs = (n.headlines || []).filter((h) => h.headline && /^https:\/\//.test(h.link || '')).slice(0, 6);
-      const host = (u) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; } };
-      const when = (ms) => { const d = new Date(ms); return isNaN(d) ? '' : d.toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }); };
-      const box = $('#stories');
-      box.innerHTML = hs.map((h, i) => `<li><a href="${esc(h.link)}" target="_blank" rel="noopener"><span class="no">${i + 1}</span><span><span class="hl">${esc(h.headline)}</span><span class="src">${esc(host(h.link))}${h.published ? ` · ${when(h.published)}` : ''}</span></span></a></li>`).join('') || '<li>No headlines right now. Check back in a bit.</li>';
-      stagger(box);
-    }).catch(() => fail('#stories', 'Headlines could not load. They are on the terminal under News.'));
-  });
-
-  whenNear('#t3', () => {
-    data('market').then((m) => {
-      const names = { 'NIFTY 50': 'Nifty 50', 'NIFTY 500': 'Nifty 500', 'NIFTY MIDCAP 150': 'Midcap 150', 'NIFTY SMALLCAP 250': 'Smallcap 250' };
-      $('#idx').innerHTML = (m.indices || []).map((i) => `<div class="tile"><div class="k">${esc(names[i.name] || i.name)}</div><div class="v">${num(i.last, 0)}</div><div class="c ${tone(i.returns?.['1W'])}">${pct(i.returns?.['1W'])} <span style="color:var(--muted);font-weight:500">1 week</span></div>${spark(i.spark)}</div>`).join('');
-      $('#t3-sub').textContent = `As of the ${fdate(m.as_of)} close. Updates every evening till Sunday.`;
-      const bt = m.breadth_trend || {}, b = m.breadth || {};
-      const g = (lab, x) => (x && x.now != null ? `<div class="gauge"><div class="row"><span>${lab}</span><b>${num(x.now, 0)}%</b></div><div class="bar"><i data-w="${Math.max(0, Math.min(100, x.now))}"></i>${x['1m_ago'] != null ? `<u style="--was:${Math.max(0, Math.min(100, x['1m_ago']))}%"></u>` : ''}</div><small>A month ago: ${num(x['1m_ago'], 0)}% (gold mark)</small></div>` : '');
-      $('#breadth').innerHTML = (g('Stocks above 50-day average', bt.above_50) + g('Stocks above 200-day average', bt.above_200)) || '<p class="asof">Breadth data not in yet.</p>';
-      requestAnimationFrame(() => requestAnimationFrame(() => document.querySelectorAll('#breadth .bar i').forEach((el) => { el.style.width = el.dataset.w + '%'; })));
-      const md = m.mood_detail || {};
-      const moodTone = /off|weak|fear/i.test(md.state || b.state || '') ? 'down' : /on|strong|greed/i.test(md.state || b.state || '') ? 'up' : '';
-      $('#hilo').innerHTML = `<div class="hl-box"><div><b class="up">${num(b.new_highs)}</b><small>new 52-week highs</small></div><div><b class="down">${num(b.new_lows)}</b><small>new 52-week lows</small></div></div>
-        <div class="hl-box"><div><b class="up">${num(b.advances)}</b><small>rose</small></div><div><b class="down">${num(b.declines)}</b><small>fell</small></div></div>
-        ${md.state || b.state ? `<span class="mood ${moodTone}">Market mood: ${esc(md.state || b.state)}</span>` : ''}<p class="asof">Last session, all NSE stocks.</p>`;
-    }).catch(() => { fail('#idx', 'Index data could not load. It is on the terminal.'); fail('#breadth', ''); fail('#hilo', ''); });
-    data('sectors').then((s) => {
-      const xs = (s.sectors || []).filter((x) => x.returns?.['1W'] != null).sort((a, b) => b.returns['1W'] - a.returns['1W']);
-      const pick = [...xs.slice(0, 3), ...xs.slice(-3)];
-      $('#secs').innerHTML = pick.map((x) => `<li><span class="nm">${esc(x.name)}<small>${esc(x.trend || '')}</small></span><b class="${tone(x.returns['1W'])}">${pct(x.returns['1W'], 1)}</b></li>`).join('') || '<li>No sector data yet.</li>';
-    }).catch(() => fail('#secs', 'Sector data could not load.'));
-  });
-
-  whenNear('#t4', () => {
-    data('screeners').then((sc) => {
-      const pat = Object.fromEntries((sc.patterns || []).map((p) => [p.key, p]));
-      const card = (x, chips, nums) => `<div class="stk"><div class="t"><b>${esc(x.sym)}</b>${chips}</div><div class="s">${esc(x.name)}${x.sector ? ` · ${esc(x.sector)}` : ''}</div><div class="nums">${nums}</div></div>`;
-      const views = {
-        high_52w: () => (pat.high_52w?.rows || []).slice(0, 9).map((x) => card(x, `<span class="chip gold">${esc(fdate(x.date))}</span>`, `<span>Close <b>${num(x.last, 1)}</b></span><span>52w high <b>${num(x.high_52w, 1)}</b></span>`)),
-        leaders: () => (sc.leadership?.leaders || []).slice(0, 9).map((x) => card(x, `<span class="chip good">RS ${esc(x.rs)}</span>`, `<span>1M <b class="${tone(x.ret_1m)}">${pct(x.ret_1m, 1)}</b></span><span>3M <b class="${tone(x.ret_3m)}">${pct(x.ret_3m, 0)}</b></span>`)),
-        rectangle: () => (pat.rectangle?.rows || []).slice(0, 9).map((x) => card(x, `<span class="chip gold">${esc(fdate(x.date))}</span>`, `<span>Close <b>${num(x.last, 1)}</b></span><span>Base <b>${num(x.base_bars)} days</b></span>`)),
-      };
-      const notes = {
-        high_52w: 'Stocks that closed at a new 52-week high recently, from our screener.',
-        leaders: 'Market leaders by relative strength (strongest 12-month performers, liquid stocks).',
-        rectangle: 'Stocks that broke out of a sideways range recently, from our screener.',
-      };
-      const show = (k) => {
-        const box = $('#stocks');
-        box.classList.remove('go');
-        box.innerHTML = views[k]().join('') || '<p class="asof">Nothing on this list right now.</p>';
-        $('#stk-note').textContent = `${notes[k]} For learning and discussion only. Not a recommendation to buy or sell.`;
-        stagger(box);
-        document.querySelectorAll('#stkSeg button').forEach((b) => b.classList.toggle('on', b.dataset.v === k));
-      };
-      $('#stkSeg').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) show(b.dataset.v); });
-      show('high_52w');
-    }).catch(() => fail('#stocks', 'The lists could not load. They are on the terminal under Screeners.'));
-  });
 })();
 </script>
 </body>
