@@ -66,15 +66,18 @@ h1,h2,h3{font-family:var(--serif);color:var(--green);margin:0;letter-spacing:-.0
 .coin{position:absolute;bottom:-50px;width:var(--s,34px);height:var(--s,34px);border-radius:50%;background:radial-gradient(circle at 35% 30%,#f3dca8,var(--gold) 70%);color:var(--deep);display:grid;place-items:center;font:700 calc(var(--s,34px)*.5) var(--sans);opacity:0;box-shadow:inset 0 -3px 0 rgba(0,0,0,.15);animation:floatup var(--d,11s) var(--dl,0s) linear infinite}
 @keyframes floatup{0%{transform:translateY(0) rotate(0);opacity:0}10%{opacity:.5}80%{opacity:.35}100%{transform:translateY(-640px) rotate(240deg);opacity:0}}
 
-.hero{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,.82fr);gap:30px 90px;align-items:center;padding:46px 46px 52px}
+.hero{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,.82fr);grid-template-areas:"intro form" "more form";gap:0 90px;padding:46px 46px 52px}
 .hero>div{min-width:0}
+.intro{grid-area:intro;align-self:end}
+.more{grid-area:more;align-self:start}
+.form-zone{grid-area:form;align-self:center}
 .eyebrow{display:inline-flex;align-items:center;gap:9px;background:rgba(233,220,195,.1);border:1px solid rgba(233,220,195,.2);border-radius:999px;padding:6px 14px 6px 10px;font:700 12px var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--gold-2)}
 .live-dot{width:8px;height:8px;border-radius:50%;background:#f06a4f;box-shadow:0 0 0 0 rgba(240,106,79,.6);animation:ping 1.8s infinite}
 @keyframes ping{70%{box-shadow:0 0 0 10px rgba(240,106,79,0)}100%{box-shadow:0 0 0 0 rgba(240,106,79,0)}}
 .hero h1{color:#fff;font-size:clamp(38px,6vw,70px);line-height:1.02;margin:16px 0 18px}
 .hero h1 .word{display:block;color:var(--gold-2);font-style:italic}
-.h1-in>*{display:inline-block;opacity:0;transform:translateY(24px);animation:rise .7s cubic-bezier(.2,.9,.3,1.2) forwards}
-@keyframes rise{to{opacity:1;transform:none}}
+.h1-in>*{display:inline-block;animation:rise .7s cubic-bezier(.2,.9,.3,1.2) backwards}
+@keyframes rise{from{transform:translateY(24px)}}
 .when{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 20px}
 .pill{display:inline-flex;align-items:center;gap:8px;background:rgba(233,220,195,.1);border:1px solid rgba(233,220,195,.18);border-radius:999px;padding:8px 14px;font-weight:600;font-size:15px;color:#fff}
 .pill svg{color:var(--gold-2)}
@@ -100,7 +103,7 @@ h1,h2,h3{font-family:var(--serif);color:var(--green);margin:0;letter-spacing:-.0
 @keyframes pop{from{opacity:0;transform:translateY(6px) scale(.9)}to{opacity:1;transform:none}}
 .bubble.swap{animation:pop .35s forwards}
 .card{position:relative;z-index:2;background:var(--paper);color:var(--ink);border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,.28);padding:24px;animation:cardin .8s .3s cubic-bezier(.2,.9,.3,1.15) both}
-@keyframes cardin{from{opacity:0;transform:translateY(30px) rotate(1.5deg)}to{opacity:1;transform:none}}
+@keyframes cardin{from{transform:translateY(30px) rotate(1.5deg)}to{transform:none}}
 .card::before{content:"";position:absolute;inset:-2px;border-radius:24px;padding:2px;background:conic-gradient(from var(--ang,0deg),var(--gold-2),transparent 30%,transparent 70%,var(--gold-2));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:spin 6s linear infinite;pointer-events:none}
 @property --ang{syntax:"<angle>";inherits:false;initial-value:0deg}
 @keyframes spin{to{--ang:360deg}}
@@ -125,8 +128,11 @@ label.f{display:block;font-weight:600;font-size:14px;margin:0 0 6px}
 .sw input:checked+i{background:var(--green)}
 .sw input:checked+i::after{transform:translateX(18px)}
 .sw input:focus-visible+i{box-shadow:0 0 0 3px rgba(47,107,79,.25)}
-.fill{font-size:13px;color:var(--muted);margin:-8px 0 14px}
-.linkbtn{background:none;border:0;padding:0;font:inherit;font-weight:700;color:var(--green-2);text-decoration:underline;cursor:pointer}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border:1px solid var(--line);background:#fff;border-radius:999px;padding:12px 16px;font:700 15px var(--sans);color:var(--ink);cursor:pointer;box-shadow:0 2px 6px rgba(31,46,36,.08);transition:transform .15s,box-shadow .15s}
+.gbtn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(31,46,36,.12)}
+.gbtn:disabled{opacity:.6;cursor:wait}
+.or{display:flex;align-items:center;gap:10px;margin:12px 0;color:var(--muted);font-size:13px;font-weight:600}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 .err{color:var(--down);font-size:14px;font-weight:600;min-height:20px;margin:0 0 8px}
 .err.shake{animation:shake .4s}
@@ -164,7 +170,8 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
 #sky{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:60}
 
 @media (max-width:1000px){
-  .hero{grid-template-columns:1fr;gap:26px;padding:34px 26px 40px}
+  .hero{grid-template-columns:1fr;grid-template-areas:"intro" "form" "more";gap:0;padding:34px 26px 40px}
+  .more{margin-top:28px}
   .peek{left:auto;right:14px;top:-104px;width:76px;transform:none;opacity:0;animation:fadein .6s .8s forwards, bob 3s 1.4s ease-in-out infinite}
   @keyframes fadein{to{opacity:1}}
   .bubble{left:auto;right:96px;top:-80px}
@@ -173,7 +180,24 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
 @media (max-width:640px){
   .wrap{padding:0 16px}
   .stage{border-radius:22px;margin-top:12px}
-  .hero{padding:28px 18px 30px}
+  .hero{padding:14px 14px 24px}
+  .hero h1{font-size:30px;margin:10px 0 10px}
+  .hero h1 .word{display:inline}
+  .eyebrow{font-size:11px;padding:5px 12px 5px 9px}
+  .when{gap:6px;margin:0 0 14px}
+  .pill{font-size:13px;padding:5px 10px;gap:6px}
+  .pill svg{width:15px;height:15px}
+  .peek,.bubble,.ticker,.pill.pm,#regForm p.sub{display:none}
+  .stage{margin-top:8px}
+  .or{margin:9px 0}
+  .in{margin:0 0 11px}
+  .choice{margin:0 0 11px}
+  .consent{padding:10px;margin:0 0 12px;font-size:13px}
+  .form-zone{margin-top:0}
+  .card{padding:18px 16px}
+  .form h2{font-size:22px;margin:0 0 10px}
+  .form p.sub{margin:2px 0 12px}
+  .more{margin-top:24px}
   .count .cell{width:64px}
   .count .face{font-size:26px}
   .terminal{grid-template-columns:1fr;padding:22px 22px 26px}
@@ -200,14 +224,17 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
   <div class="stage">
     <div class="stage-bg" aria-hidden="true"><div class="grid-bg"></div><svg class="chart" id="chart" viewBox="0 0 1200 400" preserveAspectRatio="none"></svg><div id="coins"></div></div>
     <div class="hero">
-      <div>
+      <div class="intro">
         <span class="eyebrow"><i class="live-dot"></i> Community Meet 3 · Free · Live</span>
         <h1 class="h1-in"><span style="animation-delay:.1s">The community</span> <span class="word" style="animation-delay:.35s">meets again.</span></h1>
         <div class="when">
-          <span class="pill"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Sunday, 25 October</span>
-          <span class="pill"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>9:00 to 10:00 PM IST</span>
-          <span class="pill"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="m16 10 6-3v10l-6-3"/></svg>Google Meet</span>
+          <span class="pill"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Sun, 25 October</span>
+          <span class="pill"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>9 to 10 PM IST</span>
+          <span class="pill pm"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="m16 10 6-3v10l-6-3"/></svg>Google Meet</span>
         </div>
+      </div>
+
+      <div class="more">
         <p class="lede">One hour, live, with the Street ka Dalal community: what is going on in the markets, what we are learning, and your questions answered. Free. Register once and we send you the calendar invite and the Meet link.</p>
         <div class="count" id="count" aria-label="Time left">
           <div class="cell"><b class="face" id="cd-d">-</b><small>days</small></div><div class="cell"><b class="face" id="cd-h">-</b><small>hours</small></div><div class="cell"><b class="face" id="cd-m">-</b><small>mins</small></div><div class="cell"><b class="face" id="cd-s">-</b><small>secs</small></div>
@@ -223,12 +250,13 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
           <form id="regForm" novalidate>
             <h2>Save your seat</h2>
             <p class="sub">Takes 20 seconds. Free.</p>
+            <div id="gWrap"><button type="button" class="gbtn" id="gsign"><svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Continue with Google</button>
+            <div class="or"><span>or type your details</span></div></div>
             <label class="f" for="name">Your name</label>
             <input class="in" id="name" name="name" autocomplete="name" maxlength="80" placeholder="Full name" required>
             <label class="f" for="email">Email (for the calendar invite)</label>
             <label class="acct" id="acct" hidden><span class="sw"><input type="checkbox" id="useLogin" checked><i></i></span><span>Use my sign-in email<b id="acctMail"></b></span></label>
-            <div id="emailWrap"><input class="in" id="email" name="email" type="email" inputmode="email" autocomplete="email" maxlength="120" placeholder="you@gmail.com" required>
-            <p class="fill" id="fillG" hidden>Already a Street ka Dalal member? <button type="button" class="linkbtn" id="gsign">Sign in with Google</button> and we fill this for you.</p></div>
+            <div id="emailWrap"><input class="in" id="email" name="email" type="email" inputmode="email" autocomplete="email" maxlength="120" placeholder="you@gmail.com" required></div>
             <label class="f">Did you attend one of our earlier sessions?</label>
             <div class="choice"><input type="radio" name="attended" id="att-y" value="yes"><label for="att-y">Yes, I did</label><input type="radio" name="attended" id="att-n" value="no"><label for="att-n">No, first time</label></div>
             <label class="consent"><input type="checkbox" id="consent" checked><span>Yes, add me to the calendar invite for this session (and send me the Meet link).</span></label>
@@ -250,7 +278,7 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
   </section>
 </main>
 <footer class="wrap">Street ka Dalal · For learning and discussion only. Not investment advice, and no buy or sell calls.</footer>
-<div class="float-cta" id="floatCta"><a class="btn gold" href="#register">Save my seat for Sunday 9 PM</a></div>
+<div class="float-cta hide" id="floatCta"><a class="btn gold" href="#register">Save my seat for Sunday 9 PM</a></div>
 <canvas id="sky" aria-hidden="true"></canvas>
 
 <script>
@@ -368,8 +396,9 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
   let fbUser = null, fbAuth = null;
   const showAcct = () => {
     const on = !!fbUser?.email;
+    if (!$('#acct')) return;   // already registered: the form has been replaced by the wish
     $('#acct').hidden = !on;
-    $('#fillG').hidden = on;
+    $('#gWrap').hidden = on;
     if (on) {
       $('#acctMail').textContent = fbUser.email;
       const nm = $('#name');
@@ -388,17 +417,25 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
       A.onAuthStateChanged(a, (u) => { fbUser = u; showAcct(); });
     } catch (e) { console.warn('sign-in not available', e); }
   }
-  $('#fillG').hidden = false;
   $('#gsign')?.addEventListener('click', async () => {
-    if (!fbAuth) await loadAuth();
-    if (!fbAuth) { $('#err').textContent = 'Google sign-in is not available here. Please type your email.'; return; }
+    const g = $('#gsign');
+    if (!fbAuth) await authReady;
+    if (!fbAuth) { $('#err').textContent = 'Google sign-in is not available here. Please type your name and email.'; return; }
     const { A, a } = fbAuth;
     const prov = new A.GoogleAuthProvider();
     prov.setCustomParameters({ prompt: 'select_account' });
-    try { await A.setPersistence(a, A.indexedDBLocalPersistence).catch(() => {}); await A.signInWithPopup(a, prov); }
-    catch (e) { if (!/popup-closed|cancelled/.test(e.code || '')) $('#err').textContent = 'Could not sign in here. Please type your email instead.'; }
+    g.disabled = true;
+    try {
+      await A.signInWithPopup(a, prov);
+      $('#err').textContent = '';
+      $('#att-y').focus();
+    } catch (e) {
+      if (!/popup-closed|cancelled/.test(e.code || '')) $('#err').textContent = 'Google sign-in did not work in this browser. Please type your name and email.';
+    }
+    g.disabled = false;
   });
-  (window.requestIdleCallback || ((f) => setTimeout(f, 600)))(loadAuth);
+  // loaded right away (not when idle) so the Google pop-up opens straight from the tap
+  const authReady = loadAuth();
 
   /* registration */
   const gcal = () => 'https://calendar.google.com/calendar/render?action=TEMPLATE'
@@ -410,12 +447,12 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
   function done(name, again) {
     const first = name ? esc(name.split(' ')[0]) : '';
     $('#formCard').innerHTML = `<div class="done">${DIYA}
-      <p class="wish">Happy Diwali${first ? `, ${first}` : ''}!</p>
+      <p class="wish">Advance Happy Diwali${first ? `, ${first}` : ''}!</p>
       <h2>You are in for Community Meet 3</h2>
-      <p class="sub" style="color:var(--muted);margin:6px 0 0">${again ? 'Your registration is saved.' : 'See you on Sunday, 25 October at 9:00 PM.'} Wishing you and your family a bright, happy and prosperous Diwali.</p>
+      <p class="sub" style="color:var(--muted);margin:6px 0 0">${again ? 'Your registration is saved.' : 'See you on Sunday, 25 October at 9:00 PM.'} Wishing you and your family a bright, happy and prosperous Diwali in advance.</p>
       ${MEET ? `<a class="meet" href="${MEET}" target="_blank" rel="noopener">Meet link: ${MEET.replace('https://', '')}</a>` : '<p class="meet">The Meet link comes with your calendar invite and on our WhatsApp community.</p>'}
       <div class="btns"><a class="btn primary" href="${gcal()}" target="_blank" rel="noopener">Add to my Google Calendar</a><a class="btn light" href="${WA}" target="_blank" rel="noopener">Join the WhatsApp community</a></div></div>`;
-    const b = $('#bubble'); b.dataset.fixed = '1'; b.textContent = 'Happy Diwali! Sunday ko milte hain.';
+    const b = $('#bubble'); b.dataset.fixed = '1'; b.textContent = 'Advance Happy Diwali! Sunday ko milte hain.';
     const f = $('#floatCta'); if (f) f.remove();
   }
   const saved = store.get('skd-reg-' + EVENT);
