@@ -1579,36 +1579,61 @@ async function viewAdmin() {
       { k: 'created', label: 'Registered', fmt: (x) => `${fDT(x.created)}<span class="sub">${ago(x.created)}</span>` },
     ], 'No registrations yet. Share the sign-up page link on WhatsApp.')}</section>`;
   } else if (t === 'quiz') {
-    // Investor persona test results from quiz.html (functions/api/quiz.js, D1 table quiz_results)
+    // Investor persona test results from quiz.html (functions/api/quiz.js, D1 table persona_results)
     const r = await fetch('/api/quiz', { headers: { Authorization: `Bearer ${await A.idToken()}` } }).then((x) => x.json()).catch((e) => ({ error: e.message }));
     const all = r.rows || [], days = ui.admin.quizDays || 0;
     const rows = days ? all.filter((x) => Date.now() - new Date(x.created) < days * 86400000) : all;
     ui.quiz = rows;
     const LV = [['beginner', 'Beginner', 'Rising Rookie', '#3aa7b8'], ['intermediate', 'Intermediate', 'Street Smart Investor', '#23794f'], ['advanced', 'Advanced', 'Dalal Street Pro', '#b08d57']];
-    const SK = [['basics', 'Market basics'], ['charts', 'Charts'], ['fund', 'Fundamentals'], ['data', 'Market data'], ['temper', 'Temperament']];
-    const EXP = [['new', 'Just starting'], ['lt2', 'Under 2 years'], ['2to5', '2 to 5 years'], ['5plus', '5+ years']];
+    const L = {
+      years: [['none', 'Not started yet'], ['lt1', 'Under 1 year'], ['1to3', '1 to 3 years'], ['3to5', '3 to 5 years'], ['5plus', 'More than 5 years']],
+      style: [['long', 'Long-term investing'], ['sip', 'SIP and mutual funds'], ['swing', 'Swing trading'], ['intraday', 'Intraday'], ['fno', 'F&O and options'], ['watch', 'Only watching']],
+      time: [['15m', 'Under 15 min'], ['30m', 'About 30 min'], ['2h', '1 to 2 hours'], ['full', 'Full time']],
+      goal: [['wealth', 'Long-term wealth'], ['income', 'Income from trading'], ['beatfd', 'Beat FD and inflation'], ['learn', 'Learn first'], ['thrill', 'Fun and thrill']],
+      tools: [['broker', 'Broker app only'], ['tv', 'TradingView / charts'], ['screener', 'Screener websites'], ['sheets', 'Excel / Sheets'], ['options', 'Option chain tools'], ['code', 'Coding / backtests'], ['none', 'Nothing yet']],
+      learn: [['social', 'YouTube / Instagram'], ['books', 'Books'], ['courses', 'Paid courses'], ['friends', 'Friends / family'], ['tips', 'Tip groups'], ['filings', 'Reports and filings'], ['skd', 'Street ka Dalal']],
+      words: [['nifty', 'Nifty 50'], ['sensex', 'Sensex'], ['sip', 'SIP'], ['mf', 'Mutual fund'], ['sl', 'Stop loss'], ['mcap', 'Market cap'], ['ipo', 'IPO'], ['pe', 'P/E ratio'], ['brk', 'Breakout'], ['ma', 'Moving average'], ['rsi', 'RSI'], ['fii', 'FII / DII'], ['dy', 'Dividend yield'], ['prom', 'Promoter holding'], ['52w', '52-week high'], ['roce', 'ROCE'], ['fcf', 'Free cash flow'], ['oc', 'Option chain'], ['oi', 'Open interest'], ['iv', 'Implied volatility'], ['theta', 'Theta decay'], ['pcr', 'PCR'], ['ic', 'Iron condor'], ['pledge', 'Promoter pledge'], ['rs', 'Relative strength']],
+    };
+    const MOM = [['Nifty falls 10% in a week', ['Sell everything', 'Hold and wait', 'Check, add a little', 'Borrow and buy a lot']], ['Small-cap tip on Telegram', ['Put Rs 25,000', 'Put Rs 5,000', 'Check the company', 'Ignore it']], ['Your stock breaks out', ['Sell all', 'Hold with trailing stop', 'Buy more, no plan', 'Sell half']], ['Good results, stock falls', ['Panic sell', 'Read results and call', 'Buy more at once', 'Close the app']], ['"Pakka 5x" option', ['Go big Rs 30,000', 'Small bet Rs 3,000', 'Skip it', 'Paper trade']]];
     const n = rows.length, cnt = (k) => rows.filter((x) => x.level === k).length, share = (v, of = n) => (of ? Math.round((v / of) * 100) : 0);
     const avg = (f, list = rows) => (list.length ? Math.round(list.reduce((s, x) => s + (f(x) || 0), 0) / list.length) : 0);
     const people = new Set(rows.map((x) => (x.email || x.name || '').toLowerCase())).size;
-    const sk = SK.map(([k, l]) => [k, l, avg((x) => x.skills?.[k])]), weak = [...sk].sort((a, b) => a[2] - b[2])[0];
-    const bar = (v, col) => `<span style="display:block;height:10px;border-radius:6px;background:var(--paper-2);overflow:hidden"><i style="display:block;height:100%;width:${v}%;background:${col}"></i></span>`;
-    body = r.error ? `<div class="card empty">Could not load the persona test results: ${esc(r.error)}</div>` : `<div class="stats big"><div><b>${n}</b><span>games played</span></div><div><b>${people}</b><span>different people</span></div>${LV.map(([k, l, , c]) => `<div><b style="color:${c}">${cnt(k)}</b><span>${l} (${share(cnt(k))}%)</span></div>`).join('')}<div><b>${avg((x) => x.pct)}%</b><span>average score</span></div></div>
-    <div class="toolbar"><div class="seg">${[[0, 'All time'], [30, '30 days'], [7, '7 days'], [1, 'Today']].map(([d, l]) => `<button class="${d === days ? 'on' : ''}" data-act="quizDays" data-v="${d}">${l}</button>`).join('')}</div><span class="sub">Test page <a href="quiz" target="_blank" rel="noopener">street-ka-dalal.pages.dev/quiz</a></span><span class="grow"></span><button class="btn sm ghost" data-act="exportQuiz">Download CSV</button></div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin:0 0 16px">
-      <section class="card"><h2>Community level</h2><div style="display:flex;height:34px;border-radius:10px;overflow:hidden;margin:12px 0;background:var(--paper-2)">${LV.map(([k, , , c]) => (cnt(k) ? `<span title="${k}" style="flex:${cnt(k)};background:${c};color:#fff;font-weight:700;font-size:13px;display:grid;place-items:center">${share(cnt(k))}%</span>` : '')).join('')}</div>
-        ${LV.map(([k, l, nm, c]) => `<p style="display:flex;gap:8px;align-items:center;margin:6px 0"><i style="width:12px;height:12px;border-radius:3px;background:${c}"></i><b>${l}</b><span class="sub">${nm}</span><span style="flex:1"></span><b>${cnt(k)}</b></p>`).join('')}</section>
-      <section class="card"><h2>What the community knows</h2><p class="sub">Average score by topic.${n ? ` Weakest: <b>${esc(weak[1])}</b>, a good topic for the next session.` : ''}</p>
-        ${sk.map(([, l, v]) => `<div style="display:grid;grid-template-columns:120px 1fr 44px;gap:10px;align-items:center;margin:8px 0;font-size:14px"><span>${l}</span>${bar(v, v < 50 ? 'var(--down)' : 'var(--up)')}<b style="text-align:right">${v}%</b></div>`).join('')}</section>
-      <section class="card"><h2>Says vs scores</h2><p class="sub">How long people say they have invested, against the level the test gave them.</p>
-        <table style="width:100%;font-size:14px;border-collapse:collapse"><thead><tr><th style="text-align:left">Investing for</th>${LV.map(([, l]) => `<th style="text-align:right">${l}</th>`).join('')}<th style="text-align:right">Avg</th></tr></thead><tbody>
-        ${EXP.map(([k, l]) => { const g = rows.filter((x) => x.exp === k); return `<tr><td style="padding:6px 0">${l} <span class="sub" style="display:inline">(${g.length})</span></td>${LV.map(([lk]) => `<td style="text-align:right">${g.length ? share(g.filter((x) => x.level === lk).length, g.length) + '%' : '-'}</td>`).join('')}<td style="text-align:right"><b>${g.length ? avg((x) => x.pct, g) + '%' : '-'}</b></td></tr>`; }).join('')}</tbody></table></section>
+    const has = (x, k, v) => { const a = x.answers?.[k]; return Array.isArray(a) ? a.includes(v) : a === v; };
+    const bar = (v, col = 'var(--green-2)') => `<span style="display:block;height:10px;border-radius:6px;background:var(--paper-2);overflow:hidden"><i style="display:block;height:100%;width:${v}%;background:${col}"></i></span>`;
+    const bars = (title, sub, key, list, sort) => {
+      let items = list.map(([k, l]) => [l, rows.filter((x) => has(x, key, k)).length]);
+      if (sort) items = items.sort((p, q) => q[1] - p[1]);
+      return `<section class="card"><h2>${title}</h2>${sub ? `<p class="sub">${sub}</p>` : ''}${items.map(([l, c]) => `<div style="display:grid;grid-template-columns:150px 1fr 70px;gap:10px;align-items:center;margin:7px 0;font-size:14px"><span>${esc(l)}</span>${bar(share(c))}<b style="text-align:right">${share(c)}% <span class="sub" style="display:inline">${c}</span></b></div>`).join('')}</section>`;
+    };
+    const words = L.words.map(([k, l]) => [l, share(rows.filter((x) => has(x, 'words', k)).length)]).sort((p, q) => p[1] - q[1]);
+    const zeta = share(rows.filter((x) => has(x, 'words', 'zeta')).length);
+    const pls = rows.map((x) => x.pl || 0), inProfit = pls.filter((v) => v > 0).length;
+    body = r.error ? `<div class="card empty">Could not load the persona test results: ${esc(r.error)}</div>` : `<div class="stats big"><div><b>${n}</b><span>games played</span></div><div><b>${people}</b><span>different people</span></div>${LV.map(([k, l, , c]) => `<div><b style="color:${c}">${cnt(k)}</b><span>${l} (${share(cnt(k))}%)</span></div>`).join('')}<div><b>${share(inProfit)}%</b><span>ended the ₹1 lakh game in profit</span></div></div>
+    <div class="toolbar"><div class="seg">${[[0, 'All time'], [30, '30 days'], [7, '7 days'], [1, 'Today']].map(([d, l]) => `<button class="${d === days ? 'on' : ''}" data-act="quizDays" data-v="${d}">${l}</button>`).join('')}</div><span class="sub">Test page <a href="quiz" target="_blank" rel="noopener">street-ka-dalal.pages.dev/quiz</a> · average persona score ${avg((x) => x.score)}/100 · average virtual P/L ${avg((x) => x.pl).toLocaleString('en-IN')}</span><span class="grow"></span><button class="btn sm ghost" data-act="exportQuiz">Download CSV</button></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin:0 0 16px">
+      <section class="card"><h2>Community level</h2><div style="display:flex;height:34px;border-radius:10px;overflow:hidden;margin:12px 0;background:var(--paper-2)">${LV.map(([k, , , c]) => (cnt(k) ? `<span style="flex:${cnt(k)};background:${c};color:#fff;font-weight:700;font-size:13px;display:grid;place-items:center">${share(cnt(k))}%</span>` : '')).join('')}</div>
+        ${LV.map(([k, l, nm, c]) => `<p style="display:flex;gap:8px;align-items:center;margin:6px 0"><i style="width:12px;height:12px;border-radius:3px;background:${c}"></i><b>${l}</b><span class="sub" style="display:inline">${nm}</span><span style="flex:1"></span><b>${cnt(k)}</b></p>`).join('')}
+        <p class="sub" style="margin-top:12px">Average profile: experience ${avg((x) => x.profile?.exp)}%, words ${avg((x) => x.profile?.words)}%, habits ${avg((x) => x.profile?.habits)}%, tools ${avg((x) => x.profile?.tools)}%, discipline ${avg((x) => x.profile?.disc)}%.</p></section>
+      ${bars('What they do most', '', 'style', L.style, true)}
+      ${bars('Years in the market', '', 'years', L.years)}
+      <section class="card"><h2>Market words they know</h2><p class="sub">Least known first: good topics for the next sessions. ${zeta}% picked "Zeta crossover", a made-up word (an honesty check).</p>
+        <div style="max-height:420px;overflow:auto">${words.map(([l, v]) => `<div style="display:grid;grid-template-columns:150px 1fr 44px;gap:10px;align-items:center;margin:6px 0;font-size:14px"><span>${esc(l)}</span>${bar(v, v < 40 ? 'var(--down)' : 'var(--up)')}<b style="text-align:right">${v}%</b></div>`).join('')}</div></section>
+      ${bars('Where they learn', 'Pick-all question, so the shares add up to more than 100%.', 'learn', L.learn, true)}
+      ${bars('Tools they use', 'Pick-all question.', 'tools', L.tools, true)}
+      ${bars('What they want from the market', '', 'goal', L.goal, true)}
+      ${bars('Time on the market each day', '', 'time', L.time)}
+      <section class="card"><h2>Habits</h2>${[['h1', 'Look at the chart before buying'], ['h2', 'Read results before investing'], ['h3', 'Set exit or stop loss first'], ['h4', 'Bought a stock on a tip']].map(([k, l]) => { const v = share(rows.filter((x) => x.answers?.habits?.[k] === true).length); return `<div style="display:grid;grid-template-columns:190px 1fr 44px;gap:10px;align-items:center;margin:8px 0;font-size:14px"><span>${l}</span>${bar(v, k === 'h4' ? 'var(--down)' : 'var(--up)')}<b style="text-align:right">${v}%</b></div>`; }).join('')}<p class="sub">Share who said "That's me".</p></section>
+      <section class="card"><h2>Market moments: what they chose</h2>${MOM.map(([title, opts], i) => `<p style="margin:10px 0 4px;font-weight:700">${esc(title)}</p>${opts.map((o, k) => { const v = share(rows.filter((x) => x.answers?.moments?.[i] === k).length); return `<div style="display:grid;grid-template-columns:170px 1fr 44px;gap:10px;align-items:center;margin:4px 0;font-size:13px"><span>${esc(o)}</span>${bar(v, 'var(--gold)')}<b style="text-align:right">${v}%</b></div>`; }).join('')}`).join('')}</section>
+      <section class="card"><h2>Says vs scores</h2><p class="sub">How much people say they know (1 to 10), against the level their answers gave them.</p>
+        <table style="width:100%;font-size:14px;border-collapse:collapse"><thead><tr><th style="text-align:left">Self rating</th>${LV.map(([, l]) => `<th style="text-align:right">${l}</th>`).join('')}</tr></thead><tbody>
+        ${[[1, 3, '1 to 3'], [4, 6, '4 to 6'], [7, 8, '7 to 8'], [9, 10, '9 to 10']].map(([lo, hi, l]) => { const g = rows.filter((x) => x.rating >= lo && x.rating <= hi); return `<tr><td style="padding:6px 0">${l} <span class="sub" style="display:inline">(${g.length})</span></td>${LV.map(([lk]) => `<td style="text-align:right">${g.length ? share(g.filter((x) => x.level === lk).length, g.length) + '%' : '-'}</td>`).join('')}</tr>`; }).join('')}</tbody></table></section>
     </div>
     <section class="card flush">${table('quiz', rows, [
       { k: 'name', label: 'Player', fmt: (x) => `<b>${esc(x.name)}</b><span class="sub">${x.email ? esc(x.email) : 'no sign-in'} · ${esc(x.cid)}</span>` },
-      { k: 'level', label: 'Level', fmt: (x) => { const l = LV.find((z) => z[0] === x.level) || LV[0]; return `<span class="chip" style="background:${l[3]}22;color:${l[3]}">${l[1]}</span><span class="sub">${l[2]}</span>`; } },
-      { k: 'pct', label: 'Score', fmt: (x) => `<b>${x.score}/${x.max}</b><span class="sub">${x.pct}%</span>`, cls: 'r' },
-      { k: 'exp', label: 'Investing for', fmt: (x) => esc((EXP.find((e) => e[0] === x.exp) || [, '-'])[1]) },
-      { k: 'secs', label: 'Time', fmt: (x) => `${Math.floor((x.secs || 0) / 60)}m ${(x.secs || 0) % 60}s`, cls: 'r' },
+      { k: 'level', label: 'Persona', fmt: (x) => { const l = LV.find((z) => z[0] === x.level) || LV[0]; return `<span class="chip" style="background:${l[3]}22;color:${l[3]}">${l[1]}</span><span class="sub">${esc((L.style.find((s) => s[0] === x.style) || [, '-'])[1])}</span>`; } },
+      { k: 'score', label: 'Score', fmt: (x) => `<b>${x.score}/100</b><span class="sub">says ${x.rating}/10</span>`, cls: 'r' },
+      { k: 'years', label: 'In market', fmt: (x) => esc((L.years.find((e) => e[0] === x.years) || [, '-'])[1]) },
+      { k: 'pl', label: 'Virtual P/L', fmt: (x) => `<span class="${x.pl > 0 ? 'up' : x.pl < 0 ? 'down' : ''}">${x.pl > 0 ? '+' : ''}${(x.pl || 0).toLocaleString('en-IN')}</span>`, cls: 'r' },
       { k: 'created', label: 'Played', fmt: (x) => `${fDT(x.created)}<span class="sub">${ago(x.created)}</span>` },
     ], 'Nobody has played yet. Share street-ka-dalal.pages.dev/quiz on WhatsApp.')}</section>`;
   } else if (t === 'asks') {
@@ -1813,8 +1838,9 @@ const ACTS = {
   },
   quizDays: (el) => { ui.admin.quizDays = +el.dataset.v; render(); },
   exportQuiz: () => {
-    const sk = ['basics', 'charts', 'fund', 'data', 'temper'];
-    const csv = [['name', 'email', 'level', 'score', 'max', 'pct', 'investing_for', ...sk, 'portfolio', 'best_streak', 'seconds', 'certificate', 'played'].join(','), ...(ui.quiz || []).map((x) => [x.name, x.email, x.level, x.score, x.max, x.pct, x.exp, ...sk.map((k) => x.skills?.[k]), x.val, x.best, x.secs, x.cid, x.created].map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','))].join(String.fromCharCode(10));
+    const dims = ['exp', 'words', 'habits', 'tools', 'disc'];
+    const head = ['name', 'email', 'level', 'score', 'self_rating', 'style', 'years', 'time', 'goal', ...dims.map((d) => 'profile_' + d), 'words_known', 'tools', 'learn', 'habit_chart', 'habit_results', 'habit_exit', 'habit_tip', 'moments', 'virtual_pl', 'seconds', 'certificate', 'played'];
+    const csv = [head.join(','), ...(ui.quiz || []).map((x) => { const a = x.answers || {}; return [x.name, x.email, x.level, x.score, x.rating, x.style, x.years, a.time, a.goal, ...dims.map((d) => x.profile?.[d]), (a.words || []).join(' '), (a.tools || []).join(' '), (a.learn || []).join(' '), a.habits?.h1, a.habits?.h2, a.habits?.h3, a.habits?.h4, (a.moments || []).join(' '), x.pl, x.secs, x.cid, x.created].map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','); })].join(String.fromCharCode(10));
     Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })), download: `persona-test-${new Date().toISOString().slice(0, 10)}.csv` }).click();
   },
   exportMembers: async () => {
