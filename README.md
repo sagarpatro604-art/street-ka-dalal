@@ -21,3 +21,7 @@ Local preview without Firebase: leave `projectId` empty in `js/config.js` (demo 
 - News: `data/newsfeed/latest.json` (publisher, 7 days) + a live Google News search per question; optional `BRAVE_API_KEY` secret as backup. Key = encrypted secret `GEMINI_API_KEY` in Cloudflare (never in the repo).
 - Questions are logged to Firestore `asks` (admin tab "Dalal questions"); logins and asks older than 90 days are cleaned when the admin opens the terminal.
 - Health check: Admin → Data status → "Check Dalal". Social links in `js/config.js` → `SOCIAL`.
+
+## Investor persona test (`/quiz`)
+- Page `quiz.html` (public, no sign-in needed; Google sign-in optional): 16 game-style questions in 3 rounds (swipe Bull / Bear, read a chart, tap the breakout candle, slider guess, order, match, spot the red flags), each linked to the site tab it comes from. Ends with a persona (Beginner = Rising Rookie, Intermediate = Street Smart Investor, Advanced = Dalal Street Pro; cut-offs 40% / 72%), a skill profile, a PNG certificate drawn in the browser, and Instagram / WhatsApp / Telegram links. `FEATURED_REEL` at the top of the script = the Instagram reel code shown on the results page (empty = profile card only).
+- Server `functions/api/quiz.js`: saves each finished game in D1 table `quiz_results` (level worked out on the server, 15 games a day per network); admin GET feeds Admin > Persona test (level counts, topic averages, says-vs-scores, CSV). Changing the questions: bump `VER` in quiz.html and add the new maximum to `VERSIONS` in quiz.js.

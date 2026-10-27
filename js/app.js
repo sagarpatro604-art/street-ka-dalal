@@ -1534,7 +1534,7 @@ async function adminUpdates() {
 async function viewAdmin() {
   if (!A.isAdmin()) return '<div class="empty card">This area is for the admin.</div>';
   const t = ui.admin.tab;
-  const tabs = [['publisher', 'Publisher'], ['updates', 'Updates & change log'], ['members', 'Members'], ['logins', 'Login log'], ['asks', 'Dalal questions'], ['regs', 'Registrations'], ['status', 'Data status']];
+  const tabs = [['publisher', 'Publisher'], ['updates', 'Updates & change log'], ['members', 'Members'], ['logins', 'Login log'], ['asks', 'Dalal questions'], ['regs', 'Registrations'], ['quiz', 'Persona test'], ['status', 'Data status']];
   if (!ui.purged) { ui.purged = true; A.purgeOld(90).then((n) => n && toast(`Cleaned ${n} records older than 90 days`)).catch(() => {}); }
   let body = '';
   if (t === 'publisher') {
@@ -1578,6 +1578,39 @@ async function viewAdmin() {
       { k: 'consent', label: 'Calendar invite', fmt: (x) => (x.consent ? chip('Yes', 'good') : chip('No')) },
       { k: 'created', label: 'Registered', fmt: (x) => `${fDT(x.created)}<span class="sub">${ago(x.created)}</span>` },
     ], 'No registrations yet. Share the sign-up page link on WhatsApp.')}</section>`;
+  } else if (t === 'quiz') {
+    // Investor persona test results from quiz.html (functions/api/quiz.js, D1 table quiz_results)
+    const r = await fetch('/api/quiz', { headers: { Authorization: `Bearer ${await A.idToken()}` } }).then((x) => x.json()).catch((e) => ({ error: e.message }));
+    const all = r.rows || [], days = ui.admin.quizDays || 0;
+    const rows = days ? all.filter((x) => Date.now() - new Date(x.created) < days * 86400000) : all;
+    ui.quiz = rows;
+    const LV = [['beginner', 'Beginner', 'Rising Rookie', '#3aa7b8'], ['intermediate', 'Intermediate', 'Street Smart Investor', '#23794f'], ['advanced', 'Advanced', 'Dalal Street Pro', '#b08d57']];
+    const SK = [['basics', 'Market basics'], ['charts', 'Charts'], ['fund', 'Fundamentals'], ['data', 'Market data'], ['temper', 'Temperament']];
+    const EXP = [['new', 'Just starting'], ['lt2', 'Under 2 years'], ['2to5', '2 to 5 years'], ['5plus', '5+ years']];
+    const n = rows.length, cnt = (k) => rows.filter((x) => x.level === k).length, share = (v, of = n) => (of ? Math.round((v / of) * 100) : 0);
+    const avg = (f, list = rows) => (list.length ? Math.round(list.reduce((s, x) => s + (f(x) || 0), 0) / list.length) : 0);
+    const people = new Set(rows.map((x) => (x.email || x.name || '').toLowerCase())).size;
+    const sk = SK.map(([k, l]) => [k, l, avg((x) => x.skills?.[k])]), weak = [...sk].sort((a, b) => a[2] - b[2])[0];
+    const bar = (v, col) => `<span style="display:block;height:10px;border-radius:6px;background:var(--paper-2);overflow:hidden"><i style="display:block;height:100%;width:${v}%;background:${col}"></i></span>`;
+    body = r.error ? `<div class="card empty">Could not load the persona test results: ${esc(r.error)}</div>` : `<div class="stats big"><div><b>${n}</b><span>games played</span></div><div><b>${people}</b><span>different people</span></div>${LV.map(([k, l, , c]) => `<div><b style="color:${c}">${cnt(k)}</b><span>${l} (${share(cnt(k))}%)</span></div>`).join('')}<div><b>${avg((x) => x.pct)}%</b><span>average score</span></div></div>
+    <div class="toolbar"><div class="seg">${[[0, 'All time'], [30, '30 days'], [7, '7 days'], [1, 'Today']].map(([d, l]) => `<button class="${d === days ? 'on' : ''}" data-act="quizDays" data-v="${d}">${l}</button>`).join('')}</div><span class="sub">Test page <a href="quiz" target="_blank" rel="noopener">street-ka-dalal.pages.dev/quiz</a></span><span class="grow"></span><button class="btn sm ghost" data-act="exportQuiz">Download CSV</button></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin:0 0 16px">
+      <section class="card"><h2>Community level</h2><div style="display:flex;height:34px;border-radius:10px;overflow:hidden;margin:12px 0;background:var(--paper-2)">${LV.map(([k, , , c]) => (cnt(k) ? `<span title="${k}" style="flex:${cnt(k)};background:${c};color:#fff;font-weight:700;font-size:13px;display:grid;place-items:center">${share(cnt(k))}%</span>` : '')).join('')}</div>
+        ${LV.map(([k, l, nm, c]) => `<p style="display:flex;gap:8px;align-items:center;margin:6px 0"><i style="width:12px;height:12px;border-radius:3px;background:${c}"></i><b>${l}</b><span class="sub">${nm}</span><span style="flex:1"></span><b>${cnt(k)}</b></p>`).join('')}</section>
+      <section class="card"><h2>What the community knows</h2><p class="sub">Average score by topic.${n ? ` Weakest: <b>${esc(weak[1])}</b>, a good topic for the next session.` : ''}</p>
+        ${sk.map(([, l, v]) => `<div style="display:grid;grid-template-columns:120px 1fr 44px;gap:10px;align-items:center;margin:8px 0;font-size:14px"><span>${l}</span>${bar(v, v < 50 ? 'var(--down)' : 'var(--up)')}<b style="text-align:right">${v}%</b></div>`).join('')}</section>
+      <section class="card"><h2>Says vs scores</h2><p class="sub">How long people say they have invested, against the level the test gave them.</p>
+        <table style="width:100%;font-size:14px;border-collapse:collapse"><thead><tr><th style="text-align:left">Investing for</th>${LV.map(([, l]) => `<th style="text-align:right">${l}</th>`).join('')}<th style="text-align:right">Avg</th></tr></thead><tbody>
+        ${EXP.map(([k, l]) => { const g = rows.filter((x) => x.exp === k); return `<tr><td style="padding:6px 0">${l} <span class="sub" style="display:inline">(${g.length})</span></td>${LV.map(([lk]) => `<td style="text-align:right">${g.length ? share(g.filter((x) => x.level === lk).length, g.length) + '%' : '-'}</td>`).join('')}<td style="text-align:right"><b>${g.length ? avg((x) => x.pct, g) + '%' : '-'}</b></td></tr>`; }).join('')}</tbody></table></section>
+    </div>
+    <section class="card flush">${table('quiz', rows, [
+      { k: 'name', label: 'Player', fmt: (x) => `<b>${esc(x.name)}</b><span class="sub">${x.email ? esc(x.email) : 'no sign-in'} · ${esc(x.cid)}</span>` },
+      { k: 'level', label: 'Level', fmt: (x) => { const l = LV.find((z) => z[0] === x.level) || LV[0]; return `<span class="chip" style="background:${l[3]}22;color:${l[3]}">${l[1]}</span><span class="sub">${l[2]}</span>`; } },
+      { k: 'pct', label: 'Score', fmt: (x) => `<b>${x.score}/${x.max}</b><span class="sub">${x.pct}%</span>`, cls: 'r' },
+      { k: 'exp', label: 'Investing for', fmt: (x) => esc((EXP.find((e) => e[0] === x.exp) || [, '-'])[1]) },
+      { k: 'secs', label: 'Time', fmt: (x) => `${Math.floor((x.secs || 0) / 60)}m ${(x.secs || 0) % 60}s`, cls: 'r' },
+      { k: 'created', label: 'Played', fmt: (x) => `${fDT(x.created)}<span class="sub">${ago(x.created)}</span>` },
+    ], 'Nobody has played yet. Share street-ka-dalal.pages.dev/quiz on WhatsApp.')}</section>`;
   } else if (t === 'asks') {
     const qs = await A.listAsks(200);
     const day = Date.now() - 86400000;
@@ -1777,6 +1810,12 @@ const ACTS = {
   exportRegs: () => {
     const csv = ['name,email,attended_last,calendar_invite,registered', ...(ui.regs || []).map((x) => [x.name, x.email, x.attended, x.consent ? 'yes' : 'no', x.created].map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','))].join(String.fromCharCode(10));
     Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })), download: `community-${ui.admin.regEv || REG_EVENTS[0][0]}-registrations-${new Date().toISOString().slice(0, 10)}.csv` }).click();
+  },
+  quizDays: (el) => { ui.admin.quizDays = +el.dataset.v; render(); },
+  exportQuiz: () => {
+    const sk = ['basics', 'charts', 'fund', 'data', 'temper'];
+    const csv = [['name', 'email', 'level', 'score', 'max', 'pct', 'investing_for', ...sk, 'portfolio', 'best_streak', 'seconds', 'certificate', 'played'].join(','), ...(ui.quiz || []).map((x) => [x.name, x.email, x.level, x.score, x.max, x.pct, x.exp, ...sk.map((k) => x.skills?.[k]), x.val, x.best, x.secs, x.cid, x.created].map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','))].join(String.fromCharCode(10));
+    Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })), download: `persona-test-${new Date().toISOString().slice(0, 10)}.csv` }).click();
   },
   exportMembers: async () => {
     const ms = await A.listMembers();
