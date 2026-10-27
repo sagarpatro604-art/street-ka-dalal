@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Investor Persona Test · Street ka Dalal</title>
-<meta name="description" content="What kind of investor are you? 17 quick questions about you and 5 virtual market moments. Find your investor persona, see your virtual profit or loss, and get a Proud Investor certificate. Free, about 3 minutes.">
+<meta name="description" content="What kind of investor are you? A few quick questions about you and 5 virtual market moments. Find your investor persona, see your virtual profit or loss, and get a Proud Investor certificate. Free, about 3 minutes.">
 <meta property="og:title" content="What kind of investor are you? · Street ka Dalal">
-<meta property="og:description" content="17 quick questions, 5 virtual market moments, one persona and a Proud Investor certificate. Free, about 3 minutes.">
+<meta property="og:description" content="Quick questions about you, 5 virtual market moments, one persona and a Proud Investor certificate. Free, about 3 minutes.">
 <meta property="og:image" content="https://street-ka-dalal.pages.dev/icons/icon-512.png">
 <meta name="theme-color" content="#0b1e14">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
@@ -231,9 +231,9 @@ input[type=range]::-moz-range-thumb{width:28px;height:28px;border-radius:50%;bac
 .me img{width:120px;height:120px;border-radius:50%;object-fit:cover;border:4px solid transparent;background:linear-gradient(#000,#000) padding-box,conic-gradient(#feda75,#fa7e1e,#d62976,#962fbf,#4f5bd5,#feda75) border-box}
 .me h3{font-size:24px}
 .me p{margin:4px 0 12px;color:rgba(255,255,255,.85);font-size:14px}
+.me p.role{margin:2px 0 0;font:800 11px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--gold-3)}
 .me+.me{margin-top:10px}
 .me.bh{background:linear-gradient(135deg,#0f2a3d,#1f4d6b 50%,#2f6b4f)}
-.me .ini{width:120px;height:120px;border-radius:50%;display:grid;place-items:center;font:700 40px var(--serif);color:#fff;border:4px solid transparent;background:linear-gradient(#173a4f,#12301f) padding-box,conic-gradient(#feda75,#fa7e1e,#d62976,#962fbf,#4f5bd5,#feda75) border-box}
 .me .acts{display:flex;flex-wrap:wrap;gap:8px}
 .li-btn{background:#0a66c2;color:#fff}
 .ig-btn{background:linear-gradient(135deg,#fa7e1e,#d62976 50%,#962fbf);color:#fff}
@@ -269,8 +269,7 @@ footer{position:relative;z-index:1;padding:20px 0 40px;color:rgba(233,220,195,.5
   .hud .rnd{font-size:11px;letter-spacing:.08em}
   .swipe-zone{height:210px}
   .me{grid-template-columns:84px 1fr;gap:12px}
-  .me img,.me .ini{width:84px;height:84px}
-  .me .ini{font-size:28px}
+  .me img{width:84px;height:84px}
   .socials{grid-template-columns:1fr}
   .sk{grid-template-columns:96px 1fr 40px}
 }
@@ -349,6 +348,7 @@ const MOMENTS = [
     opts: [['Go big: ₹30,000', -27000, 0], ['Small bet: ₹3,000', -2700, 1], ['Skip it', 0, 2], ['Paper trade it to learn', 0, 2]],
     out: 'Nifty stayed flat and the option lost 90% of its value by expiry. SEBI found about 9 in 10 individual F&O traders lost money.' },
 ];
+const TGBOT = [['yes', 'Yes, I would use it'], ['maybe', 'Maybe, show me first'], ['no', 'No, thanks']];
 const ROUNDS = [
   { name: 'Round 1 · About you', title: 'Tell us about you', sub: 'Five quick taps. There are no right or wrong answers here.', say: 'Pehle thoda introduction ho jaaye!' },
   { name: 'Round 2 · Your toolkit', title: 'What you know and use', sub: 'Words, tools and habits. Be honest, nobody is checking.', say: 'Jo sach hai wahi tap karna!' },
@@ -365,6 +365,7 @@ const QS = [
   { r: 1, id: 'learn', type: 'multi', label: 'How you learn', q: 'Where do you learn about markets?', hint: 'Pick all that fit.', opts: LEARN },
   ...HABITS.map(([id, text]) => ({ r: 1, id, type: 'swipe', label: 'That\'s me?', q: text })),
   ...MOMENTS.map((m) => ({ r: 2, id: m.id, type: 'moment', label: 'Market moment', q: m.q, m })),
+  { r: 2, id: 'tgbot', type: 'pick', label: 'One last question', q: 'Would you like a free Telegram bot that sends you market news updates?', opts: TGBOT },
 ];
 const LEVELS = {
   beginner: { key: 'beginner', label: 'Beginner', name: 'Rising Rookie', hin: 'Naya khiladi, bada potential', line: 'You are at the start of your journey, the best time to build good habits. Our community and free tools will help you learn fast.', color: '#3aa7b8' },
@@ -557,7 +558,7 @@ function hud() {
   $('#hud').hidden = false;
   $('#hRound').textContent = ROUNDS[q.r].name;
   $('#hQn').textContent = `${Math.min(S.i + 1, QS.length)}/${QS.length}`;
-  $('#hVault').hidden = q.r !== 2;
+  $('#hVault').hidden = q.type !== 'moment';
   $('#hBar').innerHTML = QS.map((_, i) => `<i class="${i < S.i ? 'd' : i === S.i ? 'c' : ''}"></i>`).join('');
 }
 
@@ -755,18 +756,18 @@ function persona(res, old) {
       ${Object.keys(DIMS).map((k) => `<div class="sk"><span>${DIMS[k]}</span><span class="tr"><i class="${res.profile[k] < 50 ? 'low' : ''}" data-w="${res.profile[k]}"></i></span><em>${res.profile[k]}%</em></div>`).join('')}
       <div class="next"><img src="icons/dalal-head.webp" alt="" width="40" height="40" style="border-radius:50%;flex:none"><span>Strongest: <b>${DIMS[best[0]]}</b>. Grow next: <b>${DIMS[weak[0]]}</b>. A good place to start is <a href="${DIM_LINK[weak[0]][0]}" target="_blank" rel="noopener" style="color:var(--green-2);font-weight:700">${DIM_LINK[weak[0]][1]}</a> on Street ka Dalal.</span></div>
     </div>
-    <div class="cert-wrap"><h3>Your Proud Investor certificate</h3><p class="sub">Download it, post it on your status, tag ${esc(LINKS.igHandle)}.</p>
+    <div class="cert-wrap"><h3>Your Proud Investor certificate</h3><p class="sub">Download it, post it on your status, tag ${esc(LINKS.igHandle)} and ${esc(LINKS.bhHandle)}.</p>
       <img class="cert-img" id="certImg" alt="Your Street ka Dalal Proud Investor certificate">
       <div class="row-btns"><button class="btn gold" id="dl">Download certificate</button><button class="btn green" id="share">Share</button><a class="btn" style="background:#25D366;color:#fff" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(`I am a "${lv.name}" (${styleName}) on the Street ka Dalal investor persona test. What kind of investor are you? ${SITE}/quiz`)}">Challenge friends on WhatsApp</a></div>
     </div>
     <div class="follow">
       <h2>Keep learning with us</h2>
-      <p>Markets, money and business, explained simply. Follow Sagar and Bhuvan and join the community.</p>
-      <div class="me"><img src="icons/sagar.webp" alt="K. Sagar Patro" width="120" height="120"><div><h3>K. Sagar Patro</h3><p>${esc(LINKS.igHandle)} on Instagram. Reels on markets, stocks and money in simple Hinglish.</p><div class="acts"><a class="btn ig-btn" href="${LINKS.ig}" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>Follow on Instagram</a><a class="btn li-btn" href="${LINKS.li}" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9.5h4V21H3V9.5Zm7 0h3.8v1.6h.1c.5-1 1.8-2 3.7-2 4 0 4.7 2.6 4.7 6V21h-4v-5.1c0-1.2 0-2.8-1.7-2.8s-2 1.3-2 2.7V21h-4V9.5Z"/></svg>LinkedIn</a></div></div></div><div class="me bh"><span class="ini" aria-hidden="true">BP</span><div><h3>Bhuvan Pasari</h3><p>${esc(LINKS.bhHandle)} on Instagram. Sagar's partner in Street ka Dalal's research and community work.</p><div class="acts"><a class="btn ig-btn" href="${LINKS.bhIg}" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>Follow on Instagram</a><a class="btn li-btn" href="${LINKS.bhLi}" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9.5h4V21H3V9.5Zm7 0h3.8v1.6h.1c.5-1 1.8-2 3.7-2 4 0 4.7 2.6 4.7 6V21h-4v-5.1c0-1.2 0-2.8-1.7-2.8s-2 1.3-2 2.7V21h-4V9.5Z"/></svg>LinkedIn</a></div></div></div>
+      <p>Street ka Dalal and its community are run by two co-founders. Follow them and join the community.</p>
+      <div class="me"><img src="icons/sagar.webp" alt="K. Sagar Patro" width="120" height="120"><div><h3>K. Sagar Patro</h3><p class="role">Co-founder, Street ka Dalal</p><p>${esc(LINKS.igHandle)} on Instagram. Reels on markets, stocks and money in simple Hinglish.</p><div class="acts"><a class="btn ig-btn" href="${LINKS.ig}" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>Follow on Instagram</a><a class="btn li-btn" href="${LINKS.li}" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9.5h4V21H3V9.5Zm7 0h3.8v1.6h.1c.5-1 1.8-2 3.7-2 4 0 4.7 2.6 4.7 6V21h-4v-5.1c0-1.2 0-2.8-1.7-2.8s-2 1.3-2 2.7V21h-4V9.5Z"/></svg>LinkedIn</a></div></div></div><div class="me bh"><img src="icons/bhuvan.webp" alt="Bhuvan Pasari" width="120" height="120"><div><h3>Bhuvan Pasari</h3><p class="role">Co-founder, Street ka Dalal</p><p>${esc(LINKS.bhHandle)} on Instagram. Research, sessions and the community, every day.</p><div class="acts"><a class="btn ig-btn" href="${LINKS.bhIg}" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>Follow on Instagram</a><a class="btn li-btn" href="${LINKS.bhLi}" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9.5h4V21H3V9.5Zm7 0h3.8v1.6h.1c.5-1 1.8-2 3.7-2 4 0 4.7 2.6 4.7 6V21h-4v-5.1c0-1.2 0-2.8-1.7-2.8s-2 1.3-2 2.7V21h-4V9.5Z"/></svg>LinkedIn</a></div></div></div>
       ${FEATURED_REEL ? `<div class="reel"><iframe src="https://www.instagram.com/reel/${encodeURIComponent(FEATURED_REEL)}/embed/" loading="lazy" title="Featured reel by ${esc(LINKS.igHandle)}" allowtransparency="true" allow="encrypted-media"></iframe></div>` : ''}
       <div class="socials">
         <a class="soc wa" href="${LINKS.wa}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .1-1.3c0-.1-.2-.2-.5-.3Z"/></svg><span><b>WhatsApp community</b>500+ members. Daily notes and session invites.</span></a>
-        <a class="soc tg" href="${LINKS.tg}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M21.9 4.3 18.7 19.5c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2L6.5 13.3l-4.7-1.5c-1-.3-1-1 .2-1.5L20.4 3.2c.9-.3 1.6.2 1.5 1.1Z"/></svg><span><b>Telegram group</b>Quant and factor investing talk.</span></a>
+        <a class="soc tg" href="${LINKS.tg}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M21.9 4.3 18.7 19.5c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2L6.5 13.3l-4.7-1.5c-1-.3-1-1 .2-1.5L20.4 3.2c.9-.3 1.6.2 1.5 1.1Z"/></svg><span><b>Telegram group</b>${res.a.tgbot === 'yes' || res.a.tgbot === 'maybe' ? 'You asked for the news bot: join here and we will share it first.' : 'Quant and factor investing talk.'}</span></a>
         <a class="soc skd" href="./" target="_blank" rel="noopener"><svg viewBox="0 0 40 40"><rect width="40" height="40" rx="10" fill="#12301f"/><rect x="9" y="19.5" width="4" height="6" rx="1" fill="#E9DCC3"/><rect x="18" y="15" width="4" height="8.5" rx="1" fill="#C9A96E"/><rect x="27" y="10" width="4" height="9" rx="1" fill="#E9DCC3"/></svg><span><b>Open the Street ka Dalal terminal</b>Screeners, pre-market, results, MF flows and Dalal, your AI buddy. Free.</span></a>
       </div>
     </div>
@@ -858,15 +859,14 @@ async function makeCert(res, lv, styleName) {
     bx += bw + gap;
   });
   c.textAlign = 'center';
-  c.font = '400 66px "Great Vibes", cursive'; c.fillStyle = '#f3dca8'; c.fillText('K. Sagar Patro', 360, 960);
-  c.strokeStyle = 'rgba(217,184,120,.7)'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(200, 978); c.lineTo(520, 978); c.stroke();
-  c.font = '700 17px system-ui, sans-serif'; c.fillStyle = 'rgba(233,220,195,.75)'; c.fillText('FOUNDER, STREET KA DALAL', 360, 1006);
-  c.font = '700 30px "JetBrains Mono", monospace'; c.fillStyle = '#fff'; c.fillText(new Date(res.at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }), W - 360, 958);
-  c.beginPath(); c.moveTo(W - 520, 978); c.lineTo(W - 200, 978); c.stroke();
-  c.font = '700 17px system-ui, sans-serif'; c.fillStyle = 'rgba(233,220,195,.75)'; c.fillText('DATE', W - 360, 1006);
+  [['K. Sagar Patro', 340], ['Bhuvan Pasari', W - 340]].forEach(([who, x]) => {
+    c.font = '400 64px "Great Vibes", cursive'; c.fillStyle = '#f3dca8'; c.fillText(who, x, 960);
+    c.strokeStyle = 'rgba(217,184,120,.7)'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(x - 160, 978); c.lineTo(x + 160, 978); c.stroke();
+    c.font = '700 17px system-ui, sans-serif'; c.fillStyle = 'rgba(233,220,195,.75)'; c.fillText('CO-FOUNDER, STREET KA DALAL', x, 1006);
+  });
   seal(c, W / 2, 950, 92, lv);
   c.font = '600 16px system-ui, sans-serif'; c.fillStyle = 'rgba(233,220,195,.5)';
-  c.fillText(`street-ka-dalal.pages.dev/quiz   ·   Instagram ${LINKS.igHandle}   ·   For learning only. Not investment advice.`, W / 2, H - 70);
+  c.fillText(`street-ka-dalal.pages.dev/quiz   ·   Instagram ${LINKS.igHandle}  ${LINKS.bhHandle}   ·   For learning only. Not investment advice.`, W / 2, H - 70);
   return new Promise((r) => cv.toBlob(r, 'image/png'));
 }
 function roundRect(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }

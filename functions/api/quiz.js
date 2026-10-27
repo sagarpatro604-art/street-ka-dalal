@@ -23,6 +23,7 @@ const WORDS = [['nifty', 1], ['sensex', 1], ['sip', 1], ['mf', 1], ['sl', 1], ['
 const WORD_MAX = WORDS.reduce((s, w) => s + w[1], 0);
 const TOOLS = [['broker', 0], ['tv', 2], ['screener', 2], ['sheets', 2], ['options', 2], ['code', 3], ['none', 0]];
 const LEARN = ['social', 'books', 'courses', 'friends', 'tips', 'filings', 'skd'];
+const TGBOT = ['yes', 'maybe', 'no'];   // 'Would you like a Telegram news bot?' recorded, not scored
 const HABITS = [['h1', 3, true], ['h2', 4, true], ['h3', 4, true], ['h4', 4, false]];
 const MOMENTS = [[[-12000, 0], [3000, 1], [6000, 2], [-15000, 0]], [[-10000, 0], [-2000, 0], [0, 2], [0, 2]], [[2000, 1], [4000, 2], [1000, 0], [3000, 2]], [[-1600, 0], [2400, 2], [1000, 1], [1600, 1]], [[-27000, 0], [-2700, 1], [0, 2], [0, 2]]];
 
@@ -33,7 +34,7 @@ function clean(a = {}) {
   return {
     years: pickOne(a.years, ids(YEARS)), rating: Math.min(10, Math.max(1, Math.round(+a.rating || 1))), style: pickOne(a.style, STYLE),
     time: pickOne(a.time, ids(TIME)), goal: pickOne(a.goal, GOAL), words: pickMany(a.words, ids(WORDS)), tools: pickMany(a.tools, ids(TOOLS)),
-    learn: pickMany(a.learn, LEARN), habits: Object.fromEntries(HABITS.map(([id]) => [id, a.habits?.[id] === true])),
+    learn: pickMany(a.learn, LEARN), tgbot: pickOne(a.tgbot, TGBOT), habits: Object.fromEntries(HABITS.map(([id]) => [id, a.habits?.[id] === true])),
     moments: MOMENTS.map((m, i) => { const k = Number.isInteger(a.moments?.[i]) ? a.moments[i] : -1; return k >= 0 && k < m.length ? k : null; }),
   };
 }
