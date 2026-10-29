@@ -620,8 +620,24 @@ export async function onRequestOptions({ request }) {
 }
 
 // GET: the member's questions left today; for the admin also a quick health check of the setup.
+// GET ?selftest: no sign-in, for the PC's watchdog. One short test of each AI (Gemini, Groq, Claude), kept 10 minutes,
+// so anyone calling it costs at most 144 tests a day. Shows only ok / the provider's error, never a key.
+async function selfTest(env) {
+  try { const hit = await cacheGet(env, 'selftest'); if (hit) return { ...JSON.parse(hit), cached: true }; } catch {}
+  const ping = async (fn) => { const t0 = Date.now(); try { const r = await fn(); return { ok: true, model: r.model, secs: +((Date.now() - t0) / 1000).toFixed(1) }; } catch (e) { return { ok: false, error: clip(e.message, 300) }; } };
+  const sys = 'Reply with the single word OK.';
+  const out = { at: new Date().toISOString() };
+  out.gemini = env.GEMINI_API_KEY ? await ping(async () => askGemini(env, await pickModels(env), sys, [{ role: 'user', parts: [{ text: 'ping' }] }])) : { ok: false, error: 'no key' };
+  out.groq = env.GROQ_API_KEY ? await ping(() => askGroq(env, sys, [], 'ping')) : { ok: false, error: 'no key' };
+  out.claude = env.ANTHROPIC_API_KEY ? await ping(() => askClaude(env, sys, [], 'ping')) : { ok: false, error: 'no key' };
+  out.ok = out.gemini.ok || out.groq.ok || out.claude.ok;
+  await cachePut(env, 'selftest', JSON.stringify(out), 600);
+  return out;
+}
+
 export async function onRequestGet({ request, env }) {
   const origin = request.headers.get('Origin');
+  if (new URL(request.url).searchParams.has('selftest')) return json(await selfTest(env), 200, origin);
   const projectId = env.FIREBASE_PROJECT_ID || 'street-ka-dalal';
   const user = await verifyToken((request.headers.get('Authorization') || '').replace(/^Bearer\s+/i, ''), projectId);
   if (!user) return json({ error: 'signin' }, 401, origin);
@@ -712,6 +728,7 @@ export async function onRequestPost({ request, env }) {
     const newsLinks = [...Object.values(news?.by_stock || {}).flat(), ...(news?.topic || [])].filter((x) => x.link).slice(0, 4).map((x) => ({ title: `${x.source}: ${x.title}`.slice(0, 90), uri: x.link }));
     return json({ answer: r.text, sources: r.sources?.length ? r.sources : newsLinks, web: r.web || !!newsLinks.length, model: r.model, asOf: meta?.as_of, left: isAdmin ? limit : Math.max(0, limit - used - 1) }, 200, origin);
   } catch (e) {
+    console.warn('dalal no answer:', clip(e.message, 1000));
     const busy = /429|RESOURCE_EXHAUSTED|quota/i.test(e.message);
     return json({ error: busy ? 'busy' : 'ai', message: busy ? 'Dalal is getting a lot of questions right now. Please try again in a minute.' : 'Dalal could not answer just now. Please try again.', detail: clip(e.message, 600) }, busy ? 429 : 502, origin);
   }
