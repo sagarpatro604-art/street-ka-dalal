@@ -452,7 +452,10 @@ async function pickModels(env) {
 
 // Web search (grounding) is not free on every model. When Google refuses it for quota, that model answers
 // without search for the next 6 hours (remembered in KV), from the site's own data.
+// Time budget (GEMINI_BUDGET_MS, default 25 s) for all Gemini tries together: on 29-Oct-2026 Gemini took 50 s for a
+// one-word test, so members' questions ran past the chat's 75 s limit while Groq and Claude answered in 1 s.
 async function askGemini(env, models, sys, contents, only) {
+  const deadline = Date.now() + +(env.GEMINI_BUDGET_MS || 25000);
   const noSearch = new Set();
   for (const m of models) if (await cacheGet(env, `ns:${m}`)) noSearch.add(m);
   const attempts = [];
@@ -461,6 +464,8 @@ async function askGemini(env, models, sys, contents, only) {
   let lastErr = '';
   for (let i = 0; i < attempts.length; i++) {
     const [model, search, plain] = attempts[i];
+    const room = deadline - Date.now();
+    if (room < 4000) { lastErr += ' | time budget used up (slow)'; break; }
     // Keep "thinking" short so answers come fast (2.5: budget 0; 3.x and newer: low). Dropped if a model refuses it.
     const think = plain ? null : /^gemini-2\.5-flash/.test(model) ? { thinkingBudget: 0 } : vnum(model) >= 3 ? { thinkingLevel: 'low' } : null;
     const body = {
@@ -472,9 +477,9 @@ async function askGemini(env, models, sys, contents, only) {
     let r;
     try {
       r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY }, body: JSON.stringify(body), signal: AbortSignal.timeout(40000),
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY }, body: JSON.stringify(body), signal: AbortSignal.timeout(Math.min(40000, room)),
       });
-    } catch (e) { lastErr += ` | ${model}: ${e.name === 'TimeoutError' ? 'no answer in 40 s' : e.message}`; continue; }
+    } catch (e) { lastErr += ` | ${model}: ${e.name === 'TimeoutError' ? `no answer in ${Math.round(room / 1000)} s (slow)` : e.message}`; continue; }
     if (r.ok) {
       const d = await r.json();
       const c = d.candidates?.[0];
@@ -483,7 +488,7 @@ async function askGemini(env, models, sys, contents, only) {
       const gm = c.groundingMetadata || {};
       const seen = new Set();
       const sources = (gm.groundingChunks || []).map((g) => g.web).filter((w) => w && w.uri && !seen.has(w.title) && seen.add(w.title)).slice(0, 5).map((w) => ({ title: w.title, uri: w.uri }));
-      return { text, sources, web: !!(gm.webSearchQueries && gm.webSearchQueries.length), model, searchOn: search };
+      return { text, sources, web: !!(gm.webSearchQueries && gm.webSearchQueries.length), model, searchOn: search, tried: lastErr.replace(/^ \| /, '') || undefined };
     }
     const errText = await r.text();
     lastErr += ` | ${model}${search ? '' : ' (no search)'}: ${r.status} ${errText.replace(/\s+/g, ' ').slice(0, 140)}`;
@@ -539,9 +544,9 @@ async function askGroq(env, sys, history, userText) {
     try {
       r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.GROQ_API_KEY}` },
-        body: JSON.stringify({ model, messages, temperature: 0.3, max_tokens: 1200 }), signal: AbortSignal.timeout(30000),
+        body: JSON.stringify({ model, messages, temperature: 0.3, max_tokens: 1200 }), signal: AbortSignal.timeout(15000),
       });
-    } catch (e) { lastErr += ` | ${model}: ${e.name === 'TimeoutError' ? 'no answer in 30 s' : e.message}`; continue; }
+    } catch (e) { lastErr += ` | ${model}: ${e.name === 'TimeoutError' ? 'no answer in 15 s' : e.message}`; continue; }
     if (r.ok) {
       const d = await r.json();
       const text = (d.choices?.[0]?.message?.content || '').replace(/<think>[\s\S]*?<\/think>/g, '').trim();
@@ -590,9 +595,18 @@ async function askClaude(env, sys, history, userText) {
 // Gemini -> Groq -> Claude. Returns the first answer; the error lists why each one failed.
 async function askChain(env, sys, history, context, questionText) {
   const errs = [];
-  if (env.GEMINI_API_KEY) {
+  // a slow Gemini is skipped for 10 minutes, so the next members go straight to Groq instead of waiting 25 s each
+  if (env.GEMINI_API_KEY && await cacheGet(env, 'gslow')) errs.push('Gemini: skipped, slow in the last 10 minutes');
+  else if (env.GEMINI_API_KEY) {
     const contents = [...history.map((h) => ({ role: h.role, parts: [{ text: h.text }] })), { role: 'user', parts: [{ text: `SITE DATA (JSON):\n${context}\n\n${questionText}` }] }];
-    try { return await askGemini(env, await pickModels(env), sys, contents); } catch (e) { errs.push(`Gemini: ${e.message}`); }
+    try {
+      const r = await askGemini(env, await pickModels(env), sys, contents);
+      if (/\(slow\)/.test(r.tried || '')) await cachePut(env, 'gslow', '1', 600);
+      return r;
+    } catch (e) {
+      if (/\(slow\)/.test(e.message)) await cachePut(env, 'gslow', '1', 600);
+      errs.push(`Gemini: ${e.message}`);
+    }
   }
   if (env.GROQ_API_KEY) {
     // about 10,000 characters of site data fit in 8,000 tokens with the rules and the answer; less when the chat is long
@@ -624,7 +638,7 @@ export async function onRequestOptions({ request }) {
 // so anyone calling it costs at most 144 tests a day. Shows only ok / the provider's error, never a key.
 async function selfTest(env) {
   try { const hit = await cacheGet(env, 'selftest'); if (hit) return { ...JSON.parse(hit), cached: true }; } catch {}
-  const ping = async (fn) => { const t0 = Date.now(); try { const r = await fn(); return { ok: true, model: r.model, secs: +((Date.now() - t0) / 1000).toFixed(1) }; } catch (e) { return { ok: false, error: clip(e.message, 300) }; } };
+  const ping = async (fn) => { const t0 = Date.now(); try { const r = await fn(); return { ok: true, model: r.model, secs: +((Date.now() - t0) / 1000).toFixed(1), tried: r.tried }; } catch (e) { return { ok: false, error: clip(e.message, 300) }; } };
   const sys = 'Reply with the single word OK.';
   const out = { at: new Date().toISOString() };
   out.gemini = env.GEMINI_API_KEY ? await ping(async () => askGemini(env, await pickModels(env), sys, [{ role: 'user', parts: [{ text: 'ping' }] }])) : { ok: false, error: 'no key' };
