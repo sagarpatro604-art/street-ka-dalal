@@ -458,6 +458,10 @@ async function askGemini(env, models, sys, contents, only) {
   const deadline = Date.now() + +(env.GEMINI_BUDGET_MS || 25000);
   const noSearch = new Set();
   for (const m of models) if (await cacheGet(env, `ns:${m}`)) noSearch.add(m);
+  // a model that ran out of time goes to the back of the line for an hour (29-Oct: 3.8-flash hung, 3.7-flash answered)
+  const slow = new Set();
+  for (const m of models) if (await cacheGet(env, `slow:${m}`)) slow.add(m);
+  models = [...models.filter((m) => !slow.has(m)), ...models.filter((m) => slow.has(m))];
   const attempts = [];
   for (const m of models) if (!noSearch.has(m)) attempts.push([m, true]);
   if (!only || noSearch.size) for (const m of models) attempts.push([m, false]);
@@ -479,7 +483,11 @@ async function askGemini(env, models, sys, contents, only) {
       r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
         method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY }, body: JSON.stringify(body), signal: AbortSignal.timeout(Math.min(40000, room)),
       });
-    } catch (e) { lastErr += ` | ${model}: ${e.name === 'TimeoutError' ? `no answer in ${Math.round(room / 1000)} s (slow)` : e.message}`; continue; }
+    } catch (e) {
+      if (e.name === 'TimeoutError') await cachePut(env, `slow:${model}`, '1', 3600);
+      lastErr += ` | ${model}: ${e.name === 'TimeoutError' ? `no answer in ${Math.round(room / 1000)} s (slow)` : e.message}`;
+      continue;
+    }
     if (r.ok) {
       const d = await r.json();
       const c = d.candidates?.[0];
