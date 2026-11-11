@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Community Meet 3 · Street ka Dalal</title>
-<meta name="description" content="Street ka Dalal Community Meet 3: Sunday 25 October, 9 PM on Google Meet. Investing strategies, and what happened in the market this week. Free for our community. Register here.">
-<meta property="og:title" content="Street ka Dalal · Community Meet 3">
-<meta property="og:description" content="Sunday 25 October, 9:00 PM IST on Google Meet. Investing strategies, and what happened in the market this week. Free. Register here.">
+<title>Community Meet 4: Gold + Nifty ETF system · Street ka Dalal</title>
+<meta name="description" content="Street ka Dalal Community Meet 4: Sunday 15 November, 9 PM on Google Meet. A simple Gold + Nifty ETF systematic strategy that delivered about 17 to 18% CAGR in backtesting. How it works, how to build your own, and how it is running now. Free PDF giveaway. Register here.">
+<meta property="og:title" content="Street ka Dalal · Community Meet 4: Gold + Nifty ETF system">
+<meta property="og:description" content="Sunday 15 November, 9:00 PM IST on Google Meet. A simple Gold + Nifty ETF system, about 17 to 18% CAGR in backtesting. Rules, rebalancing, year-wise results, and a free PDF. Register here.">
 <meta property="og:image" content="https://street-ka-dalal.pages.dev/icons/icon-512.png">
 <meta name="theme-color" content="#1F4D3A">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
@@ -142,14 +142,88 @@ label.f{display:block;font-weight:600;font-size:14px;margin:0 0 6px}
 @keyframes shine{0%{left:-60%}35%,100%{left:130%}}
 .fine{font-size:12px;color:var(--muted);margin:10px 0 0}
 
-/* after sign-up: the Diwali wish */
+/* gold props: floating bars, coin labels, hero stat chips */
+.bar{position:absolute;bottom:-50px;width:var(--s,46px);height:calc(var(--s,46px)*.5);clip-path:polygon(16% 0,84% 0,100% 100%,0 100%);background:linear-gradient(160deg,#fbe9b7 0%,#e0b85c 38%,#b08d57 70%,#8a6a3a 100%);opacity:0;animation:floatup var(--d,13s) var(--dl,0s) linear infinite}
+.bar::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.65) 45%,transparent 60%);background-size:250% 100%;animation:barshine 2.6s linear infinite}
+@keyframes barshine{from{background-position:150% 0}to{background-position:-100% 0}}
+.coin.au{font-size:calc(var(--s,34px)*.36);letter-spacing:.02em}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 22px}
+.chip{display:flex;flex-direction:column;min-width:112px;background:linear-gradient(160deg,rgba(243,220,168,.16),rgba(176,141,87,.08));border:1px solid rgba(217,184,120,.35);border-radius:16px;padding:10px 14px;animation:rise .7s cubic-bezier(.2,.9,.3,1.2) backwards}
+.chip b{font:700 24px/1.1 var(--serif);color:var(--gold-2)}
+.chip small{font-size:12px;color:rgba(233,220,195,.8);font-weight:600}
+.legend{position:absolute;right:26px;top:18px;display:flex;gap:14px;font-size:12px;font-weight:700;color:rgba(233,220,195,.8);z-index:1}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:16px;height:3px;border-radius:2px;display:inline-block}
+.chart .ln-n{fill:none;stroke:#7fd3a0;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:var(--len);stroke-dashoffset:var(--len);animation:draw 3s .3s ease-out forwards;opacity:.85}
+.chart .ln-g{fill:none;stroke:var(--gold-2);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:var(--len);stroke-dashoffset:var(--len);animation:draw 3s .6s ease-out forwards}
+.chart .ln-s{fill:none;stroke:#fff;stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:var(--len);stroke-dashoffset:var(--len);animation:draw 3.4s 1.2s ease-out forwards}
+.chart .rb{fill:var(--deep);stroke:var(--gold-2);stroke-width:2;opacity:0;transform-box:fill-box;transform-origin:center;animation:rbin .4s cubic-bezier(.2,.9,.3,1.6) forwards}
+@keyframes rbin{from{opacity:0;transform:scale(0)}to{opacity:1;transform:scale(1)}}
+
+/* agenda, scale and giveaway */
+.sec-h{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:0 0 18px}
+.sec-h h2{font-size:clamp(26px,3.4vw,38px)}
+.sec-h p{margin:4px 0 0;color:var(--muted);max-width:560px}
+.kicker{font:700 12px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+.agenda{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
+.ag{position:relative;background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:18px 16px 18px;box-shadow:var(--shadow);overflow:hidden;transition:transform .2s,box-shadow .2s;opacity:0;transform:translateY(18px)}
+.ag.in{opacity:1;transform:none;transition:opacity .6s,transform .6s cubic-bezier(.2,.9,.3,1.2)}
+.ag:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(31,46,36,.14)}
+.ag::after{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,var(--gold-2),var(--gold),var(--green-2))}
+.ag .no{font:700 13px var(--sans);color:var(--gold);letter-spacing:.08em}
+.ag svg{display:block;width:52px;height:52px;margin:8px 0 10px}
+.ag h3{font-size:18px;line-height:1.2;margin:0 0 6px}
+.ag p{margin:0;font-size:14px;color:var(--muted)}
+.gear{transform-box:fill-box;transform-origin:center;animation:turnr 6s linear infinite}
+.gear.r{animation-direction:reverse;animation-duration:4s}
+@keyframes turnr{to{transform:rotate(360deg)}}
+.blk{animation:stack 2.8s ease-in-out infinite}
+.blk.b2{animation-delay:.25s}.blk.b3{animation-delay:.5s}
+@keyframes stack{0%,100%{transform:translateY(0)}40%{transform:translateY(-4px)}}
+.yb{transform-box:fill-box;transform-origin:50% 100%;animation:ybar 2.4s ease-in-out infinite alternate}
+@keyframes ybar{from{transform:scaleY(.55)}to{transform:scaleY(1)}}
+.pulse{stroke-dasharray:80;stroke-dashoffset:80;animation:pulse 2.2s linear infinite}
+@keyframes pulse{to{stroke-dashoffset:-80}}
+
+.duo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-top:16px}
+.scale-card,.gift{border-radius:24px;padding:26px;position:relative;overflow:hidden}
+.scale-card{background:var(--paper);border:1px solid var(--line);box-shadow:var(--shadow);display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:10px;align-items:center}
+.scale-card h3,.gift h3{font-size:clamp(22px,2.6vw,28px);margin:6px 0 8px}
+.scale-card p,.gift p{margin:0;font-size:15px}
+.scale-card p{color:var(--muted)}
+.scale svg{width:100%;height:auto;display:block}
+.scale .beam{transform-box:view-box;transform-origin:110px 52px;animation:tilt 5s ease-in-out infinite}
+.scale .panL{animation:panL 5s ease-in-out infinite}
+.scale .panR{animation:panR 5s ease-in-out infinite}
+@keyframes tilt{0%,100%{transform:rotate(-9deg)}45%,55%{transform:rotate(9deg)}}
+@keyframes panL{0%,100%{transform:translateY(12.5px)}45%,55%{transform:translateY(-12.5px)}}
+@keyframes panR{0%,100%{transform:translateY(-12.5px)}45%,55%{transform:translateY(12.5px)}}
+.scale .tag{font:700 11px var(--sans);fill:var(--muted);letter-spacing:.06em}
+.gift{background:radial-gradient(120% 120% at 100% 0%,#3a2f17 0%,#1f1a0f 55%,#12301f 100%);color:var(--cream);display:grid;grid-template-columns:150px minmax(0,1fr);gap:20px;align-items:center}
+.gift h3{color:#fff}
+.gift .kicker{color:var(--gold-2)}
+.gift ul{margin:10px 0 0;padding:0;list-style:none;display:grid;gap:5px;font-size:14px}
+.gift li{display:flex;gap:8px;align-items:flex-start}
+.gift li::before{content:"";flex:none;width:8px;height:8px;margin-top:7px;border-radius:2px;background:var(--gold-2);transform:rotate(45deg)}
+.pdf{position:relative;width:132px;height:170px;margin:0 auto;animation:hover 4s ease-in-out infinite}
+@keyframes hover{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-8px) rotate(-1deg)}}
+.pdf .sheet{position:absolute;inset:0;background:#fffdf8;border-radius:10px;box-shadow:0 18px 40px rgba(0,0,0,.4);overflow:hidden}
+.pdf .sheet.back{transform:rotate(7deg) translate(10px,4px);background:#efe4cc}
+.pdf .sheet svg{width:100%;height:100%}
+.pdf .ribbon{position:absolute;top:-8px;right:-12px;background:linear-gradient(135deg,#fbe9b7,#d9b878 50%,#b08d57);color:var(--deep);font:800 11px var(--sans);letter-spacing:.1em;padding:6px 10px;border-radius:8px;box-shadow:0 6px 16px rgba(0,0,0,.35);transform:rotate(8deg)}
+.gift .sparkle{position:absolute;width:6px;height:6px;border-radius:50%;background:var(--gold-2);box-shadow:0 0 10px 3px rgba(217,184,120,.6);opacity:0;animation:twinkle 2.4s ease-in-out infinite}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(.4)}50%{opacity:1;transform:scale(1)}}
+.note{margin:14px 0 0;font-size:12px;color:var(--muted)}
+
+/* after sign-up: the gold card */
 .done{text-align:center;padding:6px 4px}
-.diya{display:block;margin:0 auto 6px;width:96px;height:80px}
-.diya .flame{transform-box:fill-box;transform-origin:50% 100%;animation:flicker 1.1s ease-in-out infinite alternate}
-@keyframes flicker{0%{transform:scale(1,1) rotate(-2deg)}50%{transform:scale(.92,1.08) rotate(2deg)}100%{transform:scale(1.05,.95) rotate(-1deg)}}
-.diya .glow{animation:glow 1.6s ease-in-out infinite alternate}
-@keyframes glow{from{opacity:.35}to{opacity:.8}}
-.wish{font:700 italic clamp(30px,4vw,38px)/1.05 var(--serif);margin:0 0 6px;background:linear-gradient(90deg,#b4442f,#d98a2b,#d9b878,#d98a2b,#b4442f);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:wishin .7s cubic-bezier(.2,.9,.3,1.4) both,sheen 3s linear infinite}
+.ingots{display:block;margin:0 auto 8px;width:120px;height:84px}
+.ingots .ig{animation:igdrop .6s cubic-bezier(.2,.9,.3,1.4) backwards}
+.ingots .ig2{animation-delay:.15s}.ingots .ig3{animation-delay:.3s}
+@keyframes igdrop{from{transform:translateY(-40px);opacity:0}}
+.ingots .gl{animation:glint 2.2s 1s linear infinite}
+@keyframes glint{0%{transform:translateX(-80px)}60%,100%{transform:translateX(140px)}}
+.wish{font:700 italic clamp(30px,4vw,38px)/1.05 var(--serif);margin:0 0 6px;background:linear-gradient(90deg,#8a6a3a,#d9b878,#fbe9b7,#d9b878,#8a6a3a);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:wishin .7s cubic-bezier(.2,.9,.3,1.4) both,sheen 3s linear infinite}
 @keyframes wishin{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
 @keyframes sheen{to{background-position:-200% 0}}
 .done h2{font-size:22px;margin:4px 0 0}
@@ -176,13 +250,16 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
   @keyframes fadein{to{opacity:1}}
   .bubble{left:auto;right:96px;top:-80px}
   .form-zone{margin-top:90px}
+  .agenda{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .duo{grid-template-columns:1fr}
 }
 @media (max-width:640px){
   .wrap{padding:0 16px}
   .stage{border-radius:22px;margin-top:12px}
   .hero{padding:14px 14px 24px}
   .hero h1{font-size:30px;margin:10px 0 10px}
-  .hero h1 .word{display:inline}
+  .hero h1 .word{display:block}
+  .hero h1{line-height:1.08}
   .eyebrow{font-size:11px;padding:5px 12px 5px 9px}
   .when{gap:6px;margin:0 0 14px}
   .pill{font-size:13px;padding:5px 10px;gap:6px}
@@ -201,13 +278,21 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
   .count .cell{width:64px}
   .count .face{font-size:26px}
   .terminal{grid-template-columns:1fr;padding:22px 22px 26px}
+  .agenda{grid-template-columns:1fr}
+  .ag{display:grid;grid-template-columns:52px minmax(0,1fr);gap:0 14px;align-items:start}
+  .ag .no{grid-column:2}.ag svg{grid-row:1 / span 3;margin:2px 0 0}
+  .scale-card{grid-template-columns:1fr;padding:22px}
+  .scale{max-width:240px;margin:0 auto}
+  .gift{grid-template-columns:1fr;padding:22px;text-align:left}
+  .chip{min-width:0;flex:1;padding:8px 10px}.chip b{font-size:20px}
+  .legend{display:none}
   .float-cta{display:flex;position:fixed;left:16px;right:16px;bottom:14px;z-index:30;transition:transform .3s,opacity .3s}
   .float-cta.hide{transform:translateY(90px);opacity:0}
   .float-cta .btn{width:100%;padding:14px}
 }
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}
   .peek{transform:none}.bubble,.card,.h1-in>*,.wish{opacity:1;transform:none}
-  .chart .cdl{transform:none}.chart .trend{stroke-dashoffset:0}.chart .tip{opacity:1}.coin{display:none}}
+  .chart .cdl{transform:none}.chart .trend,.chart .ln-n,.chart .ln-g,.chart .ln-s{stroke-dashoffset:0}.chart .tip,.chart .rb{opacity:1}.coin,.bar{display:none}.ag{opacity:1;transform:none}}
 </style>
 </head>
 <body>
@@ -223,19 +308,25 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
 <main class="wrap">
   <div class="stage">
     <div class="stage-bg" aria-hidden="true"><div class="grid-bg"></div><svg class="chart" id="chart" viewBox="0 0 1200 400" preserveAspectRatio="none"></svg><div id="coins"></div></div>
+    <div class="legend" aria-hidden="true"><span><i style="background:#7fd3a0"></i>Nifty</span><span><i style="background:#d9b878"></i>Gold</span><span><i style="background:#fff"></i>The system</span></div>
     <div class="hero">
       <div class="intro">
-        <span class="eyebrow"><i class="live-dot"></i> Community Meet 3 · Free · Live</span>
-        <h1 class="h1-in"><span style="animation-delay:.1s">The community</span> <span class="word" style="animation-delay:.35s">meets again.</span></h1>
+        <span class="eyebrow"><i class="live-dot"></i> Community Meet 4 · Free · Live</span>
+        <h1 class="h1-in"><span style="animation-delay:.1s">Gold + Nifty.</span> <span class="word" style="animation-delay:.35s">One simple system.</span></h1>
         <div class="when">
-          <span class="pill"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Sun, 25 October</span>
+          <span class="pill"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Sun, 15 November</span>
           <span class="pill"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>9 to 10 PM IST</span>
           <span class="pill pm"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="m16 10 6-3v10l-6-3"/></svg>Google Meet</span>
         </div>
       </div>
 
       <div class="more">
-        <p class="lede">One hour, live, with the Street ka Dalal community. This time: <b style="color:#fff">investing strategies</b>, and <b style="color:#fff">what happened in the market this week</b>. Free. Register once and we send you the calendar invite and the Meet link.</p>
+        <p class="lede">One hour, live. We break down a <b style="color:#fff">simple Gold + Nifty ETF systematic strategy</b>: how it works, how to build your own, and how it is running right now. Free. Register once and we send you the calendar invite and the Meet link.</p>
+        <div class="chips">
+          <div class="chip" style="animation-delay:.5s"><b>2 ETFs</b><small>Gold and Nifty</small></div>
+          <div class="chip" style="animation-delay:.65s"><b>17 to 18%</b><small>CAGR in backtesting</small></div>
+          <div class="chip" style="animation-delay:.8s"><b>Free PDF</b><small>Full strategy giveaway</small></div>
+        </div>
         <div class="count" id="count" aria-label="Time left">
           <div class="cell"><b class="face" id="cd-d">-</b><small>days</small></div><div class="cell"><b class="face" id="cd-h">-</b><small>hours</small></div><div class="cell"><b class="face" id="cd-m">-</b><small>mins</small></div><div class="cell"><b class="face" id="cd-s">-</b><small>secs</small></div>
         </div>
@@ -244,7 +335,7 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
       </div>
 
       <div class="form-zone" id="register">
-        <div class="bubble" id="bubble">Arre, register kar lo!</div>
+        <div class="bubble" id="bubble">Gold ya Nifty? Dono!</div>
         <img class="peek" src="icons/dalal-peek.webp" alt="" width="263" height="720" decoding="async">
         <div class="card form" id="formCard">
           <form id="regForm" novalidate>
@@ -270,7 +361,58 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
     </div>
   </div>
 
-  <section class="block">
+  <section class="block" id="agenda">
+    <div class="sec-h"><div><span class="kicker">What we will break down</span><h2>Beyond just CAGR</h2><p>A practical session on systematic investing: building your own strategy, and reading its results beyond one headline number.</p></div></div>
+    <div class="agenda">
+      <div class="ag"><span class="no">01</span>
+        <svg viewBox="0 0 52 52" aria-hidden="true"><g class="gear"><circle cx="20" cy="22" r="11" fill="none" stroke="#b08d57" stroke-width="6" stroke-dasharray="4 3.2"/><circle cx="20" cy="22" r="8" fill="#f3ead9" stroke="#b08d57" stroke-width="2.5"/><circle cx="20" cy="22" r="2.5" fill="#b08d57"/></g><g class="gear r"><circle cx="37" cy="37" r="7.5" fill="none" stroke="#2f6b4f" stroke-width="5" stroke-dasharray="3 2.6"/><circle cx="37" cy="37" r="5" fill="#dfe9d6" stroke="#2f6b4f" stroke-width="2"/></g></svg>
+        <h3>How the strategy works</h3><p>The rules in plain words: what it holds, when it switches, and why.</p></div>
+      <div class="ag"><span class="no">02</span>
+        <svg viewBox="0 0 52 52" aria-hidden="true"><rect class="blk b3" x="8" y="34" width="36" height="11" rx="3" fill="#1f4d3a"/><rect class="blk b2" x="12" y="21" width="28" height="11" rx="3" fill="#d9b878"/><rect class="blk" x="16" y="8" width="20" height="11" rx="3" fill="#2f6b4f"/><text x="26" y="42" text-anchor="middle" font-size="7" font-weight="800" fill="#e9dcc3" font-family="system-ui">NIFTY</text><text x="26" y="29" text-anchor="middle" font-size="7" font-weight="800" fill="#12301f" font-family="system-ui">GOLD</text><text x="26" y="16" text-anchor="middle" font-size="7" font-weight="800" fill="#e9dcc3" font-family="system-ui">RULES</text></svg>
+        <h3>Build your own with ETFs</h3><p>The steps to turn an idea into a system you can actually follow.</p></div>
+      <div class="ag"><span class="no">03</span>
+        <svg viewBox="0 0 52 52" aria-hidden="true"><g class="gear" style="animation-duration:9s"><circle cx="26" cy="26" r="17" fill="none" stroke="#d9b878" stroke-width="8" stroke-dasharray="58 49"/><circle cx="26" cy="26" r="17" fill="none" stroke="#2f6b4f" stroke-width="8" stroke-dasharray="49 58" stroke-dashoffset="-58"/></g><path d="M22 26h8M27 22l4 4-4 4" stroke="#1d2a23" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <h3>Allocation and rebalancing</h3><p>The logic behind how much goes where, and when the mix is reset.</p></div>
+      <div class="ag"><span class="no">04</span>
+        <svg viewBox="0 0 52 52" aria-hidden="true"><path d="M6 46h40" stroke="#c9bfa9" stroke-width="2" stroke-linecap="round"/><rect class="yb" x="8" y="26" width="6" height="20" rx="1.5" fill="#2f6b4f"/><rect class="yb" style="animation-delay:.3s" x="17" y="14" width="6" height="32" rx="1.5" fill="#d9b878"/><rect class="yb" style="animation-delay:.6s" x="26" y="32" width="6" height="14" rx="1.5" fill="#b4442f"/><rect class="yb" style="animation-delay:.9s" x="35" y="18" width="6" height="28" rx="1.5" fill="#2f6b4f"/></svg>
+        <h3>Every year, every market</h3><p>Year by year results through rising, falling and flat markets.</p></div>
+      <div class="ag"><span class="no">05</span>
+        <svg viewBox="0 0 52 52" aria-hidden="true"><rect x="4" y="10" width="44" height="32" rx="6" fill="#12301f"/><path class="pulse" d="M8 28h9l3-8 5 14 4-10 3 4h12" fill="none" stroke="#d9b878" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="41" cy="16" r="3" fill="#f06a4f"><animate attributeName="opacity" values="1;.2;1" dur="1.4s" repeatCount="indefinite"/></circle></svg>
+        <h3>How it is running now</h3><p>Where the system stands today, and what its rules are saying.</p></div>
+    </div>
+
+    <div class="duo">
+      <div class="scale-card">
+        <div><span class="kicker">The core idea</span><h3>Two assets, one set of rules</h3><p>Gold and Nifty rarely run together. The system decides how much sits on each side and when to bring the balance back, so you follow rules instead of guesses.</p></div>
+        <div class="scale" aria-hidden="true"><svg viewBox="0 0 220 170">
+          <path d="M80 158h60" stroke="#1f4d3a" stroke-width="8" stroke-linecap="round"/><path d="M110 156V52" stroke="#1f4d3a" stroke-width="6" stroke-linecap="round"/>
+          <g class="beam"><path d="M30 52h160" stroke="#b08d57" stroke-width="6" stroke-linecap="round"/></g>
+          <circle cx="110" cy="52" r="8" fill="#d9b878" stroke="#1f4d3a" stroke-width="3"/>
+          <g class="panL"><path d="M30 52 12 104M30 52l18 52" stroke="#8a7a5c" stroke-width="1.5"/><path d="M4 104h52a26 10 0 0 1-52 0Z" fill="#1f4d3a"/>
+            <path d="M14 104l3-9h18l3 9Z" fill="url(#gg)"/><path d="M22 95l3-8h14l3 8Z" fill="url(#gg)"/><path d="M32 104l3-9h18l3 9Z" fill="url(#gg)" transform="translate(-6 0)"/>
+            <text x="30" y="128" text-anchor="middle" class="tag">GOLD</text></g>
+          <g class="panR"><path d="M190 52l-18 52M190 52l18 52" stroke="#8a7a5c" stroke-width="1.5"/><path d="M164 104h52a26 10 0 0 1-52 0Z" fill="#1f4d3a"/>
+            <rect x="172" y="80" width="36" height="24" rx="4" fill="#fffdf8" stroke="#2f6b4f" stroke-width="2"/><path d="M176 98l7-6 6 3 6-8 9-3" fill="none" stroke="#23794f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <text x="190" y="128" text-anchor="middle" class="tag">NIFTY</text></g>
+          <defs><linearGradient id="gg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbe9b7"/><stop offset=".5" stop-color="#d9b878"/><stop offset="1" stop-color="#8a6a3a"/></linearGradient></defs>
+        </svg></div>
+      </div>
+      <div class="gift">
+        <span class="sparkle" style="left:12%;top:14%"></span><span class="sparkle" style="left:30%;top:82%;animation-delay:.8s"></span><span class="sparkle" style="right:8%;top:20%;animation-delay:1.4s"></span><span class="sparkle" style="right:22%;bottom:12%;animation-delay:.4s"></span>
+        <div class="pdf" aria-hidden="true"><div class="sheet back"></div><div class="sheet"><svg viewBox="0 0 132 170">
+          <rect x="0" y="0" width="132" height="34" fill="#1f4d3a"/><text x="12" y="16" font-size="8" font-weight="800" fill="#d9b878" font-family="system-ui" letter-spacing="1">STREET KA DALAL</text><text x="12" y="27" font-size="9" font-weight="700" fill="#fff" font-family="Georgia,serif">Gold + Nifty system</text>
+          <rect x="12" y="44" width="70" height="5" rx="2" fill="#e4dccb"/><rect x="12" y="54" width="100" height="4" rx="2" fill="#efe8d8"/><rect x="12" y="62" width="88" height="4" rx="2" fill="#efe8d8"/>
+          <path d="M12 108l14-10 12 4 14-14 12 6 16-16 14 6 18-12" fill="none" stroke="#b08d57" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 112l14-6 12 2 14-8 12 4 16-8 14 2 18-6" fill="none" stroke="#7fd3a0" stroke-width="2" stroke-linecap="round" opacity=".8"/>
+          <g fill="#d9b878"><rect x="14" y="140" width="10" height="16"/><rect x="30" y="132" width="10" height="24"/><rect x="46" y="144" width="10" height="12" fill="#b4442f"/><rect x="62" y="128" width="10" height="28"/><rect x="78" y="136" width="10" height="20"/><rect x="94" y="126" width="10" height="30"/><rect x="110" y="134" width="10" height="22"/></g>
+        </svg></div><span class="ribbon">FREE PDF</span></div>
+        <div><span class="kicker">Giveaway</span><h3>The complete strategy, as a PDF</h3><p>Everyone who joins gets the full write-up:</p>
+          <ul><li>The rules of the strategy</li><li>The backtest breakdown</li><li>Year-wise performance</li><li>Detailed analysis</li></ul></div>
+      </div>
+    </div>
+    <p class="note">The 17 to 18% CAGR is from backtesting. Past and backtest results do not promise future returns. For learning and discussion only, not investment advice.</p>
+  </section>
+
+  <section class="block" style="padding-top:6px">
     <div class="terminal">
       <div><div class="say" style="margin:0 0 10px"><img src="icons/dalal-head.webp" alt="" width="40" height="40" loading="lazy"><span style="background:rgba(255,255,255,.12);color:#fff">Session se pehle ek baar ghoom aao.</span></div><h2>Explore the Street ka Dalal terminal</h2><p>Screeners, sectors, results, news and the pre-market page. Free with Google sign-in.</p></div>
       <a class="btn" href="./">Open the terminal</a>
@@ -278,14 +420,14 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
   </section>
 </main>
 <footer class="wrap">Street ka Dalal · For learning and discussion only. Not investment advice, and no buy or sell calls.</footer>
-<div class="float-cta hide" id="floatCta"><a class="btn gold" href="#register">Save my seat for Sunday 9 PM</a></div>
+<div class="float-cta hide" id="floatCta"><a class="btn gold" href="#register">Save my seat for Sunday 15 Nov, 9 PM</a></div>
 <canvas id="sky" aria-hidden="true"></canvas>
 
 <script>
 (() => {
-  const EVENT = 'meet-3';
-  const START = Date.parse('2026-10-25T21:00:00+05:30'), END = Date.parse('2026-10-25T22:00:00+05:30');
-  const MEET = 'https://meet.google.com/caf-xzkh-qap';   // Google Meet link for this session; while empty the page says it comes with the calendar invite
+  const EVENT = 'meet-4';
+  const START = Date.parse('2026-11-15T21:00:00+05:30'), END = Date.parse('2026-11-15T22:00:00+05:30');
+  const MEET = '';   // Google Meet link for this session; while empty the page says it comes with the calendar invite
   const WA = 'https://chat.whatsapp.com/DUdUxpofHqE9auMNtDyZYr';
   const $ = (s) => document.querySelector(s);
   const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -298,7 +440,7 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
   /* fireworks over the whole page: a show when the page opens, a bigger one after sign-up */
   const sky = (() => {
     const cv = $('#sky'), ctx = cv.getContext('2d');
-    const cols = ['#ffd27a', '#ff8a3d', '#ff4f5e', '#ff7ad9', '#7fd3a0', '#8fd0ff', '#ffffff', '#d9b878'];
+    const cols = ['#ffd27a', '#fbe9b7', '#d9b878', '#e0b85c', '#b08d57', '#ffffff', '#7fd3a0', '#ffe7a0'];
     let rockets = [], sparks = [], running = false, W = 0, H = 0;
     const fit = () => { const dpr = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); };
     addEventListener('resize', fit); fit();
@@ -342,29 +484,42 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
   })();
   setTimeout(() => sky(9, 420), 500);
 
-  /* hero background: candles grow one by one, then a gold trend line draws over them */
+  /* hero background: Nifty and Gold lines draw, then the system line (white) with gold rebalance dots; gold coins and bars float up */
   (function chart() {
-    const svg = $('#chart'), W = 1200, n = 34;
-    let y = 300, out = '';
-    const pts = [];
+    const svg = $('#chart'), W = 1200, n = 40;
+    const xs = (i) => 20 + i * ((W - 40) / (n - 1));
+    const nifty = [], gold = [], sys = [];
+    let a = 1, g = 1, m = 1;
     for (let i = 0; i < n; i++) {
-      const x = 20 + i * ((W - 40) / (n - 1));
-      const move = Math.sin(i * 1.7) * 26 - 6 - (i > 22 ? 5 : 0);
-      const o = y, c = Math.max(40, Math.min(360, y + move));
-      const hi = Math.min(o, c) - 10 - (i * 7) % 18, lo = Math.max(o, c) + 10 + (i * 5) % 14;
-      const col = c < o ? '#7fd3a0' : '#f2a08f';
-      out += `<g class="cdl" style="animation-delay:${(i * 0.06).toFixed(2)}s"><line x1="${x}" x2="${x}" y1="${hi}" y2="${lo}" stroke="${col}" stroke-width="2"/><rect x="${x - 7}" y="${Math.min(o, c)}" width="14" height="${Math.max(4, Math.abs(c - o))}" rx="2" fill="${col}"/></g>`;
-      pts.push(`${x.toFixed(1)},${c.toFixed(1)}`); y = c;
+      const crash = i > 13 && i < 20, golden = i > 12 && i < 24;
+      const ra = crash ? -0.055 : 0.03 + Math.sin(i * 1.3) * 0.035;
+      const rg = golden ? 0.03 + Math.sin(i * 2.1) * 0.012 : 0.006 + Math.sin(i * 1.9) * 0.02;
+      if (i) { a *= 1 + ra; g *= 1 + rg; m *= 1 + (crash ? rg * 0.9 + ra * 0.1 : ra * 0.7 + rg * 0.3) + 0.006; }
+      nifty.push(a); gold.push(g); sys.push(m);
     }
-    const last = pts[pts.length - 1].split(',');
-    svg.innerHTML = out + `<polyline class="trend" points="${pts.join(' ')}" style="--len:2400"/><circle class="tip-ring" cx="${last[0]}" cy="${last[1]}" r="6"/><circle class="tip" cx="${last[0]}" cy="${last[1]}" r="6"/>`;
+    const hi = Math.max(...nifty, ...gold, ...sys), lo = Math.min(...nifty, ...gold, ...sys);
+    const yv = (v) => 360 - ((v - lo) / (hi - lo)) * 300;
+    const path = (arr) => arr.map((v, i) => `${xs(i).toFixed(1)},${yv(v).toFixed(1)}`).join(' ');
+    let dots = '';
+    for (let i = 6; i < n - 1; i += 7) dots += `<circle class="rb" cx="${xs(i).toFixed(1)}" cy="${yv(sys[i]).toFixed(1)}" r="7" style="animation-delay:${(1.2 + (i / n) * 3.2).toFixed(2)}s"/>`;
+    const lx = xs(n - 1), ly = yv(sys[n - 1]);
+    svg.innerHTML = `<polyline class="ln-n" points="${path(nifty)}" style="--len:2600"/><polyline class="ln-g" points="${path(gold)}" style="--len:2600"/><polyline class="ln-s" points="${path(sys)}" style="--len:2600"/>${dots}<circle class="tip-ring" cx="${lx}" cy="${ly}" r="6" style="animation-delay:4.6s"/><circle class="tip" cx="${lx}" cy="${ly}" r="6" style="animation-delay:4.5s"/>`;
     if (calm) return;
     const coins = $('#coins');
-    [[6, 34, 12, 0], [22, 26, 14, 3], [41, 40, 11, 6], [63, 30, 15, 1.5], [80, 36, 12, 8], [92, 24, 16, 4.5]].forEach(([l, s, d, dl]) => {
-      const c = document.createElement('span'); c.className = 'coin'; c.textContent = '₹';
-      c.style.cssText = `left:${l}%;--s:${s}px;--d:${d}s;--dl:${dl}s`; coins.appendChild(c);
+    [[5, 34, 12, 0, 'au'], [16, 44, 14, 2, 'bar'], [29, 28, 13, 5, 'rs'], [41, 40, 11, 6, 'au'], [54, 50, 15, 1, 'bar'], [66, 30, 14, 3.5, 'rs'], [78, 36, 12, 8, 'au'], [88, 42, 16, 4.5, 'bar'], [95, 26, 13, 9, 'rs']].forEach(([l, sz, d, dl, k]) => {
+      const c = document.createElement('span');
+      c.className = k === 'bar' ? 'bar' : 'coin' + (k === 'au' ? ' au' : '');
+      if (k !== 'bar') c.textContent = k === 'au' ? 'Au' : '₹';
+      c.style.cssText = `left:${l}%;--s:${sz}px;--d:${d}s;--dl:${dl}s`; coins.appendChild(c);
     });
   })();
+
+  /* agenda cards slide in as they come on screen */
+  const ags = document.querySelectorAll('.ag');
+  if ('IntersectionObserver' in window && !calm) {
+    const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { const k = [...ags].indexOf(e.target); setTimeout(() => e.target.classList.add('in'), k * 110); io.unobserve(e.target); } }), { threshold: 0.15 });
+    ags.forEach((el) => io.observe(el));
+  } else ags.forEach((el) => el.classList.add('in'));
 
   /* countdown with flipping digits */
   const pad = (n) => String(n).padStart(2, '0');
@@ -384,7 +539,7 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
   tick();
 
   /* Dalal's speech bubble */
-  const lines = ['Arre, register kar lo!', 'Sunday, 9 baje. Milte hain.', 'Seat free hai, bas naam likho.', 'Calendar mein daal denge, tension mat lo.'];
+  const lines = ['Gold ya Nifty? Dono!', 'Sunday, 9 baje. System samjhenge.', 'Free PDF bhi milega.', 'Seat free hai, bas naam likho.', 'Calendar mein daal denge, tension mat lo.'];
   let li = 0;
   setInterval(() => { const b = $('#bubble'); if (!b || b.dataset.fixed) return; li = (li + 1) % lines.length; b.classList.remove('swap'); void b.offsetWidth; b.textContent = lines[li]; b.classList.add('swap'); }, 4200);
 
@@ -439,20 +594,20 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
 
   /* registration */
   const gcal = () => 'https://calendar.google.com/calendar/render?action=TEMPLATE'
-    + '&text=' + encodeURIComponent('Street ka Dalal Community Meet 3')
-    + '&dates=20261025T153000Z/20261025T163000Z'
-    + '&details=' + encodeURIComponent('Street ka Dalal Community Meet 3, live on Google Meet: investing strategies, and what happened in the market this week.' + (MEET ? '\nJoin: ' + MEET : '\nThe Meet link comes with the calendar invite and on our WhatsApp community.'))
+    + '&text=' + encodeURIComponent('Street ka Dalal Community Meet 4: Gold + Nifty ETF system')
+    + '&dates=20261115T153000Z/20261115T163000Z'
+    + '&details=' + encodeURIComponent('Street ka Dalal Community Meet 4, live on Google Meet: a simple Gold + Nifty ETF systematic strategy. How it works, how to build your own, rebalancing, year-wise results and how it is running now. Free PDF of the full strategy for everyone who joins.' + (MEET ? '\nJoin: ' + MEET : '\nThe Meet link comes with the calendar invite and on our WhatsApp community.'))
     + (MEET ? '&location=' + encodeURIComponent(MEET) : '');
-  const DIYA = '<svg class="diya" viewBox="0 0 96 80" aria-hidden="true"><ellipse class="glow" cx="48" cy="24" rx="26" ry="22" fill="#ffcf6b" opacity=".5"/><path class="flame" d="M48 6c6 9 9 15 9 20a9 9 0 0 1-18 0c0-5 3-11 9-20Z" fill="#ff9b2e"/><path class="flame" d="M48 15c3 5 4.5 8 4.5 11a4.5 4.5 0 0 1-9 0c0-3 1.5-6 4.5-11Z" fill="#ffe7a0"/><path d="M10 46h76c-3 15-18 26-38 26S13 61 10 46Z" fill="#b4442f"/><path d="M10 46h76" stroke="#d9b878" stroke-width="5" stroke-linecap="round"/><path d="M26 58h44" stroke="#d9b878" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="4 6"/></svg>';
+  const INGOTS = '<svg class="ingots" viewBox="0 0 120 84" aria-hidden="true"><defs><linearGradient id="ig" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbe9b7"/><stop offset=".45" stop-color="#e0b85c"/><stop offset="1" stop-color="#8a6a3a"/></linearGradient><clipPath id="igc"><path d="M14 80l8-24h36l8 24Z M54 80l8-24h36l8 24Z M34 54l8-24h36l8 24Z"/></clipPath></defs><path class="ig" d="M14 80l8-24h36l8 24Z" fill="url(#ig)"/><path class="ig ig2" d="M54 80l8-24h36l8 24Z" fill="url(#ig)"/><path class="ig ig3" d="M34 54l8-24h36l8 24Z" fill="url(#ig)"/><g clip-path="url(#igc)"><g transform="skewX(-20)"><rect class="gl" x="0" y="0" width="16" height="84" fill="#fff" opacity=".55"/></g></g><path d="M60 4v10M48 9l5 6M72 9l-5 6" stroke="#d9b878" stroke-width="3" stroke-linecap="round"/></svg>';
   function done(name, again) {
     const first = name ? esc(name.split(' ')[0]) : '';
-    $('#formCard').innerHTML = `<div class="done">${DIYA}
-      <p class="wish">Advance Happy Diwali${first ? `, ${first}` : ''}!</p>
-      <h2>You are in for Community Meet 3</h2>
-      <p class="sub" style="color:var(--muted);margin:6px 0 0">${again ? 'Your registration is saved.' : 'See you on Sunday, 25 October at 9:00 PM.'} Wishing you and your family a bright, happy and prosperous Diwali in advance.</p>
+    $('#formCard').innerHTML = `<div class="done">${INGOTS}
+      <p class="wish">You are in${first ? `, ${first}` : ''}!</p>
+      <h2>You are in for Community Meet 4</h2>
+      <p class="sub" style="color:var(--muted);margin:6px 0 0">${again ? 'Your registration is saved.' : 'See you on Sunday, 15 November at 9:00 PM.'} We break down the Gold + Nifty ETF system live, and everyone who joins gets the full strategy PDF.</p>
       ${MEET ? `<a class="meet" href="${MEET}" target="_blank" rel="noopener">Meet link: ${MEET.replace('https://', '')}</a>` : '<p class="meet">The Meet link comes with your calendar invite and on our WhatsApp community.</p>'}
       <div class="btns"><a class="btn primary" href="${gcal()}" target="_blank" rel="noopener">Add to my Google Calendar</a><a class="btn light" href="${WA}" target="_blank" rel="noopener">Join the WhatsApp community</a></div></div>`;
-    const b = $('#bubble'); b.dataset.fixed = '1'; b.textContent = 'Advance Happy Diwali! Sunday ko milte hain.';
+    const b = $('#bubble'); b.dataset.fixed = '1'; b.textContent = 'Done! Sunday ko milte hain, PDF ready rakhenge.';
     const f = $('#floatCta'); if (f) f.remove();
   }
   const saved = store.get('skd-reg-' + EVENT);
@@ -490,9 +645,9 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
   fetch('data/market.json').then((r) => (r.ok ? r.json() : Promise.reject(new Error(r.status)))).then((m) => {
     const names = { 'NIFTY 50': 'Nifty 50', 'NIFTY 500': 'Nifty 500', 'NIFTY MIDCAP 150': 'Midcap 150', 'NIFTY SMALLCAP 250': 'Smallcap 250' };
     const items = [...(m.indices || []).map((i) => [names[i.name] || i.name, num(i.last, 0), i.returns?.['1D']]), ...(m.sectoral || []).filter((s) => s.returns?.['1D'] != null).slice(0, 14).map((s) => [s.name.replace(/^NIFTY /i, 'Nifty '), '', s.returns['1D']])];
-    const html = items.map(([n, v, c]) => `<span><i></i>${esc(n)} ${v ? `<b>${v}</b>` : ''} <em class="${tone(c)}" style="font-style:normal">${pct(c)}</em></span>`).join('') + '<span><i></i><b>Community Meet 3</b> Sunday 25 Oct, 9 PM</span>';
+    const html = items.map(([n, v, c]) => `<span><i></i>${esc(n)} ${v ? `<b>${v}</b>` : ''} <em class="${tone(c)}" style="font-style:normal">${pct(c)}</em></span>`).join('') + '<span><i></i><b>Community Meet 4</b> Gold + Nifty ETF system, Sunday 15 Nov, 9 PM</span><span><i></i><b>Free PDF</b> the full strategy for everyone who joins</span>';
     $('#ticker').innerHTML = html + html;
-  }).catch(() => { const s = '<span><i></i><b>Community Meet 3</b> Sunday 25 October, 9 PM IST on Google Meet</span>'; $('#ticker').innerHTML = s.repeat(8); });
+  }).catch(() => { const s = '<span><i></i><b>Community Meet 4</b> Gold + Nifty ETF system, Sunday 15 November, 9 PM IST on Google Meet</span>'; $('#ticker').innerHTML = s.repeat(8); });
 })();
 </script>
 </body>

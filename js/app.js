@@ -79,7 +79,7 @@ const LOGO = '<svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><rect wid
 
 /* ---------------- data ---------------- */
 // Community sessions with a sign-up page (newest first): event id, admin tab label, line under it
-const REG_EVENTS = [['meet-3', 'Meet 3', 'Community Meet 3 · Sunday 25 October, 9 PM'], ['meet-2', 'Meet 2', 'Community Meet 2 · Sunday 18 October, 9 PM']];
+const REG_EVENTS = [['meet-4', 'Meet 4', 'Community Meet 4 (Gold + Nifty ETF system) · Sunday 15 November, 9 PM'], ['meet-3', 'Meet 3', 'Community Meet 3 · Sunday 25 October, 9 PM'], ['meet-2', 'Meet 2', 'Community Meet 2 · Sunday 18 October, 9 PM']];
 const cache = {};
 let meta = null;
 async function loadMeta(force) {
