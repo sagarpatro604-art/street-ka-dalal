@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Humanizer: make AI text sound human, in fresh words · Street ka Dalal</title>
-<meta name="description" content="Free humanizer by Street ka Dalal. Paste any text, press one button, and get it back rewritten so it reads like a person wrote it, in fresh original wording. Copy, download, compare.">
-<meta property="og:title" content="Street ka Dalal Humanizer">
-<meta property="og:description" content="Paste text, one click: it reads human and comes back in fresh wording of its own. Free.">
+<title>Plagiarism checker + Humanizer · Street ka Dalal</title>
+<meta name="description" content="Free plagiarism checker and humanizer by Street ka Dalal. Check how much of your text is already on the web, then rewrite it in one click so it reads human, in fresh words, and see the plagiarism percentage drop.">
+<meta property="og:title" content="Street ka Dalal: Plagiarism checker + Humanizer">
+<meta property="og:description" content="Check plagiarism against the web, humanize in one click, and see the new plagiarism percentage. Free with Google sign-in.">
 <meta property="og:image" content="https://street-ka-dalal.pages.dev/icons/icon-512.png">
 <meta name="theme-color" content="#1F4D3A">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,700&display=swap" media="print" onload="this.media='all'">
 <style>
-:root{--bg:#f6f1e7;--paper:#fffdf8;--paper-2:#f1ebdf;--line:#e4dccb;--ink:#1d2a23;--muted:#6c786f;--green:#1f4d3a;--green-2:#2f6b4f;--deep:#12301f;--sage:#dfe9d6;--gold:#b08d57;--gold-2:#d9b878;--gold-soft:#f3ead9;--cream:#e9dcc3;--up:#23794f;--down:#b4442f;
+:root{--bg:#f6f1e7;--paper:#fffdf8;--paper-2:#f1ebdf;--line:#e4dccb;--ink:#1d2a23;--muted:#6c786f;--green:#1f4d3a;--green-2:#2f6b4f;--deep:#12301f;--sage:#dfe9d6;--gold:#b08d57;--gold-2:#d9b878;--gold-soft:#f3ead9;--cream:#e9dcc3;--up:#23794f;--down:#b4442f;--warn:#a8701c;
 --serif:"Fraunces",Georgia,"Times New Roman",serif;--sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;--shadow:0 1px 2px rgba(31,46,36,.05),0 10px 30px rgba(31,46,36,.08)}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -22,12 +22,14 @@ body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 var(--sans);-
 a{color:var(--green-2)}
 h1,h2,h3{font-family:var(--serif);color:var(--green);margin:0;letter-spacing:-.01em}
 .wrap{max-width:1240px;margin:0 auto;padding:0 18px}
-.top{position:sticky;top:0;z-index:20;background:rgba(246,241,231,.9);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-.top .wrap{display:flex;align-items:center;gap:12px;height:58px}
+.top{position:sticky;top:0;z-index:20;background:rgba(246,241,231,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:10px;height:58px}
 .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--green);font:700 19px var(--serif)}
 .brand img{width:30px;height:30px}
 .brand em{color:var(--gold);font-style:italic}
 .grow{flex:1}
+.me{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+.me img{width:28px;height:28px;border-radius:50%}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:0;border-radius:999px;padding:12px 20px;font:700 15px var(--sans);cursor:pointer;text-decoration:none;transition:transform .15s ease,box-shadow .15s ease,background .15s;white-space:nowrap}
 .btn:hover{transform:translateY(-1px)}
 .btn:active{transform:scale(.97)}
@@ -39,15 +41,31 @@ h1,h2,h3{font-family:var(--serif);color:var(--green);margin:0;letter-spacing:-.0
 .btn.light{background:var(--paper);color:var(--green);border:1px solid var(--line)}
 .btn.light:hover{background:var(--gold-soft)}
 .btn.on{background:var(--sage);border-color:#c6d8bb}
+.btn.google{background:#fff;color:#1f1f1f;border:1px solid #dadce0;padding:14px 26px;font-size:16px;box-shadow:var(--shadow)}
+.btn.google svg{width:20px;height:20px}
 
-.hero{padding:30px 0 10px;text-align:center}
+.hero{padding:30px 0 6px;text-align:center}
 .hero h1{font-size:clamp(28px,4.4vw,44px);line-height:1.12}
 .hero h1 em{color:var(--gold);font-style:italic}
-.hero p{color:var(--muted);max-width:720px;margin:10px auto 0;font-size:16.5px}
-.pills{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px}
-.pill{background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13px;color:var(--green);font-weight:600}
+.hero p{color:var(--muted);max-width:740px;margin:10px auto 0;font-size:16.5px}
 
-.controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;margin:20px 0 14px}
+.gate{max-width:560px;margin:26px auto 0;background:var(--paper);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);padding:28px 26px;text-align:center}
+.gate ul{text-align:left;color:var(--muted);margin:16px auto 22px;max-width:420px;padding-left:20px}
+.gate li{margin:5px 0}
+.gate .small{font-size:13px;color:var(--muted);margin-top:14px}
+.warnbox{background:var(--gold-soft);border:1px solid #e5d3ad;border-radius:14px;padding:12px 14px;font-size:14px;margin:14px 0 0;text-align:left}
+
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:22px auto 6px;max-width:860px}
+@media (max-width:640px){.modes{grid-template-columns:1fr}}
+.mode{all:unset;cursor:pointer;background:var(--paper);border:2px solid var(--line);border-radius:20px;padding:16px 18px;display:flex;gap:14px;align-items:flex-start;transition:.15s;box-shadow:var(--shadow)}
+.mode:hover{border-color:var(--gold-2)}
+.mode.on{border-color:var(--green);background:#fbfdf8}
+.mode .ico{flex:none;width:44px;height:44px;border-radius:12px;background:var(--sage);display:grid;place-items:center;color:var(--green);font:700 20px var(--serif)}
+.mode.on .ico{background:var(--green);color:#fff}
+.mode b{display:block;font:700 18px var(--serif);color:var(--green)}
+.mode span{display:block;font-size:14px;color:var(--muted);margin-top:2px}
+
+.controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;margin:14px 0 14px}
 .tones{display:flex;gap:4px;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:4px;flex-wrap:wrap;justify-content:center}
 .tones button{border:0;background:transparent;border-radius:999px;padding:7px 13px;font:600 13.5px var(--sans);color:var(--muted);cursor:pointer}
 .tones button.on{background:var(--green);color:#fff}
@@ -55,12 +73,14 @@ h1,h2,h3{font-family:var(--serif);color:var(--green);margin:0;letter-spacing:-.0
 
 .panes{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media (max-width:860px){.panes{grid-template-columns:1fr}}
-.pane{background:var(--paper);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);display:flex;flex-direction:column;min-height:440px;overflow:hidden}
+.pane{background:var(--paper);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);display:flex;flex-direction:column;min-height:460px;overflow:hidden}
 .pane-head{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
 .pane-head h2{font-size:17px;margin-right:auto}
-.pane textarea,.pane .view{flex:1;width:100%;border:0;outline:0;resize:none;background:transparent;padding:16px 18px;font:16px/1.65 var(--sans);color:var(--ink);min-height:340px}
-.pane .view{white-space:pre-wrap;overflow:auto}
-.pane .view mark{background:#f6dfb0;border-radius:3px;padding:0 1px}
+.pane textarea,.pane .view{flex:1;width:100%;border:0;outline:0;resize:none;background:transparent;padding:16px 18px;font:16px/1.65 var(--sans);color:var(--ink);min-height:360px}
+.pane .view{white-space:pre-wrap;overflow:auto;max-height:640px}
+.view mark{border-radius:3px;padding:0 1px;background:#f6dfb0}
+.view mark.s0{background:#f8d3c9}.view mark.s1{background:#f6dfb0}.view mark.s2{background:#d7e8f6}.view mark.s3{background:#e3d9f3}.view mark.s4{background:#d5ecd9}.view mark.s5{background:#f3d6e8}
+.view mark.s6,.view mark.s7,.view mark.s8,.view mark.s9{background:#e8e0cf}
 .pane-foot{display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);flex-wrap:wrap}
 .pane-foot b{color:var(--ink)}
 .over{color:var(--down);font-weight:700}
@@ -73,14 +93,49 @@ h1,h2,h3{font-family:var(--serif);color:var(--green);margin:0;letter-spacing:-.0
 .badge.mid{background:var(--gold-soft);color:#7a5a1f}
 .badge.low{background:#f6dcd5;color:var(--down)}
 .spin{width:16px;height:16px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .8s linear infinite;display:inline-block}
+.spin.dark{border-color:rgba(31,77,58,.2);border-top-color:var(--green)}
 @keyframes sp{to{transform:rotate(360deg)}}
-.working{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;margin:auto;color:var(--muted);padding:40px}
+.working{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;margin:auto;color:var(--muted);padding:40px;text-align:center}
 .working .bar{width:220px;height:6px;border-radius:9px;background:var(--paper-2);overflow:hidden}
 .working .bar i{display:block;height:100%;width:40%;background:linear-gradient(90deg,var(--gold-2),var(--green-2));border-radius:9px;animation:slide 1.3s ease-in-out infinite}
 @keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(260%)}}
 .err{background:#fbeae5;border:1px solid #efc6ba;color:var(--down);border-radius:14px;padding:12px 16px;margin:12px auto 0;max-width:760px;text-align:center;font-weight:600}
 
-.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:34px 0 10px}
+/* plagiarism summary in the right pane */
+.summary{margin:auto;padding:26px 22px;text-align:center;width:100%}
+.gauge{width:170px;height:170px;margin:0 auto 10px;border-radius:50%;display:grid;place-items:center;position:relative}
+.gauge::after{content:"";position:absolute;inset:16px;border-radius:50%;background:var(--paper)}
+.gauge div{position:relative;z-index:1}
+.gauge b{display:block;font:700 40px var(--serif);color:var(--green);line-height:1}
+.gauge span{font-size:12.5px;color:var(--muted)}
+.verdict{font:700 19px var(--serif);margin:6px 0 4px}
+.verdict.good{color:var(--up)}.verdict.mid{color:var(--warn)}.verdict.bad{color:var(--down)}
+.summary p{color:var(--muted);font-size:14.5px;margin:4px auto 16px;max-width:420px}
+
+/* before / after strip above the humanized text */
+.ba{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;background:#fbf8f0;border-bottom:1px solid var(--line);font-size:14px}
+.ba .num{font:700 20px var(--serif)}
+.ba .arrow{color:var(--muted)}
+.num.good{color:var(--up)}.num.mid{color:var(--warn)}.num.bad{color:var(--down)}
+
+.report{margin:26px 0 0;background:var(--paper);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);overflow:hidden}
+.report-head{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.report-head h2{font-size:19px;margin-right:auto}
+.scores{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 18px}
+@media (max-width:700px){.scores{grid-template-columns:1fr}}
+.score{background:var(--paper-2);border-radius:14px;padding:12px 14px}
+.score b{display:block;font:700 28px var(--serif)}
+.score span{font-size:13px;color:var(--muted)}
+.srcs{width:100%;border-collapse:collapse;font-size:14.5px}
+.srcs th{text-align:left;font-size:12.5px;color:var(--muted);font-weight:600;padding:8px 18px;border-top:1px solid var(--line)}
+.srcs td{padding:10px 18px;border-top:1px solid var(--line);vertical-align:top}
+.srcs td.r,.srcs th.r{text-align:right;white-space:nowrap}
+.srcs a{word-break:break-word;font-weight:600}
+.srcs small{display:block;color:var(--muted);word-break:break-all}
+.dot{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.method{padding:12px 18px 16px;font-size:13px;color:var(--muted);border-top:1px solid var(--line)}
+
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:30px 0 10px}
 @media (max-width:860px){.cards{grid-template-columns:1fr}}
 .card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:16px 18px}
 .card h3{font-size:16.5px;margin-bottom:6px}
@@ -93,219 +148,450 @@ h1,h2,h3{font-family:var(--serif);color:var(--green);margin:0;letter-spacing:-.0
 .hist-item:hover{background:var(--gold-soft)}
 .hist-item span{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:14.5px}
 .hist-item small{color:var(--muted);white-space:nowrap}
-.note{font-size:13px;color:var(--muted);max-width:860px;margin:28px auto 0;text-align:center;line-height:1.6}
+.note{font-size:13px;color:var(--muted);max-width:880px;margin:28px auto 0;text-align:center;line-height:1.6}
 .foot{margin:30px 0 0;padding:22px 0 34px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);text-align:center}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--deep);color:#fff;padding:10px 18px;border-radius:999px;font-weight:650;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:50}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+.loading{padding:80px 0;text-align:center;color:var(--muted)}
 </style>
 </head>
 <body>
 <header class="top"><div class="wrap">
   <a class="brand" href="./"><img src="icons/icon.svg" alt="">Street ka <em>Dalal</em></a>
   <span class="grow"></span>
+  <span class="me" id="me" hidden></span>
   <a class="btn sm light" href="./">Back to the site</a>
 </div></header>
 
 <main class="wrap">
   <section class="hero">
-    <h1>Make any text sound <em>human</em>, in your own fresh words</h1>
-    <p>Paste your text and press one button. It comes back rewritten the way a careful person writes, with new wording of its own, and the meaning, facts and numbers unchanged.</p>
-    <div class="pills"><span class="pill">Humanize + fresh wording in one click</span><span class="pill">Free</span><span class="pill">Up to 2,000 words</span><span class="pill">English, Hindi, Hinglish</span></div>
+    <h1>Check <em>plagiarism</em>, then make it human in one click</h1>
+    <p>See how much of your text is already on the web. Then rewrite it so it reads like a person wrote it, in fresh words, and watch the plagiarism percentage drop. Free.</p>
   </section>
 
-  <div class="controls">
-    <span class="lbl">Tone</span>
-    <div class="tones" id="tones">
-      <button data-t="natural" class="on">Natural</button><button data-t="simple">Simple</button><button data-t="professional">Professional</button><button data-t="friendly">Friendly</button><button data-t="academic">Academic</button>
+  <div class="loading" id="loading"><span class="spin dark"></span></div>
+
+  <!-- not signed in -->
+  <section class="gate" id="gate" hidden>
+    <h2>Sign in to start</h2>
+    <ul>
+      <li>Check any text for plagiarism against the web</li>
+      <li>Humanize it in one click, in your own fresh words</li>
+      <li>See the plagiarism percentage before and after</li>
+      <li>Free: 10 checks and 20 rewrites a day</li>
+    </ul>
+    <button class="btn google" id="signInBtn"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Continue with Google</button>
+    <div class="warnbox" id="inapp" hidden>You opened this inside an app (Instagram, Facebook, LinkedIn). Google does not allow sign-in there. Tap the three dots at the top and choose <b>Open in browser</b> (Chrome or Safari), or <button class="btn sm light" id="copyLink">copy the link</button> and paste it in Chrome.</div>
+    <p class="small">We only use your name and email to keep your account and the daily free limit. By signing in you join the Street ka Dalal community.</p>
+  </section>
+
+  <!-- signed in -->
+  <section id="app" hidden>
+    <div class="modes" id="modes">
+      <button class="mode" data-m="check"><span class="ico">%</span><span><b>Check plagiarism</b><span>See how much of your text is already on the web, with every source. Then humanize it in one click.</span></span></button>
+      <button class="mode" data-m="humanize"><span class="ico">Aa</span><span><b>Humanize text</b><span>Rewrite it so it reads human, in fresh words, and see the plagiarism percentage before and after.</span></span></button>
     </div>
-  </div>
 
-  <div class="panes">
-    <section class="pane">
-      <div class="pane-head">
-        <h2>Your text</h2>
-        <button class="btn sm light" id="pasteBtn" title="Paste from clipboard">Paste</button>
-        <label class="btn sm light" title="Open a .txt file">Upload<input type="file" id="fileIn" accept=".txt,.md,.text,text/plain" hidden></label>
-        <button class="btn sm light" id="sampleBtn">Try a sample</button>
-        <button class="btn sm light" id="clearBtn">Clear</button>
+    <div class="controls">
+      <span class="lbl">Tone for the rewrite</span>
+      <div class="tones" id="tones">
+        <button data-t="natural" class="on">Natural</button><button data-t="simple">Simple</button><button data-t="professional">Professional</button><button data-t="friendly">Friendly</button><button data-t="academic">Academic</button>
       </div>
-      <textarea id="inp" placeholder="Paste or type your text here. AI-written essays, posts, emails, captions, reports: anything up to 2,000 words." spellcheck="true"></textarea>
-      <input class="hp" id="website" tabindex="-1" autocomplete="off" aria-hidden="true">
-      <div class="pane-foot"><span id="inCount"><b>0</b> words</span><span class="grow"></span><span>Ctrl + Enter to humanize</span></div>
+    </div>
+
+    <div class="panes">
+      <section class="pane">
+        <div class="pane-head">
+          <h2>Your text</h2>
+          <button class="btn sm light" id="editBtn" hidden>Edit text</button>
+          <button class="btn sm light" id="pasteBtn" title="Paste from clipboard">Paste</button>
+          <label class="btn sm light" title="Open a .txt file">Upload<input type="file" id="fileIn" accept=".txt,.md,.text,text/plain" hidden></label>
+          <button class="btn sm light" id="sampleBtn">Sample</button>
+          <button class="btn sm light" id="clearBtn">Clear</button>
+        </div>
+        <textarea id="inp" placeholder="Paste or type your text here: an essay, assignment, post, email, report or caption, up to 2,000 words." spellcheck="true"></textarea>
+        <div class="view" id="inView" hidden></div>
+        <input class="hp" id="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <div class="pane-foot"><span id="inCount"><b>0</b> words</span><span class="grow"></span><span>Ctrl + Enter to start</span></div>
+      </section>
+
+      <section class="pane">
+        <div class="pane-head">
+          <h2 id="outTitle">Result</h2>
+          <button class="btn sm light" id="copyBtn" hidden>Copy</button>
+          <button class="btn sm light" id="dlBtn" hidden>Download</button>
+          <button class="btn sm light" id="markBtn" hidden title="Highlight phrases kept from your original">Show kept words</button>
+          <button class="btn sm light" id="againBtn" hidden title="Get another version of the same text">New version</button>
+        </div>
+        <div class="placeholder" id="ph"><b id="phT">Your result appears here</b><span id="phS">Paste something on the left and press the button.</span></div>
+        <div class="working" id="work" hidden><div class="bar"><i></i></div><span id="workMsg">Working...</span></div>
+        <div class="summary" id="sum" hidden></div>
+        <div class="ba" id="ba" hidden></div>
+        <textarea id="out" hidden spellcheck="true" aria-label="Humanized text (you can edit it)"></textarea>
+        <div class="view" id="view" hidden></div>
+        <div class="pane-foot" id="outFoot" hidden><span id="outCount"></span><span id="fresh"></span><span class="grow"></span><span id="left"></span></div>
+      </section>
+    </div>
+
+    <div class="go">
+      <button class="btn gold" id="goBtn">Check plagiarism</button>
+    </div>
+    <div class="err" id="err" hidden></div>
+
+    <section class="report" id="report" hidden>
+      <div class="report-head"><h2>Plagiarism report</h2><span class="hint" id="repMeta"></span></div>
+      <div class="scores" id="scores"></div>
+      <table class="srcs"><thead><tr><th>#</th><th>Source found on the web</th><th class="r">Matches your text</th><th class="r">After humanizing</th></tr></thead><tbody id="srcRows"></tbody></table>
+      <div class="method">How we check: we take up to 6 sentences from your text and search the web for them word for word. Then we open every page found and count, word by word, which runs of 7 or more words of your text appear on that page. The percentage is the share of your words inside such runs. We check the open web only (not paid journals, private papers or other students' work), and pages that block us cannot be checked, so treat a low number as "nothing found", not a guarantee.</div>
     </section>
 
-    <section class="pane">
-      <div class="pane-head">
-        <h2>Humanized text</h2>
-        <button class="btn sm light" id="copyBtn" disabled>Copy</button>
-        <button class="btn sm light" id="dlBtn" disabled>Download</button>
-        <button class="btn sm light" id="markBtn" disabled title="Highlight words kept from your original">Show kept words</button>
-        <button class="btn sm light" id="againBtn" disabled title="Get another version of the same text">New version</button>
-      </div>
-      <div class="placeholder" id="ph"><b>Your humanized text appears here</b>Paste something on the left and press the button.</div>
-      <div class="working" id="work" hidden><div class="bar"><i></i></div><span id="workMsg">Reading your text...</span></div>
-      <textarea id="out" hidden spellcheck="true" aria-label="Humanized text (you can edit it)"></textarea>
-      <div class="view" id="view" hidden></div>
-      <div class="pane-foot" id="outFoot" hidden><span id="outCount"></span><span id="fresh"></span><span class="grow"></span><span id="left"></span></div>
+    <section class="hist" id="histSec" hidden>
+      <div class="hist-head"><h3>Your recent work</h3><span class="hint">Saved only in this browser</span><button class="btn sm light" id="histClear">Clear history</button></div>
+      <div class="hist-list" id="hist"></div>
     </section>
-  </div>
 
-  <div class="go">
-    <button class="btn gold" id="goBtn">Humanize + make it original</button>
-  </div>
-  <div class="err" id="err" hidden></div>
+    <div class="cards">
+      <div class="card"><h3>Real web check</h3><p>Every match is counted against the actual page, not guessed. Each source shows how much of your text it contains, and the matching parts are highlighted in your text.</p></div>
+      <div class="card"><h3>Humanize in one click</h3><p>Removes the AI habits (staged openers, "not just X, it's Y", lists of three, filler, inflated claims) and rebuilds every sentence in fresh words.</p></div>
+      <div class="card"><h3>Meaning kept</h3><p>Facts, names, numbers, dates and quotes stay as you wrote them. You can edit the result right in the box before you copy it.</p></div>
+    </div>
 
-  <div class="cards">
-    <div class="card"><h3>Reads like a person</h3><p>Removes the tell-tale AI habits: staged openers, "not just X, it's Y" lines, lists of three, filler words, inflated claims and one-line closers.</p></div>
-    <div class="card"><h3>Fresh wording</h3><p>Every sentence is rebuilt in new words. The "Fresh wording" score shows how little of your original phrasing is left, and "Show kept words" marks it.</p></div>
-    <div class="card"><h3>Meaning kept</h3><p>Facts, names, numbers, dates and quotes stay exactly as you wrote them. You can edit the result right in the box before you copy it.</p></div>
-  </div>
-
-  <section class="hist" id="histSec" hidden>
-    <div class="hist-head"><h3>Your recent rewrites</h3><span class="hint">Saved only in this browser</span><button class="btn sm light" id="histClear">Clear history</button></div>
-    <div class="hist-list" id="hist"></div>
+    <p class="note"><b>Please read:</b> what you paste here is saved on our server and can be read by the Street ka Dalal team, so do not paste passwords, phone numbers, bank details or anything private. Rewording someone else's work does not make their ideas yours: credit your sources, and follow your school's or employer's rules on AI tools.</p>
   </section>
-
-  <p class="note"><b>Please read:</b> what you paste here is saved on our server and can be read by the Street ka Dalal team, so do not paste passwords, phone numbers, bank details or anything private. The "Fresh wording" score compares the new text with what you pasted; it does not search the internet. New words do not make someone else's ideas yours: credit your sources, and follow your school's or employer's rules on AI tools.</p>
 </main>
 
-<footer class="foot"><div class="wrap">Street ka Dalal Humanizer · built on the open humanizer writing guide (github.com/blader/humanizer, MIT licence) · <a href="./">street-ka-dalal.pages.dev</a></div></footer>
+<footer class="foot"><div class="wrap">Street ka Dalal Plagiarism checker + Humanizer · rewriting guide from github.com/blader/humanizer (MIT licence) · <a href="./">street-ka-dalal.pages.dev</a></div></footer>
 <div class="toast" id="toast"></div>
 
-<script>
-(() => {
-  const $ = (s) => document.querySelector(s);
-  const inp = $('#inp'), out = $('#out'), view = $('#view');
-  const MAXW = 2000;
-  let tone = 'natural', last = null, marking = false, busy = false;
-  const wc = (s) => (String(s).match(/\S+/g) || []).length;
-  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const toast = (m) => { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 1800); };
-  const SAMPLE = "In today's fast-paced digital landscape, artificial intelligence has emerged as a pivotal force that is fundamentally transforming the way businesses operate. It's not just about automation, it's about unlocking unprecedented levels of efficiency and innovation. By leveraging cutting-edge machine learning algorithms, organizations can seamlessly streamline their workflows, enhance decision-making, and deliver exceptional customer experiences. Moreover, AI empowers teams to focus on what truly matters. In conclusion, embracing AI is no longer optional; it is essential for any company that wants to thrive in the future.";
+<script type="module">
+import * as A from './js/auth.js';
 
-  function counts() {
-    const n = wc(inp.value);
-    $('#inCount').innerHTML = `<b class="${n > MAXW ? 'over' : ''}">${n.toLocaleString('en-IN')}</b> words · ${inp.value.length.toLocaleString('en-IN')} characters${n > MAXW ? ` <span class="over">(max ${MAXW.toLocaleString('en-IN')})</span>` : ''}`;
-    $('#goBtn').disabled = busy || n < 5 || n > MAXW;
-    try { localStorage.setItem('hz_draft', inp.value.slice(0, 30000)); } catch {}
+const $ = (s) => document.querySelector(s);
+const inp = $('#inp'), out = $('#out'), view = $('#view'), inView = $('#inView');
+const MAXW = 2000, N = 7;   // a match = a run of 7+ words of the user's text found on the page
+let mode = localStorage.getItem('hz_mode') || 'check', tone = 'natural', busy = false;
+let chk = null;   // { id, text, toks, sets[], status[], pct, per[], sources[] }
+let hz = null;    // { in, out, reuse, after }
+let marking = false;
+const wc = (s) => (String(s).match(/\S+/g) || []).length;
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const toast = (m) => { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 1900); };
+const level = (p) => (p < 5 ? 'good' : p < 20 ? 'mid' : 'bad');
+const COLORS = ['#e8a493', '#e4c27a', '#9ec4e6', '#c2b0e6', '#9fd2aa', '#e5a9cd', '#cfc3a8', '#cfc3a8', '#cfc3a8', '#cfc3a8'];
+const SAMPLE = "Climate change represents one of the most significant challenges facing humanity in the 21st century. Rising global temperatures, driven primarily by greenhouse gas emissions, have led to more frequent extreme weather events, rising sea levels, and disruptions to ecosystems. The greenhouse effect is the process by which radiation from a planet's atmosphere warms the planet's surface to a temperature above what it would be without this atmosphere. Addressing this crisis requires coordinated international action, technological innovation, and fundamental changes in how societies produce and consume energy.";
+
+/* ---------------- sign-in ---------------- */
+function drawUser() {
+  const u = A.state.user;
+  $('#loading').hidden = A.state.ready;
+  $('#gate').hidden = !A.state.ready || !!u;
+  $('#app').hidden = !u;
+  $('#inapp').hidden = !A.inAppBrowser();
+  $('#me').hidden = !u;
+  if (u) $('#me').innerHTML = `${u.photo ? `<img src="${esc(u.photo)}" alt="" referrerpolicy="no-referrer">` : ''}<span>${esc((u.name || u.email || '').split(' ')[0])}</span><button class="btn sm light" id="outBtn">Sign out</button>`;
+}
+A.onChange(drawUser);
+A.init();
+$('#signInBtn').onclick = async () => { try { await A.signIn(); } catch (e) { showErr('Sign-in did not work: ' + (e.message || e) + '. Please try again, or open this page in Chrome.'); } };
+$('#copyLink').onclick = () => copy(location.href);
+document.addEventListener('click', (e) => { if (e.target.id === 'outBtn') A.signOut(); });
+async function api(path, opts = {}) {
+  const tok = await A.idToken();
+  const r = await fetch(path, { ...opts, headers: { ...(opts.headers || {}), Authorization: `Bearer ${tok}`, ...(opts.body ? { 'Content-Type': 'application/json' } : {}) } });
+  return r;
+}
+
+/* ---------------- modes ---------------- */
+function setMode(m) {
+  mode = m; try { localStorage.setItem('hz_mode', m); } catch {}
+  for (const b of $('#modes').children) b.classList.toggle('on', b.dataset.m === m);
+  $('#goBtn').textContent = m === 'check' ? 'Check plagiarism' : 'Humanize + check plagiarism';
+  if (!hz && !chk) { $('#phT').textContent = m === 'check' ? 'Your plagiarism report appears here' : 'Your humanized text appears here'; }
+}
+$('#modes').onclick = (e) => { const b = e.target.closest('.mode'); if (b) setMode(b.dataset.m); };
+
+/* ---------------- text matching (all in this browser) ---------------- */
+function tokens(text) {
+  const out = []; const re = /[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu; let m;
+  while ((m = re.exec(text))) out.push({ w: m[0].toLowerCase().replace(/’/g, "'"), s: m.index, e: m.index + m[0].length });
+  return out;
+}
+function pageSet(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  doc.querySelectorAll('script,style,noscript,svg,template,iframe').forEach((x) => x.remove());
+  const text = (doc.body ? doc.body.textContent : doc.documentElement.textContent) || '';
+  const w = tokens(text).map((t) => t.w), set = new Set();
+  for (let i = 0; i + N <= w.length; i++) set.add(w.slice(i, i + N).join(' '));
+  return set;
+}
+// per source: which words of `toks` are inside a run of N words found on that page
+function cover(toks, set) {
+  const c = new Uint8Array(toks.length);
+  if (!set) return c;
+  for (let i = 0; i + N <= toks.length; i++) {
+    let g = toks[i].w; for (let k = 1; k < N; k++) g += ' ' + toks[i + k].w;
+    if (set.has(g)) for (let k = 0; k < N; k++) c[i + k] = 1;
   }
-  function outCounts() {
-    const n = wc(out.value);
-    $('#outCount').innerHTML = `<b>${n.toLocaleString('en-IN')}</b> words · about ${Math.max(1, Math.round(n / 220))} min read`;
+  return c;
+}
+function measure(text, sets) {
+  const toks = tokens(text), n = toks.length || 1;
+  const covers = sets.map((s) => cover(toks, s));
+  const owner = new Int8Array(toks.length).fill(-1);
+  covers.forEach((c, si) => c.forEach((v, i) => { if (v && owner[i] < 0) owner[i] = si; }));
+  const any = owner.reduce((a, v) => a + (v >= 0 ? 1 : 0), 0);
+  return { toks, owner, pct: Math.round((any / n) * 1000) / 10, per: covers.map((c) => Math.round((c.reduce((a, v) => a + v, 0) / n) * 1000) / 10) };
+}
+function highlight(text, m) {
+  let html = '', at = 0, i = 0;
+  const T = m.toks;
+  while (i < T.length) {
+    if (m.owner[i] < 0) { i++; continue; }
+    const so = m.owner[i], st = T[i].s; let j = i;
+    while (j + 1 < T.length && m.owner[j + 1] === so) j++;
+    html += esc(text.slice(at, st)) + `<mark class="s${so}" title="Found on source ${so + 1}">${esc(text.slice(st, T[j].e))}</mark>`;
+    at = T[j].e; i = j + 1;
   }
-  function setState(s) {
-    $('#ph').hidden = s !== 'empty'; $('#work').hidden = s !== 'work';
-    out.hidden = s !== 'done' || marking; view.hidden = s !== 'done' || !marking; $('#outFoot').hidden = s !== 'done';
-    for (const b of ['#copyBtn', '#dlBtn', '#markBtn', '#againBtn']) $(b).disabled = s !== 'done';
-  }
-  function freshBadge(reuse) {
-    const f = Math.max(0, Math.round(100 - (reuse || 0)));
-    const cls = f >= 90 ? '' : f >= 75 ? 'mid' : 'low';
-    $('#fresh').innerHTML = `<span class="badge ${cls}" title="Share of your original 5-word phrases that are gone from the new text">Fresh wording ${f}%</span>`;
-  }
-  // words of the new text that also appear, in order, in the original (longest common run of words)
-  function markKept(a, b) {
-    const A = a.split(/(\s+)/), B = b.split(/(\s+)/);
-    const aw = A.filter((x, i) => i % 2 === 0).map((w) => w.toLowerCase().replace(/[^\p{L}\p{N}']/gu, ''));
-    const bi = [], bw = [];
-    B.forEach((x, i) => { if (i % 2 === 0) { bi.push(i); bw.push(x.toLowerCase().replace(/[^\p{L}\p{N}']/gu, '')); } });
-    const n = aw.length, m = bw.length;
-    if (n * m > 6e6) return esc(b);
-    const L = Array.from({ length: n + 1 }, () => new Uint16Array(m + 1));
-    for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) L[i][j] = aw[i] && aw[i] === bw[j] ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
-    const keep = new Set();
-    for (let i = 0, j = 0; i < n && j < m;) {
-      if (aw[i] && aw[i] === bw[j]) { keep.add(j); i++; j++; } else if (L[i + 1][j] >= L[i][j + 1]) i++; else j++;
-    }
-    // mark only runs of 3+ kept words in a row (single common words like "the" are not copying)
-    const run = new Set();
-    let s = -1;
-    for (let j = 0; j <= m; j++) {
-      if (j < m && keep.has(j)) { if (s < 0) s = j; }
-      else { if (s >= 0 && j - s >= 3) for (let k = s; k < j; k++) run.add(k); s = -1; }
-    }
-    return B.map((x, i) => (i % 2 === 0 && run.has(bi.indexOf(i)) ? `<mark>${esc(x)}</mark>` : esc(x))).join('');
-  }
-  const MSGS = ['Reading your text...', 'Spotting the AI habits...', 'Rebuilding each sentence in fresh words...', 'Checking every fact is kept...', 'Almost done...'];
-  async function go() {
-    const text = inp.value.trim();
-    if (busy || wc(text) < 5) return;
-    if (wc(text) > MAXW) { showErr(`Please paste up to ${MAXW.toLocaleString('en-IN')} words at a time.`); return; }
-    busy = true; $('#err').hidden = true; setState('work');
-    $('#goBtn').innerHTML = '<span class="spin"></span> Humanizing...'; $('#goBtn').disabled = true;
-    let k = 0; $('#workMsg').textContent = MSGS[0];
-    const tick = setInterval(() => { k = Math.min(k + 1, MSGS.length - 1); $('#workMsg').textContent = MSGS[k]; }, 3500);
+  return html + esc(text.slice(at));
+}
+
+/* ---------------- plagiarism check ---------------- */
+async function runCheck(text, onStep) {
+  onStep?.('Searching the web for your sentences...');
+  const r = await api('/api/plagiarism', { method: 'POST', body: JSON.stringify({ text }) });
+  const d = await r.json().catch(() => ({ error: 'Something went wrong. Please try again.' }));
+  if (!r.ok || d.error) throw new Error(d.error || 'Something went wrong. Please try again.');
+  const c = { id: d.id, text, sources: d.sources || [], sets: [], status: [], engine: d.engine, left: d.left };
+  onStep?.(c.sources.length ? `Opening ${c.sources.length} pages found and comparing word by word...` : 'Comparing...');
+  await Promise.all(c.sources.map(async (s, k) => {
     try {
-      const r = await fetch('/api/humanize', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, tone, website: $('#website').value }) });
-      const d = await r.json().catch(() => ({ error: 'Something went wrong. Please try again.' }));
-      if (!r.ok || d.error) throw new Error(d.error || 'Something went wrong. Please try again.');
-      last = { in: text, out: d.text, reuse: d.reuse, tone };
-      out.value = d.text; marking = false; $('#markBtn').classList.remove('on'); $('#markBtn').textContent = 'Show kept words';
-      setState('done'); outCounts(); freshBadge(d.reuse);
-      $('#left').textContent = d.left != null ? `${d.left} rewrite${d.left === 1 ? '' : 's'} left today` : '';
-      save(last);
-      if (window.innerWidth < 860) out.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } catch (e) {
-      setState(last ? 'done' : 'empty'); if (last) out.value = last.out;
-      showErr(e.message === 'Failed to fetch' ? 'No internet connection. Please check and try again.' : e.message);
-    } finally {
-      clearInterval(tick); busy = false; $('#goBtn').textContent = 'Humanize + make it original'; counts();
-    }
-  }
-  const showErr = (m) => { $('#err').textContent = m; $('#err').hidden = false; };
-  async function copy(t) {
-    try { await navigator.clipboard.writeText(t); }
-    catch { const x = Object.assign(document.createElement('textarea'), { value: t }); document.body.appendChild(x); x.select(); document.execCommand('copy'); x.remove(); }
-    toast('Copied');
-  }
-  // history: last 10 rewrites, in this browser only
-  const H = () => { try { return JSON.parse(localStorage.getItem('hz_hist') || '[]'); } catch { return []; } };
-  function save(e) { const h = [{ ...e, t: Date.now() }, ...H()].slice(0, 10); try { localStorage.setItem('hz_hist', JSON.stringify(h)); } catch {} drawHist(); }
-  function drawHist() {
-    const h = H(); $('#histSec').hidden = !h.length;
-    $('#hist').innerHTML = h.map((e, i) => `<button class="hist-item" data-i="${i}"><span>${esc(e.out.slice(0, 160))}</span><small>${new Date(e.t).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} · ${wc(e.out)} words</small></button>`).join('');
-  }
+      const rr = await api(`/api/plagiarism?id=${d.id}&i=${s.i}`);
+      if (!rr.ok) { const e = await rr.json().catch(() => ({})); c.status[k] = e.error || 'could not open'; return; }
+      c.sets[k] = pageSet(await rr.text());
+      c.status[k] = 'ok';
+    } catch { c.status[k] = 'could not open'; }
+  }));
+  const m = measure(text, c.sets);
+  Object.assign(c, { m, pct: m.pct, per: m.per });
+  return c;
+}
+function report(extra = {}) {
+  if (!chk) return;
+  const per = chk.sources.map((s, k) => ({ i: s.i, pct: chk.per[k] || 0, after: hz && hz.in === chk.text && hz.afterPer ? hz.afterPer[k] : null, open: chk.status[k] === 'ok' }));
+  api('/api/plagiarism', { method: 'POST', body: JSON.stringify({ report: chk.id, pct: chk.pct, per, ...extra }) }).catch(() => {});
+}
+function drawReport() {
+  if (!chk) { $('#report').hidden = true; return; }
+  $('#report').hidden = false;
+  const opened = chk.status.filter((x) => x === 'ok').length;
+  $('#repMeta').textContent = `${chk.sources.length} page${chk.sources.length === 1 ? '' : 's'} found, ${opened} opened and compared`;
+  const after = hz && hz.in === chk.text && hz.after != null ? hz.after : null;
+  $('#scores').innerHTML = `<div class="score"><b class="num ${level(chk.pct)}">${chk.pct}%</b><span>of your original text found on the web</span></div>
+    <div class="score"><b class="num ${after == null ? '' : level(after)}">${after == null ? '-' : after + '%'}</b><span>${after == null ? 'after humanizing (press Humanize)' : 'after humanizing, against the same sources'}</span></div>
+    <div class="score"><b>${chk.sources.length ? Math.max(0, ...chk.per) + '%' : '0%'}</b><span>the biggest single source</span></div>`;
+  $('#srcRows').innerHTML = chk.sources.length ? chk.sources.map((s, k) => {
+    let host = ''; try { host = new URL(s.url).hostname.replace(/^www\./, ''); } catch {}
+    const st = chk.status[k];
+    const a = hz && hz.in === chk.text && hz.afterPer ? hz.afterPer[k] : null;
+    return `<tr><td><span class="dot" style="background:${COLORS[k]}"></span>${k + 1}</td><td><a href="${esc(s.url)}" target="_blank" rel="noopener nofollow">${esc(s.title || host)}</a><small>${esc(host)}</small></td>
+      <td class="r">${st === 'ok' ? `<b class="num ${level(chk.per[k])}">${chk.per[k]}%</b>` : `<span class="hint">${esc(st || 'not opened')}</span>`}</td><td class="r">${st === 'ok' && a != null ? `<b class="num ${level(a)}">${a}%</b>` : '-'}</td></tr>`;
+  }).join('') : '<tr><td colspan="4">No page on the web was found with your sentences. That is a good sign.</td></tr>';
+}
+function drawSummary() {
+  const p = chk.pct, lv = level(p);
+  const deg = Math.min(100, p) * 3.6;
+  const col = lv === 'good' ? 'var(--up)' : lv === 'mid' ? 'var(--warn)' : 'var(--down)';
+  $('#sum').innerHTML = `<div class="gauge" style="background:conic-gradient(${col} ${deg}deg,var(--paper-2) 0)"><div><b>${p}%</b><span>plagiarism</span></div></div>
+    <div class="verdict ${lv}">${lv === 'good' ? 'Looks original' : lv === 'mid' ? 'Some parts are on the web' : 'Large parts are on the web'}</div>
+    <p>${chk.sources.length ? `Matching parts are highlighted in your text on the left. ${chk.status.filter((x) => x === 'ok').length} of ${chk.sources.length} pages found could be opened and compared.` : 'We did not find these sentences on the web.'}</p>
+    <button class="btn gold" id="hzFromCheck">Humanize this text</button>
+    <p class="hint" style="margin-top:10px">Rewrites it in fresh words, then shows the new plagiarism percentage.</p>`;
+  $('#hzFromCheck').onclick = () => humanizeNow(chk.text);
+}
 
-  $('#tones').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; tone = b.dataset.t; for (const x of $('#tones').children) x.classList.toggle('on', x === b); });
-  inp.addEventListener('input', counts);
-  out.addEventListener('input', () => { outCounts(); if (last) last.out = out.value; });
-  document.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); go(); } });
-  $('#goBtn').onclick = go;
-  $('#againBtn').onclick = () => { if (last) { inp.value = last.in; counts(); go(); } };
-  $('#pasteBtn').onclick = async () => {
-    try { const t = await navigator.clipboard.readText(); if (!t) return toast('Clipboard is empty'); inp.value = t; counts(); toast('Pasted'); }
-    catch { inp.focus(); toast('Press Ctrl + V to paste'); }
-  };
-  $('#clearBtn').onclick = () => { inp.value = ''; counts(); inp.focus(); };
-  $('#sampleBtn').onclick = () => { inp.value = SAMPLE; counts(); };
-  $('#fileIn').onchange = (e) => {
-    const f = e.target.files[0]; if (!f) return;
-    if (f.size > 400000) { showErr('That file is too big. Please use a text file under 400 KB.'); return; }
-    const r = new FileReader(); r.onload = () => { inp.value = String(r.result); counts(); toast('File loaded'); }; r.readAsText(f); e.target.value = '';
-  };
-  $('#copyBtn').onclick = () => copy(out.value);
-  $('#dlBtn').onclick = () => {
-    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([out.value], { type: 'text/plain;charset=utf-8' })), download: `humanized-${new Date().toISOString().slice(0, 10)}.txt` });
-    a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-  };
-  $('#markBtn').onclick = () => {
-    if (!last) return;
-    marking = !marking; $('#markBtn').classList.toggle('on', marking); $('#markBtn').textContent = marking ? 'Hide kept words' : 'Show kept words';
-    if (marking) view.innerHTML = markKept(last.in, out.value);
-    setState('done');
-  };
-  $('#hist').onclick = (e) => {
-    const b = e.target.closest('.hist-item'); if (!b) return;
-    const h = H()[+b.dataset.i]; if (!h) return;
-    last = { ...h }; inp.value = h.in; out.value = h.out; marking = false; $('#markBtn').classList.remove('on'); $('#markBtn').textContent = 'Show kept words';
-    counts(); setState('done'); outCounts(); freshBadge(h.reuse); $('#left').textContent = ''; window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-  $('#histClear').onclick = () => { try { localStorage.removeItem('hz_hist'); } catch {} drawHist(); toast('History cleared'); };
+/* ---------------- humanize ---------------- */
+async function callHumanize(text) {
+  const r = await api('/api/humanize', { method: 'POST', body: JSON.stringify({ text, tone, website: $('#website').value }) });
+  const d = await r.json().catch(() => ({ error: 'Something went wrong. Please try again.' }));
+  if (!r.ok || d.error) throw new Error(d.error || 'Something went wrong. Please try again.');
+  return d;
+}
+function applyAfter() {
+  if (!hz || !chk || hz.in !== chk.text) return;
+  const m = measure(hz.out, chk.sets);
+  hz.after = m.pct; hz.afterPer = m.per;
+}
+function drawBA() {
+  const ba = $('#ba');
+  if (!hz) { ba.hidden = true; return; }
+  ba.hidden = false;
+  if (chk && chk.text === hz.in) {
+    ba.innerHTML = `<span>Plagiarism</span><span class="num ${level(chk.pct)}">${chk.pct}%</span><span class="arrow">to</span><span class="num ${level(hz.after ?? 0)}">${hz.after ?? '-'}%</span><span class="hint">${hz.after != null && hz.after < chk.pct ? `down ${Math.round((chk.pct - hz.after) * 10) / 10} points` : 'against the same web sources'}</span>`;
+  } else if (hz.checking) {
+    ba.innerHTML = '<span class="spin dark"></span><span>Checking plagiarism of your original on the web...</span>';
+  } else {
+    ba.innerHTML = '<span class="hint">Plagiarism check not available for this text (needs 2 or 3 full sentences).</span>';
+  }
+}
+function showOut() {
+  $('#outTitle').textContent = 'Humanized text';
+  out.value = hz.out; marking = false; $('#markBtn').classList.remove('on'); $('#markBtn').textContent = 'Show kept words';
+  state('out'); outCounts();
+  const f = Math.max(0, Math.round(100 - (hz.reuse || 0)));
+  $('#fresh').innerHTML = `<span class="badge ${f >= 90 ? '' : f >= 75 ? 'mid' : 'low'}" title="Share of your original 5-word phrases that are gone from the new text">Fresh wording ${f}%</span>`;
+  $('#left').textContent = hz.left != null ? `${hz.left} rewrite${hz.left === 1 ? '' : 's'} left today` : '';
+  drawBA();
+}
+async function humanizeNow(text) {
+  if (busy) return;
+  busy = true; $('#err').hidden = true; startWork(['Spotting the AI habits...', 'Rebuilding each sentence in fresh words...', 'Checking every fact is kept...', 'Almost done...']);
+  try {
+    const d = await callHumanize(text);
+    hz = { in: text, out: d.text, reuse: d.reuse, left: d.left };
+    applyAfter(); showOut(); drawReport(); report({ after_pct: hz.after }); save();
+  } catch (e) { state(chk ? 'sum' : 'empty'); showErr(niceErr(e)); }
+  finally { stopWork(); }
+}
 
-  try { inp.value = localStorage.getItem('hz_draft') || ''; } catch {}
-  counts(); setState('empty'); drawHist();
-})();
+/* ---------------- the main button ---------------- */
+async function go() {
+  const text = inp.value.trim();
+  if (busy || wc(text) < 5) return;
+  if (wc(text) > MAXW) return showErr(`Please paste up to ${MAXW.toLocaleString('en-IN')} words at a time.`);
+  $('#err').hidden = true;
+  if (mode === 'check') {
+    if (wc(text) < 15) return showErr('Please paste at least two or three full sentences to check.');
+    busy = true; hz = null; startWork(['Searching the web for your sentences...']);
+    try {
+      chk = await runCheck(text, (m) => { $('#workMsg').textContent = m; });
+      showCheck(); report(); save();
+    } catch (e) { state('empty'); showErr(niceErr(e)); }
+    finally { stopWork(); }
+  } else {
+    busy = true; chk = null; startWork(['Spotting the AI habits...', 'Rebuilding each sentence in fresh words...', 'Checking every fact is kept...', 'Almost done...']);
+    const checking = wc(text) >= 15 ? runCheck(text).catch(() => null) : Promise.resolve(null);
+    try {
+      const d = await callHumanize(text);
+      hz = { in: text, out: d.text, reuse: d.reuse, left: d.left, checking: wc(text) >= 15 };
+      showOut(); stopWork();
+      const c = await checking;
+      hz.checking = false;
+      if (c) { chk = c; applyAfter(); drawReport(); markInput(); report({ after_pct: hz.after }); }
+      drawBA(); save();
+    } catch (e) { state('empty'); showErr(niceErr(e)); stopWork(); }
+  }
+}
+function showCheck() {
+  $('#outTitle').textContent = 'Plagiarism result';
+  drawSummary(); state('sum'); drawReport(); markInput();
+}
+function markInput() {
+  if (!chk || !chk.m || chk.text !== inp.value.trim()) return;
+  inView.innerHTML = highlight(chk.text, chk.m);
+  inp.hidden = true; inView.hidden = false; $('#editBtn').hidden = false;
+}
+function editInput() { inp.hidden = false; inView.hidden = true; $('#editBtn').hidden = true; inp.focus(); }
+$('#editBtn').onclick = editInput;
+
+/* ---------------- UI helpers ---------------- */
+let tick = null;
+function startWork(msgs) {
+  state('work'); let k = 0; $('#workMsg').textContent = msgs[0];
+  clearInterval(tick); tick = setInterval(() => { k = Math.min(k + 1, msgs.length - 1); if (msgs.length > 1) $('#workMsg').textContent = msgs[k]; }, 3500);
+  $('#goBtn').innerHTML = '<span class="spin"></span> Working...'; $('#goBtn').disabled = true;
+}
+function stopWork() { clearInterval(tick); busy = false; setMode(mode); counts(); }
+function state(s) {
+  $('#ph').hidden = s !== 'empty'; $('#work').hidden = s !== 'work'; $('#sum').hidden = s !== 'sum';
+  out.hidden = s !== 'out' || marking; view.hidden = s !== 'out' || !marking; $('#outFoot').hidden = s !== 'out';
+  if (s !== 'out') $('#ba').hidden = true;
+  for (const b of ['#copyBtn', '#dlBtn', '#markBtn', '#againBtn']) $(b).hidden = s !== 'out';
+  if (s === 'empty') $('#outTitle').textContent = 'Result';
+}
+const niceErr = (e) => (e.message === 'Failed to fetch' ? 'No internet connection. Please check and try again.' : e.message);
+const showErr = (m) => { $('#err').textContent = m; $('#err').hidden = false; };
+function counts() {
+  const n = wc(inp.value);
+  $('#inCount').innerHTML = `<b class="${n > MAXW ? 'over' : ''}">${n.toLocaleString('en-IN')}</b> words · ${inp.value.length.toLocaleString('en-IN')} characters${n > MAXW ? ` <span class="over">(max ${MAXW.toLocaleString('en-IN')})</span>` : ''}`;
+  $('#goBtn').disabled = busy || n < 5 || n > MAXW;
+  try { localStorage.setItem('hz_draft', inp.value.slice(0, 30000)); } catch {}
+}
+function outCounts() { const n = wc(out.value); $('#outCount').innerHTML = `<b>${n.toLocaleString('en-IN')}</b> words`; }
+async function copy(t) {
+  try { await navigator.clipboard.writeText(t); }
+  catch { const x = Object.assign(document.createElement('textarea'), { value: t }); document.body.appendChild(x); x.select(); document.execCommand('copy'); x.remove(); }
+  toast('Copied');
+}
+// kept words: runs of 3+ words of the rewrite that are also in the original, in order
+function markKept(a, b) {
+  const A = a.split(/(\s+)/), B = b.split(/(\s+)/);
+  const aw = A.filter((x, i) => i % 2 === 0).map((w) => w.toLowerCase().replace(/[^\p{L}\p{N}']/gu, ''));
+  const bi = [], bw = [];
+  B.forEach((x, i) => { if (i % 2 === 0) { bi.push(i); bw.push(x.toLowerCase().replace(/[^\p{L}\p{N}']/gu, '')); } });
+  const n = aw.length, m = bw.length;
+  if (n * m > 6e6) return esc(b);
+  const L = Array.from({ length: n + 1 }, () => new Uint16Array(m + 1));
+  for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) L[i][j] = aw[i] && aw[i] === bw[j] ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
+  const keep = new Set();
+  for (let i = 0, j = 0; i < n && j < m;) { if (aw[i] && aw[i] === bw[j]) { keep.add(j); i++; j++; } else if (L[i + 1][j] >= L[i][j + 1]) i++; else j++; }
+  const run = new Set(); let s = -1;
+  for (let j = 0; j <= m; j++) { if (j < m && keep.has(j)) { if (s < 0) s = j; } else { if (s >= 0 && j - s >= 3) for (let k = s; k < j; k++) run.add(k); s = -1; } }
+  return B.map((x, i) => (i % 2 === 0 && run.has(bi.indexOf(i)) ? `<mark>${esc(x)}</mark>` : esc(x))).join('');
+}
+
+/* ---------------- history (this browser only) ---------------- */
+const H = () => { try { return JSON.parse(localStorage.getItem('hz_hist2') || '[]'); } catch { return []; } };
+function save() {
+  const e = { t: Date.now(), in: (hz?.in || chk?.text || '').slice(0, 20000), out: hz?.out || '', reuse: hz?.reuse, pct: chk?.pct ?? null, after: hz?.after ?? null };
+  try { localStorage.setItem('hz_hist2', JSON.stringify([e, ...H()].slice(0, 10))); } catch {}
+  drawHist();
+}
+function drawHist() {
+  const h = H(); $('#histSec').hidden = !h.length;
+  $('#hist').innerHTML = h.map((e, i) => `<button class="hist-item" data-i="${i}"><span>${esc((e.out || e.in).slice(0, 160))}</span><small>${e.pct != null ? `plagiarism ${e.pct}%${e.after != null ? ` to ${e.after}%` : ''} · ` : ''}${e.out ? 'humanized · ' : ''}${new Date(e.t).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</small></button>`).join('');
+}
+
+/* ---------------- wiring ---------------- */
+$('#tones').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; tone = b.dataset.t; for (const x of $('#tones').children) x.classList.toggle('on', x === b); });
+inp.addEventListener('input', () => { counts(); });
+out.addEventListener('input', () => { outCounts(); if (hz) { hz.out = out.value; applyAfter(); drawBA(); } });
+document.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !$('#app').hidden) { e.preventDefault(); go(); } });
+$('#goBtn').onclick = go;
+$('#againBtn').onclick = () => { if (hz) humanizeNow(hz.in); };
+$('#pasteBtn').onclick = async () => {
+  try { const t = await navigator.clipboard.readText(); if (!t) return toast('Clipboard is empty'); editInput(); inp.value = t; counts(); toast('Pasted'); }
+  catch { editInput(); toast('Press Ctrl + V to paste'); }
+};
+$('#clearBtn').onclick = () => { editInput(); inp.value = ''; counts(); };
+$('#sampleBtn').onclick = () => { editInput(); inp.value = SAMPLE; counts(); };
+$('#fileIn').onchange = (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  if (f.size > 400000) return showErr('That file is too big. Please use a text file under 400 KB.');
+  const r = new FileReader(); r.onload = () => { editInput(); inp.value = String(r.result); counts(); toast('File loaded'); }; r.readAsText(f); e.target.value = '';
+};
+$('#copyBtn').onclick = () => copy(out.value);
+$('#dlBtn').onclick = () => {
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([out.value], { type: 'text/plain;charset=utf-8' })), download: `humanized-${new Date().toISOString().slice(0, 10)}.txt` });
+  a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+};
+$('#markBtn').onclick = () => {
+  if (!hz) return;
+  marking = !marking; $('#markBtn').classList.toggle('on', marking); $('#markBtn').textContent = marking ? 'Hide kept words' : 'Show kept words';
+  if (marking) view.innerHTML = markKept(hz.in, out.value);
+  state('out'); drawBA();
+};
+$('#hist').onclick = (e) => {
+  const b = e.target.closest('.hist-item'); if (!b) return;
+  const h = H()[+b.dataset.i]; if (!h) return;
+  editInput(); inp.value = h.in; counts(); chk = null; $('#report').hidden = true;
+  if (h.out) { hz = { in: h.in, out: h.out, reuse: h.reuse }; showOut(); $('#ba').hidden = true; } else { hz = null; state('empty'); }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+$('#histClear').onclick = () => { try { localStorage.removeItem('hz_hist2'); } catch {} drawHist(); toast('History cleared'); };
+
+try { inp.value = localStorage.getItem('hz_draft') || ''; } catch {}
+setMode(mode); counts(); state('empty'); drawHist(); drawUser();
 </script>
 </body>
 </html>

@@ -1,26 +1,23 @@
 // Humanizer (Cloudflare Pages Function, /api/humanize), used by humanize.html (street-ka-dalal.pages.dev/humanize).
 //
-// POST (anyone, no sign-in needed): { text, tone, website } -> Claude rewrites the text in one pass so it reads human
-//   AND is in fresh original wording (no run of more than 4 words kept from the original, except names / numbers / terms).
-//   The editing guide is the humanizer skill (blader/humanizer, MIT) built into lib/humanizer_prompt.js.
-//   A signed-in member may send their Firebase ID token; then their email is saved with the paste.
+// POST (Google sign-in required, Firebase ID token): { text, tone, website } -> Claude rewrites the text in one pass so it
+//   reads human AND is in fresh original wording (no run of more than 4 words kept from the original, except names /
+//   numbers / terms). The editing guide is the humanizer skill (blader/humanizer, MIT) built into lib/humanizer_prompt.js.
 //   `website` is a hidden honeypot field: bots fill it, people never see it.
 // GET ?selftest (no sign-in): key set, database reachable, today's use and spend, last success / error. No AI call.
-// GET (admin only, Firebase ID token of an ADMIN_EMAILS account): ?days=&q=&limit= -> the pastes, newest first,
-//   plus the day / month totals. ?id=N -> one paste in full. DELETE ?id=N (admin only) removes one paste.
+// GET (admin only): ?days=&q=&limit= -> the pastes, newest first, plus day / month totals; ?id=N -> one paste in full;
+//   ?people=1 -> everyone who used the Humanizer or the Plagiarism checker. DELETE ?id=N (admin only) removes one paste.
 //
 // Money guard (paid Claude API key ANTHROPIC_API_KEY, the same secret Dalal uses as its last backup):
 //   HUMANIZE_MODELS      models tried in order (default claude-haiku-5-5, then claude-sonnet-5-5; never Opus)
-//   HUMANIZE_PER_IP      rewrites a day from one network (default 15; IP kept only as a daily hash)
-//   HUMANIZE_DAY_USD     stop for the day after this much estimated spend (default 0.50)
-//   HUMANIZE_MONTH_USD   stop for the month after this much estimated spend (default 5)
+//   HUMANIZE_PER_USER    rewrites a day per signed-in account (default 20)
+//   HUMANIZE_PER_IP      rewrites a day from one network (default 40; IP kept only as a daily hash)
+//   HUMANIZE_DAY_USD / HUMANIZE_MONTH_USD   shared spend stop with the Plagiarism checker (default 0.50 / 5)
 //   HUMANIZE_MAX_WORDS   longest paste (default 2000 words)
-// Every paste is logged in the D1 table humanize_log (binding DALAL_DB). The page tells visitors this before they paste.
 
 import { HUMANIZER_SYSTEM } from '../../lib/humanizer_prompt.js';
+import { json, cors, istDate, istMonth, within, words, table, spend, caps, overCaps, addSpend, limits, person, who, isAdmin } from '../../lib/hz_common.js';
 
-const ALLOWED_ORIGINS = ['https://street-ka-dalal.pages.dev'];
-const ADMIN_EMAILS = ['sagarpatro604@gmail.com'];
 const TONES = {
   natural: 'natural: the way a thoughtful person writes, warm but not chatty',
   simple: 'simple: short sentences and everyday words a 15-year-old understands',
@@ -31,70 +28,6 @@ const TONES = {
 // USD per million tokens: input, output, cache read, cache write (Anthropic list prices, Nov 2026)
 const PRICE = { 'claude-haiku-5-5': [0.10, 0.50, 0.01, 0.125], 'claude-sonnet-5-5': [2, 10, 0.10, 2.5] };
 const DEFAULT_MODELS = ['claude-haiku-5-5', 'claude-sonnet-5-5'];
-
-const cors = (origin) => ({
-  'Access-Control-Allow-Origin': ALLOWED_ORIGINS.includes(origin) || /\.street-ka-dalal\.pages\.dev$/.test(origin || '') || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin || '') ? origin : ALLOWED_ORIGINS[0],
-  'Access-Control-Allow-Methods': 'POST, GET, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  'Vary': 'Origin',
-});
-const json = (obj, status, origin) => new Response(JSON.stringify(obj), { status, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', ...cors(origin) } });
-const istNow = () => new Date(Date.now() + 330 * 60000);
-const istDate = () => istNow().toISOString().slice(0, 10);
-const istMonth = () => istNow().toISOString().slice(0, 7);
-const within = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('database took too long')), ms))]);
-const words = (s) => (String(s).match(/\S+/g) || []).length;
-
-/* ------------------------------------------------------------ storage */
-let ready = null;
-function table(env) {
-  if (!env.DALAL_DB) return Promise.reject(new Error('no database'));
-  ready = ready || env.DALAL_DB.batch([
-    env.DALAL_DB.prepare('CREATE TABLE IF NOT EXISTS humanize_log (id INTEGER PRIMARY KEY AUTOINCREMENT, created TEXT, day TEXT, iph TEXT, country TEXT, email TEXT, tone TEXT, words_in INTEGER, words_out INTEGER, model TEXT, ms INTEGER, usd REAL, reuse REAL, status TEXT, text_in TEXT, text_out TEXT)'),
-    env.DALAL_DB.prepare('CREATE INDEX IF NOT EXISTS humanize_log_day ON humanize_log (day)'),
-    env.DALAL_DB.prepare('CREATE TABLE IF NOT EXISTS humanize_ip (k TEXT PRIMARY KEY, n INTEGER, day TEXT)'),
-    env.DALAL_DB.prepare('CREATE TABLE IF NOT EXISTS humanize_spend (period TEXT PRIMARY KEY, usd REAL, n INTEGER)'),
-  ]).then(() => env.DALAL_DB).catch((e) => { ready = null; throw e; });
-  return within(ready, 5000);
-}
-async function sha(s) {
-  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
-  return [...new Uint8Array(b)].slice(0, 8).map((x) => x.toString(16).padStart(2, '0')).join('');
-}
-async function spend(d, period) {
-  const r = await within(d.prepare('SELECT usd, n FROM humanize_spend WHERE period = ?').bind(period).first(), 4000);
-  return { usd: r?.usd || 0, n: r?.n || 0 };
-}
-
-/* ------------------------------------------------------------ Firebase ID token check (same as dalal.js) */
-let JWKS = null, JWKS_AT = 0;
-async function googleKeys() {
-  if (JWKS && Date.now() - JWKS_AT < 3600000) return JWKS;
-  try {
-    const r = await fetch('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com', { cf: { cacheTtl: 3600 }, signal: AbortSignal.timeout(5000) });
-    const keys = (await r.json()).keys || [];
-    if (keys.length) { JWKS = keys; JWKS_AT = Date.now(); }
-  } catch (e) { console.warn('google keys', e.message); }
-  return JWKS || [];
-}
-const b64u = (s) => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - (s.length % 4)) % 4)), (c) => c.charCodeAt(0));
-const dec = (s) => JSON.parse(new TextDecoder().decode(b64u(s)));
-async function verifyToken(token, projectId) {
-  try {
-    const [h, p, s] = String(token || '').split('.');
-    if (!s) return null;
-    const header = dec(h), payload = dec(p);
-    const jwk = (await googleKeys()).find((k) => k.kid === header.kid);
-    if (!jwk) return null;
-    const key = await crypto.subtle.importKey('jwk', jwk, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['verify']);
-    const ok = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, b64u(s), new TextEncoder().encode(`${h}.${p}`));
-    if (!ok || payload.aud !== projectId || payload.iss !== `https://securetoken.google.com/${projectId}` || payload.exp < Date.now() / 1000) return null;
-    return { email: String(payload.email || '').toLowerCase() };
-  } catch {
-    return null;
-  }
-}
-const who = (request, env) => verifyToken((request.headers.get('Authorization') || '').replace(/^Bearer\s+/i, ''), env.FIREBASE_PROJECT_ID || 'street-ka-dalal');
 
 /* ------------------------------------------------------------ originality: share of the original's 5-word phrases still in the rewrite */
 function reuseShare(a, b) {
@@ -158,6 +91,8 @@ export async function onRequestPost({ request, env }) {
   let b;
   try { b = await request.json(); } catch { return json({ error: 'Something went wrong. Please paste your text again.' }, 400, origin); }
   if (b.website) return json({ text: String(b.text || ''), reuse: 100 }, 200, origin);   // honeypot
+  const user = await who(request, env);
+  if (!user) return json({ error: 'Please sign in with Google to use the Humanizer.', signin: true }, 401, origin);
   const text = String(b.text || '').replace(/\r\n/g, '\n').replace(/[ \t]+\n/g, '\n').trim();
   const tone = TONES[b.tone] ? b.tone : 'natural';
   const maxWords = +(env.HUMANIZE_MAX_WORDS || 2000);
@@ -168,27 +103,14 @@ export async function onRequestPost({ request, env }) {
 
   let d;
   try { d = await table(env); } catch (e) { return json({ error: 'Busy right now. Please try again in a minute.' }, 503, origin); }
-  const day = istDate(), month = istMonth();
-  const iph = await sha(`${request.headers.get('CF-Connecting-IP') || ''}|${day}`);
-  const perIp = +(env.HUMANIZE_PER_IP || 15);
-  const [seen, sd, sm] = await Promise.all([
-    within(d.prepare('SELECT n FROM humanize_ip WHERE k = ?').bind(iph).first(), 4000).catch(() => null),
-    spend(d, day).catch(() => ({ usd: 0, n: 0 })), spend(d, month).catch(() => ({ usd: 0, n: 0 })),
-  ]);
-  const used = seen?.n || 0;
-  if (used >= perIp) return json({ error: `You have used all ${perIp} rewrites for today. Please come back tomorrow.`, left: 0 }, 429, origin);
-  if (sd.usd >= +(env.HUMANIZE_DAY_USD || 0.5) || sm.usd >= +(env.HUMANIZE_MONTH_USD || 5)) {
-    return json({ error: 'The humanizer has reached its limit for today. Please come back tomorrow.' }, 429, origin);
-  }
-  const user = request.headers.get('Authorization') ? await who(request, env) : null;
+  const perUser = +(env.HUMANIZE_PER_USER || 20);
+  const lim = await limits(d, request, user, 'hz', isAdmin(user) ? 1e6 : perUser, isAdmin(user) ? 1e6 : +(env.HUMANIZE_PER_IP || 40));
+  if (!lim.ok) return json({ error: `You have used all ${perUser} rewrites for today. Please come back tomorrow.`, left: 0 }, 429, origin);
+  if (await overCaps(env, d)) return json({ error: 'The humanizer has reached its limit for today. Please come back tomorrow.' }, 429, origin);
   const country = request.cf?.country || '';
+  const day = istDate();
   const log = (row) => within(d.prepare('INSERT INTO humanize_log (created, day, iph, country, email, tone, words_in, words_out, model, ms, usd, reuse, status, text_in, text_out) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-    .bind(new Date().toISOString(), day, iph, country, user?.email || '', tone, n, row.words_out || 0, row.model || '', row.ms || 0, row.usd || 0, row.reuse ?? null, row.status, text.slice(0, 20000), (row.text_out || '').slice(0, 24000)).run(), 5000).catch((e) => console.warn('log', e.message));
-  const addSpend = (usd) => within(d.batch([
-    d.prepare('INSERT INTO humanize_spend (period, usd, n) VALUES (?, ?, 1) ON CONFLICT(period) DO UPDATE SET usd = usd + excluded.usd, n = n + 1').bind(day, usd),
-    d.prepare('INSERT INTO humanize_spend (period, usd, n) VALUES (?, ?, 1) ON CONFLICT(period) DO UPDATE SET usd = usd + excluded.usd, n = n + 1').bind(month, usd),
-    d.prepare('INSERT INTO humanize_ip (k, n, day) VALUES (?, 1, ?) ON CONFLICT(k) DO UPDATE SET n = n + 1').bind(iph, day),
-  ]), 5000).catch((e) => console.warn('spend', e.message));
+    .bind(new Date().toISOString(), day, lim.iph, country, user.email || user.uid, tone, n, row.words_out || 0, row.model || '', row.ms || 0, row.usd || 0, row.reuse ?? null, row.status, text.slice(0, 20000), (row.text_out || '').slice(0, 24000)).run(), 5000).catch((e) => console.warn('log', e.message));
 
   let r;
   try { r = await rewrite(env, text, tone); }
@@ -198,13 +120,12 @@ export async function onRequestPost({ request, env }) {
     return json({ error: 'Could not rewrite right now. Please try again in a minute.' }, 502, origin);
   }
   if (r.refused) {
-    await Promise.all([addSpend(r.usd), log({ status: 'refused', model: r.model, usd: r.usd, ms: r.ms })]);
+    await Promise.all([addSpend(d, r.usd), lim.bump(), log({ status: 'refused', model: r.model, usd: r.usd, ms: r.ms })]);
     return json({ error: 'This text cannot be rewritten here. Please try different text.' }, 422, origin);
   }
   const reuse = reuseShare(text, r.text);
-  await Promise.all([addSpend(r.usd), log({ status: 'ok', model: r.model, usd: r.usd, ms: r.ms, reuse, text_out: r.text, words_out: words(r.text) })]);
-  if (Math.random() < 0.05) d.prepare('DELETE FROM humanize_ip WHERE day < ?').bind(day).run().catch(() => {});
-  return json({ text: r.text, words: words(r.text), reuse, left: Math.max(0, perIp - used - 1) }, 200, origin);
+  await Promise.all([addSpend(d, r.usd), lim.bump(), person(d, user, country, 'humanize'), log({ status: 'ok', model: r.model, usd: r.usd, ms: r.ms, reuse, text_out: r.text, words_out: words(r.text) })]);
+  return json({ text: r.text, words: words(r.text), reuse, left: Math.max(0, lim.left - 1) }, 200, origin);
 }
 
 export async function onRequestGet({ request, env }) {
@@ -212,28 +133,35 @@ export async function onRequestGet({ request, env }) {
   const q = new URL(request.url).searchParams;
   if (q.has('selftest')) {
     // the PC's watchdog: setup + recent health, no AI call (nothing paid)
-    const out = { ok: false, key: !!env.ANTHROPIC_API_KEY, db: false };
+    const out = { ok: false, key: !!env.ANTHROPIC_API_KEY, gemini: !!env.GEMINI_API_KEY, db: false };
     try {
       const d = await table(env);
       const since = new Date(Date.now() - 3 * 3600000).toISOString();
-      const [day, month, last, recent] = await Promise.all([
+      const [day, month, last, recent, plag] = await Promise.all([
         spend(d, istDate()), spend(d, istMonth()),
         within(d.prepare("SELECT MAX(CASE WHEN status = 'ok' THEN created END) AS ok, MAX(CASE WHEN status LIKE 'error%' THEN created END) AS err FROM humanize_log").first(), 4000),
         within(d.prepare("SELECT SUM(status = 'ok') AS ok, SUM(status LIKE 'error%') AS err FROM humanize_log WHERE created > ?").bind(since).first(), 4000),
+        within(d.prepare("SELECT SUM(status = 'ok') AS ok, SUM(status LIKE 'error%') AS err FROM plag_log WHERE created > ?").bind(since).first(), 4000),
       ]);
+      const c = caps(env);
       Object.assign(out, { db: true, today: day, month, last_ok: last?.ok || null, last_err: last?.err || null, last3h: { ok: recent?.ok || 0, err: recent?.err || 0 },
-        day_cap: +(env.HUMANIZE_DAY_USD || 0.5), month_cap: +(env.HUMANIZE_MONTH_USD || 5) });
-      out.ok = out.key && !(out.last3h.err >= 3 && out.last3h.err > out.last3h.ok);
+        plag3h: { ok: plag?.ok || 0, err: plag?.err || 0 }, day_cap: c.day, month_cap: c.month });
+      const bad = (x) => x.err >= 3 && x.err > x.ok;
+      out.ok = out.key && !bad(out.last3h) && !bad(out.plag3h);
     } catch (e) { out.error = e.message; }
     return json(out, out.ok ? 200 : 503, origin);
   }
   const user = await who(request, env);
-  if (!user || !ADMIN_EMAILS.includes(user.email)) return json({ error: 'admin only' }, 401, origin);
+  if (!isAdmin(user)) return json({ error: 'admin only' }, 401, origin);
   try {
     const d = await table(env);
     if (q.get('id')) {
       const row = await within(d.prepare('SELECT * FROM humanize_log WHERE id = ?').bind(+q.get('id')).first(), 5000);
       return json({ row }, row ? 200 : 404, origin);
+    }
+    if (q.has('people')) {
+      const r = await within(d.prepare('SELECT * FROM hz_people ORDER BY last DESC LIMIT 1000').all(), 6000);
+      return json({ rows: r.results || [] }, 200, origin);
     }
     const days = Math.max(0, +(q.get('days') || 0)), limit = Math.min(500, Math.max(1, +(q.get('limit') || 200)));
     const term = String(q.get('q') || '').trim().slice(0, 100);
@@ -243,10 +171,10 @@ export async function onRequestGet({ request, env }) {
     const W = where.length ? 'WHERE ' + where.join(' AND ') : '';
     const [rows, tot, day, month] = await Promise.all([
       within(d.prepare(`SELECT id, created, country, email, iph, tone, words_in, words_out, model, ms, usd, reuse, status, substr(text_in, 1, 220) AS preview FROM humanize_log ${W} ORDER BY id DESC LIMIT ?`).bind(...args, limit).all(), 6000),
-      within(d.prepare(`SELECT COUNT(*) AS n, COUNT(DISTINCT iph) AS people, SUM(words_in) AS words, SUM(usd) AS usd, SUM(status = 'ok') AS ok FROM humanize_log ${W}`).bind(...args).first(), 6000),
+      within(d.prepare(`SELECT COUNT(*) AS n, COUNT(DISTINCT email) AS people, SUM(words_in) AS words, SUM(usd) AS usd, SUM(status = 'ok') AS ok FROM humanize_log ${W}`).bind(...args).first(), 6000),
       spend(d, istDate()), spend(d, istMonth()),
     ]);
-    return json({ rows: rows.results || [], totals: tot || {}, today: day, month, caps: { day: +(env.HUMANIZE_DAY_USD || 0.5), month: +(env.HUMANIZE_MONTH_USD || 5), per_ip: +(env.HUMANIZE_PER_IP || 15) } }, 200, origin);
+    return json({ rows: rows.results || [], totals: tot || {}, today: day, month, caps: { ...caps(env), per_user: +(env.HUMANIZE_PER_USER || 20) } }, 200, origin);
   } catch (e) {
     return json({ error: e.message }, 503, origin);
   }
@@ -255,7 +183,7 @@ export async function onRequestGet({ request, env }) {
 export async function onRequestDelete({ request, env }) {
   const origin = request.headers.get('Origin');
   const user = await who(request, env);
-  if (!user || !ADMIN_EMAILS.includes(user.email)) return json({ error: 'admin only' }, 401, origin);
+  if (!isAdmin(user)) return json({ error: 'admin only' }, 401, origin);
   const id = +new URL(request.url).searchParams.get('id');
   if (!id) return json({ error: 'no id' }, 400, origin);
   try {
