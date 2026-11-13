@@ -362,7 +362,8 @@ async function runCheck(text, onStep) {
   const r = await api('/api/plagiarism', { method: 'POST', body: JSON.stringify({ text }) });
   const d = await r.json().catch(() => ({ error: 'Something went wrong. Please try again.' }));
   if (!r.ok || d.error) throw new Error(d.error || 'Something went wrong. Please try again.');
-  const c = { id: d.id, text, sources: d.sources || [], sets: [], status: [], engine: d.engine, left: d.left };
+  const c = { id: d.id, text, sources: d.sources || [], status: [], engine: d.engine, left: d.left };
+  c.sets = c.sources.map(() => null);   // a page that cannot be opened counts as no match (never a hole in the list)
   onStep?.(c.sources.length ? `Opening ${c.sources.length} pages found and comparing word by word...` : 'Comparing...');
   await Promise.all(c.sources.map(async (s, k) => {
     try {
@@ -389,7 +390,7 @@ function drawReport() {
   const after = hz && hz.in === chk.text && hz.after != null ? hz.after : null;
   $('#scores').innerHTML = `<div class="score"><b class="num ${level(chk.pct)}">${chk.pct}%</b><span>of your original text found on the web</span></div>
     <div class="score"><b class="num ${after == null ? '' : level(after)}">${after == null ? '-' : after + '%'}</b><span>${after == null ? 'after humanizing (press Humanize)' : 'after humanizing, against the same sources'}</span></div>
-    <div class="score"><b>${chk.sources.length ? Math.max(0, ...chk.per) + '%' : '0%'}</b><span>the biggest single source</span></div>`;
+    <div class="score"><b>${Math.max(0, ...chk.per.map((v) => v || 0))}%</b><span>the biggest single source</span></div>`;
   $('#srcRows').innerHTML = chk.sources.length ? chk.sources.map((s, k) => {
     let host = ''; try { host = new URL(s.url).hostname.replace(/^www\./, ''); } catch {}
     const st = chk.status[k];
@@ -440,7 +441,7 @@ function showOut() {
   state('out'); outCounts();
   const f = Math.max(0, Math.round(100 - (hz.reuse || 0)));
   $('#fresh').innerHTML = `<span class="badge ${f >= 90 ? '' : f >= 75 ? 'mid' : 'low'}" title="Share of your original 5-word phrases that are gone from the new text">Fresh wording ${f}%</span>`;
-  $('#left').textContent = hz.left != null ? `${hz.left} rewrite${hz.left === 1 ? '' : 's'} left today` : '';
+  $('#left').textContent = hz.left != null && hz.left < 1000 ? `${hz.left} rewrite${hz.left === 1 ? '' : 's'} left today` : '';
   drawBA();
 }
 async function humanizeNow(text) {
