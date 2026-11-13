@@ -1534,7 +1534,7 @@ async function adminUpdates() {
 async function viewAdmin() {
   if (!A.isAdmin()) return '<div class="empty card">This area is for the admin.</div>';
   const t = ui.admin.tab;
-  const tabs = [['publisher', 'Publisher'], ['updates', 'Updates & change log'], ['members', 'Members'], ['logins', 'Login log'], ['asks', 'Dalal questions'], ['regs', 'Registrations'], ['quiz', 'Persona test'], ['status', 'Data status']];
+  const tabs = [['publisher', 'Publisher'], ['updates', 'Updates & change log'], ['members', 'Members'], ['logins', 'Login log'], ['asks', 'Dalal questions'], ['regs', 'Registrations'], ['quiz', 'Persona test'], ['hz', 'Humanizer'], ['status', 'Data status']];
   if (!ui.purged) { ui.purged = true; A.purgeOld(90).then((n) => n && toast(`Cleaned ${n} records older than 90 days`)).catch(() => {}); }
   let body = '';
   if (t === 'publisher') {
@@ -1637,6 +1637,31 @@ async function viewAdmin() {
       { k: 'pl', label: 'Virtual P/L', fmt: (x) => `<span class="${x.pl > 0 ? 'up' : x.pl < 0 ? 'down' : ''}">${x.pl > 0 ? '+' : ''}${(x.pl || 0).toLocaleString('en-IN')}</span>`, cls: 'r' },
       { k: 'created', label: 'Played', fmt: (x) => `${fDT(x.created)}<span class="sub">${ago(x.created)}</span>` },
     ], 'Nobody has played yet. Share street-ka-dalal.pages.dev/quiz on WhatsApp.')}</section>`;
+  } else if (t === 'hz') {
+    // Humanizer pastes from humanize.html (functions/api/humanize.js, D1 table humanize_log)
+    const days = ui.admin.hzDays ?? 7, term = ui.admin.hzQ || '';
+    const r = await fetch(`/api/humanize?days=${days}&limit=300&q=${encodeURIComponent(term)}`, { headers: { Authorization: `Bearer ${await A.idToken()}` } }).then((x) => x.json()).catch((e) => ({ error: e.message }));
+    const rows = r.rows || [], T = r.totals || {}, usd = (v) => `$${(+v || 0).toFixed(v >= 1 ? 2 : 3)}`;
+    const open = ui.admin.hzRow;
+    const who = (x) => (x.email ? `<b>${esc(x.email)}</b>` : '<b>Guest</b>') + `<span class="sub">${esc(x.country || '')} · network ${esc((x.iph || '').slice(0, 6))}</span>`;
+    const box = (label, n, text, which) => `<div><p class="eyebrow">${label} (${n || 0} words)</p><div class="prose sm" style="white-space:pre-wrap;max-height:420px;overflow:auto;background:var(--paper-2,#f1ebdf);border-radius:12px;padding:12px">${esc(text || '')}</div><p><button class="btn sm ghost" data-act="hzCopy" data-v="${which}">Copy</button></p></div>`;
+    body = r.error ? `<div class="card empty">Could not load the humanizer log: ${esc(r.error)}</div>` : `<div class="stats big"><div><b>${(T.n || 0).toLocaleString('en-IN')}</b><span>pastes in this view</span></div><div><b>${(T.people || 0).toLocaleString('en-IN')}</b><span>different networks (by day)</span></div><div><b>${(T.words || 0).toLocaleString('en-IN')}</b><span>words pasted</span></div><div><b>${usd(r.today?.usd)} / ${usd(r.month?.usd)}</b><span>spent today / this month (caps ${usd(r.caps?.day)} / ${usd(r.caps?.month)})</span></div></div>
+    <div class="toolbar"><div class="seg">${[[1, 'Today'], [7, '7 days'], [30, '30 days'], [0, 'All time']].map(([d, l]) => `<button class="${d === days ? 'on' : ''}" data-act="hzDays" data-v="${d}">${l}</button>`).join('')}</div>
+      <div class="search" style="min-width:260px"><input data-change="hzQ" placeholder="Search pasted text or email, then press Enter" value="${esc(term)}"></div>
+      <span class="sub">Page <a href="humanize" target="_blank" rel="noopener">street-ka-dalal.pages.dev/humanize</a> · ${r.caps?.per_ip ?? 15} rewrites a day per network</span><span class="grow"></span><button class="btn sm ghost" data-act="exportHz">Download CSV</button></div>
+    ${open ? `<section class="card"><div class="card-head"><h2>Paste #${open.id}</h2><span class="sub">${fDT(open.created)} · ${esc(open.email || 'Guest')} ${esc(open.country || '')} · ${esc(open.tone || '')} · ${esc(open.model || '')} · ${((open.ms || 0) / 1000).toFixed(1)} s · ${usd(open.usd)} · fresh wording ${open.reuse == null ? '-' : Math.round(100 - open.reuse) + '%'} · ${esc(open.status || '')}</span><span class="grow"></span><button class="btn sm ghost" data-act="hzClose">Close</button> <button class="btn sm ghost" data-act="hzDel" data-v="${open.id}">Delete</button></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px">${box('Pasted', open.words_in, open.text_in, 'in')}${box('Humanized', open.words_out, open.text_out, 'out')}</div></section>` : ''}
+    <p class="sub">Everything people paste on the Humanizer, newest first. Press Open to read the full text and the rewrite. The page tells visitors that their text is saved and read by us.</p>
+    <section class="card flush">${table('hz', rows, [
+      { k: 'created', label: 'When', fmt: (x) => `${fDT(x.created)}<span class="sub">${ago(x.created)}</span>` },
+      { k: 'email', label: 'Who', fmt: who },
+      { k: 'preview', label: 'What they pasted', fmt: (x) => `${esc(x.preview || '')}${(x.words_in || 0) > 35 ? '...' : ''}<span class="sub">${esc(x.tone || '')} · ${x.status === 'ok' ? 'rewritten' : esc(x.status || '')}</span>` },
+      { k: 'words_in', label: 'Words', cls: 'r', fmt: (x) => (x.words_in || 0).toLocaleString('en-IN') },
+      { k: 'reuse', label: 'Fresh', cls: 'r', v: (x) => (x.reuse == null ? -1 : 100 - x.reuse), fmt: (x) => (x.reuse == null ? '-' : Math.round(100 - x.reuse) + '%') },
+      { k: 'usd', label: 'Cost', cls: 'r', fmt: (x) => usd(x.usd) },
+      { k: 'id', label: '', fmt: (x) => `<button class="btn sm ghost" data-act="hzOpen" data-v="${x.id}">Open</button>` },
+    ], 'No pastes yet. Share street-ka-dalal.pages.dev/humanize.')}</section>`;
+    ui.hzRows = rows;
   } else if (t === 'asks') {
     const qs = await A.listAsks(200);
     const day = Date.now() - 86400000;
@@ -1838,6 +1863,24 @@ const ACTS = {
     Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })), download: `community-${ui.admin.regEv || REG_EVENTS[0][0]}-registrations-${new Date().toISOString().slice(0, 10)}.csv` }).click();
   },
   quizDays: (el) => { ui.admin.quizDays = +el.dataset.v; render(); },
+  hzDays: (el) => { ui.admin.hzDays = +el.dataset.v; ui.admin.hzRow = null; render(); },
+  hzClose: () => { ui.admin.hzRow = null; render(); },
+  hzOpen: async (el) => {
+    const r = await fetch(`/api/humanize?id=${el.dataset.v}`, { headers: { Authorization: `Bearer ${await A.idToken()}` } }).then((x) => x.json()).catch((e) => ({ error: e.message }));
+    if (!r.row) return toast(r.error || 'Could not open it');
+    ui.admin.hzRow = r.row; render(); window.scrollTo({ top: 0, behavior: 'smooth' });
+  },
+  hzCopy: async (el) => { const t = ui.admin.hzRow?.[el.dataset.v === 'in' ? 'text_in' : 'text_out'] || ''; await navigator.clipboard.writeText(t).catch(() => {}); toast('Copied'); },
+  hzDel: async (el) => {
+    if (!confirm('Delete this paste from the log? This cannot be undone.')) return;
+    const r = await fetch(`/api/humanize?id=${el.dataset.v}`, { method: 'DELETE', headers: { Authorization: `Bearer ${await A.idToken()}` } }).then((x) => x.json()).catch((e) => ({ error: e.message }));
+    toast(r.ok ? 'Deleted' : r.error || 'Could not delete'); ui.admin.hzRow = null; render();
+  },
+  exportHz: () => {
+    const rows = ui.hzRows || [], q = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const csv = ['id,created,email,country,network,tone,words_in,words_out,fresh_pct,usd,model,status,preview', ...rows.map((x) => [x.id, x.created, x.email, x.country, x.iph, x.tone, x.words_in, x.words_out, x.reuse == null ? '' : Math.round(100 - x.reuse), x.usd, x.model, x.status, x.preview].map(q).join(','))].join('\n');
+    Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })), download: `humanizer-log-${new Date().toISOString().slice(0, 10)}.csv` }).click();
+  },
   exportQuiz: () => {
     const dims = ['exp', 'words', 'habits', 'tools', 'disc'];
     const head = ['name', 'email', 'level', 'score', 'self_rating', 'style', 'years', 'time', 'goal', ...dims.map((d) => 'profile_' + d), 'words_known', 'tools', 'learn', 'habit_chart', 'habit_results', 'habit_exit', 'habit_tip', 'moments', 'telegram_bot', 'virtual_pl', 'seconds', 'certificate', 'played'];
@@ -1863,6 +1906,7 @@ const INPUTS = {
   mfStock: (el) => { ui.mf.stock = el.value; loadMfStocks().then(() => showMfStock(el.value)); },
 };
 const CHANGES = {
+  hzQ: (el) => { ui.admin.hzQ = el.value.trim(); ui.admin.hzRow = null; render(); },
   scrSector: (el) => { ui.scr.sector = el.value; render(); },
   eqF: (el) => { ui.eq.f[el.dataset.k] = el.type === 'checkbox' ? el.checked : el.value; render(); },
   stkSector: (el) => { ui.stk.sector = el.value; ui.stk.limit = 100; render(); },

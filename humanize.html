@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Humanizer: make AI text sound human, in fresh words · Street ka Dalal</title>
+<meta name="description" content="Free humanizer by Street ka Dalal. Paste any text, press one button, and get it back rewritten so it reads like a person wrote it, in fresh original wording. Copy, download, compare.">
+<meta property="og:title" content="Street ka Dalal Humanizer">
+<meta property="og:description" content="Paste text, one click: it reads human and comes back in fresh wording of its own. Free.">
+<meta property="og:image" content="https://street-ka-dalal.pages.dev/icons/icon-512.png">
+<meta name="theme-color" content="#1F4D3A">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,700&display=swap" media="print" onload="this.media='all'">
+<style>
+:root{--bg:#f6f1e7;--paper:#fffdf8;--paper-2:#f1ebdf;--line:#e4dccb;--ink:#1d2a23;--muted:#6c786f;--green:#1f4d3a;--green-2:#2f6b4f;--deep:#12301f;--sage:#dfe9d6;--gold:#b08d57;--gold-2:#d9b878;--gold-soft:#f3ead9;--cream:#e9dcc3;--up:#23794f;--down:#b4442f;
+--serif:"Fraunces",Georgia,"Times New Roman",serif;--sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;--shadow:0 1px 2px rgba(31,46,36,.05),0 10px 30px rgba(31,46,36,.08)}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:var(--green-2)}
+h1,h2,h3{font-family:var(--serif);color:var(--green);margin:0;letter-spacing:-.01em}
+.wrap{max-width:1240px;margin:0 auto;padding:0 18px}
+.top{position:sticky;top:0;z-index:20;background:rgba(246,241,231,.9);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:12px;height:58px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--green);font:700 19px var(--serif)}
+.brand img{width:30px;height:30px}
+.brand em{color:var(--gold);font-style:italic}
+.grow{flex:1}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:0;border-radius:999px;padding:12px 20px;font:700 15px var(--sans);cursor:pointer;text-decoration:none;transition:transform .15s ease,box-shadow .15s ease,background .15s;white-space:nowrap}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.btn.primary{background:var(--green);color:#fff;box-shadow:0 6px 18px rgba(31,77,58,.25)}
+.btn.primary:hover{background:var(--green-2)}
+.btn.gold{background:linear-gradient(135deg,var(--gold-2),var(--gold));color:var(--deep);box-shadow:0 8px 24px rgba(217,184,120,.35);padding:15px 28px;font-size:16px}
+.btn.sm{padding:7px 13px;font-size:13.5px;font-weight:650}
+.btn.light{background:var(--paper);color:var(--green);border:1px solid var(--line)}
+.btn.light:hover{background:var(--gold-soft)}
+.btn.on{background:var(--sage);border-color:#c6d8bb}
+
+.hero{padding:30px 0 10px;text-align:center}
+.hero h1{font-size:clamp(28px,4.4vw,44px);line-height:1.12}
+.hero h1 em{color:var(--gold);font-style:italic}
+.hero p{color:var(--muted);max-width:720px;margin:10px auto 0;font-size:16.5px}
+.pills{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+.pill{background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13px;color:var(--green);font-weight:600}
+
+.controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;margin:20px 0 14px}
+.tones{display:flex;gap:4px;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:4px;flex-wrap:wrap;justify-content:center}
+.tones button{border:0;background:transparent;border-radius:999px;padding:7px 13px;font:600 13.5px var(--sans);color:var(--muted);cursor:pointer}
+.tones button.on{background:var(--green);color:#fff}
+.lbl{font-size:13px;color:var(--muted);font-weight:600}
+
+.panes{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:860px){.panes{grid-template-columns:1fr}}
+.pane{background:var(--paper);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);display:flex;flex-direction:column;min-height:440px;overflow:hidden}
+.pane-head{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.pane-head h2{font-size:17px;margin-right:auto}
+.pane textarea,.pane .view{flex:1;width:100%;border:0;outline:0;resize:none;background:transparent;padding:16px 18px;font:16px/1.65 var(--sans);color:var(--ink);min-height:340px}
+.pane .view{white-space:pre-wrap;overflow:auto}
+.pane .view mark{background:#f6dfb0;border-radius:3px;padding:0 1px}
+.pane-foot{display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);flex-wrap:wrap}
+.pane-foot b{color:var(--ink)}
+.over{color:var(--down);font-weight:700}
+.placeholder{color:var(--muted);padding:40px 22px;text-align:center;margin:auto}
+.placeholder b{display:block;font-family:var(--serif);color:var(--green);font-size:19px;margin-bottom:6px}
+
+.go{display:flex;justify-content:center;align-items:center;gap:12px;margin:18px 0 6px;flex-wrap:wrap}
+.hint{font-size:13px;color:var(--muted)}
+.badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 11px;font-weight:700;font-size:13px;background:var(--sage);color:var(--green)}
+.badge.mid{background:var(--gold-soft);color:#7a5a1f}
+.badge.low{background:#f6dcd5;color:var(--down)}
+.spin{width:16px;height:16px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .8s linear infinite;display:inline-block}
+@keyframes sp{to{transform:rotate(360deg)}}
+.working{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;margin:auto;color:var(--muted);padding:40px}
+.working .bar{width:220px;height:6px;border-radius:9px;background:var(--paper-2);overflow:hidden}
+.working .bar i{display:block;height:100%;width:40%;background:linear-gradient(90deg,var(--gold-2),var(--green-2));border-radius:9px;animation:slide 1.3s ease-in-out infinite}
+@keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(260%)}}
+.err{background:#fbeae5;border:1px solid #efc6ba;color:var(--down);border-radius:14px;padding:12px 16px;margin:12px auto 0;max-width:760px;text-align:center;font-weight:600}
+
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:34px 0 10px}
+@media (max-width:860px){.cards{grid-template-columns:1fr}}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:16px 18px}
+.card h3{font-size:16.5px;margin-bottom:6px}
+.card p{margin:0;color:var(--muted);font-size:14.5px}
+.hist{margin:26px 0 0}
+.hist-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.hist-head h3{font-size:18px;margin-right:auto}
+.hist-list{display:grid;gap:8px}
+.hist-item{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:10px 14px;cursor:pointer;display:flex;gap:12px;align-items:center;text-align:left;font:inherit;color:inherit;width:100%}
+.hist-item:hover{background:var(--gold-soft)}
+.hist-item span{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:14.5px}
+.hist-item small{color:var(--muted);white-space:nowrap}
+.note{font-size:13px;color:var(--muted);max-width:860px;margin:28px auto 0;text-align:center;line-height:1.6}
+.foot{margin:30px 0 0;padding:22px 0 34px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);text-align:center}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--deep);color:#fff;padding:10px 18px;border-radius:999px;font-weight:650;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:50}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="./"><img src="icons/icon.svg" alt="">Street ka <em>Dalal</em></a>
+  <span class="grow"></span>
+  <a class="btn sm light" href="./">Back to the site</a>
+</div></header>
+
+<main class="wrap">
+  <section class="hero">
+    <h1>Make any text sound <em>human</em>, in your own fresh words</h1>
+    <p>Paste your text and press one button. It comes back rewritten the way a careful person writes, with new wording of its own, and the meaning, facts and numbers unchanged.</p>
+    <div class="pills"><span class="pill">Humanize + fresh wording in one click</span><span class="pill">Free</span><span class="pill">Up to 2,000 words</span><span class="pill">English, Hindi, Hinglish</span></div>
+  </section>
+
+  <div class="controls">
+    <span class="lbl">Tone</span>
+    <div class="tones" id="tones">
+      <button data-t="natural" class="on">Natural</button><button data-t="simple">Simple</button><button data-t="professional">Professional</button><button data-t="friendly">Friendly</button><button data-t="academic">Academic</button>
+    </div>
+  </div>
+
+  <div class="panes">
+    <section class="pane">
+      <div class="pane-head">
+        <h2>Your text</h2>
+        <button class="btn sm light" id="pasteBtn" title="Paste from clipboard">Paste</button>
+        <label class="btn sm light" title="Open a .txt file">Upload<input type="file" id="fileIn" accept=".txt,.md,.text,text/plain" hidden></label>
+        <button class="btn sm light" id="sampleBtn">Try a sample</button>
+        <button class="btn sm light" id="clearBtn">Clear</button>
+      </div>
+      <textarea id="inp" placeholder="Paste or type your text here. AI-written essays, posts, emails, captions, reports: anything up to 2,000 words." spellcheck="true"></textarea>
+      <input class="hp" id="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <div class="pane-foot"><span id="inCount"><b>0</b> words</span><span class="grow"></span><span>Ctrl + Enter to humanize</span></div>
+    </section>
+
+    <section class="pane">
+      <div class="pane-head">
+        <h2>Humanized text</h2>
+        <button class="btn sm light" id="copyBtn" disabled>Copy</button>
+        <button class="btn sm light" id="dlBtn" disabled>Download</button>
+        <button class="btn sm light" id="markBtn" disabled title="Highlight words kept from your original">Show kept words</button>
+        <button class="btn sm light" id="againBtn" disabled title="Get another version of the same text">New version</button>
+      </div>
+      <div class="placeholder" id="ph"><b>Your humanized text appears here</b>Paste something on the left and press the button.</div>
+      <div class="working" id="work" hidden><div class="bar"><i></i></div><span id="workMsg">Reading your text...</span></div>
+      <textarea id="out" hidden spellcheck="true" aria-label="Humanized text (you can edit it)"></textarea>
+      <div class="view" id="view" hidden></div>
+      <div class="pane-foot" id="outFoot" hidden><span id="outCount"></span><span id="fresh"></span><span class="grow"></span><span id="left"></span></div>
+    </section>
+  </div>
+
+  <div class="go">
+    <button class="btn gold" id="goBtn">Humanize + make it original</button>
+  </div>
+  <div class="err" id="err" hidden></div>
+
+  <div class="cards">
+    <div class="card"><h3>Reads like a person</h3><p>Removes the tell-tale AI habits: staged openers, "not just X, it's Y" lines, lists of three, filler words, inflated claims and one-line closers.</p></div>
+    <div class="card"><h3>Fresh wording</h3><p>Every sentence is rebuilt in new words. The "Fresh wording" score shows how little of your original phrasing is left, and "Show kept words" marks it.</p></div>
+    <div class="card"><h3>Meaning kept</h3><p>Facts, names, numbers, dates and quotes stay exactly as you wrote them. You can edit the result right in the box before you copy it.</p></div>
+  </div>
+
+  <section class="hist" id="histSec" hidden>
+    <div class="hist-head"><h3>Your recent rewrites</h3><span class="hint">Saved only in this browser</span><button class="btn sm light" id="histClear">Clear history</button></div>
+    <div class="hist-list" id="hist"></div>
+  </section>
+
+  <p class="note"><b>Please read:</b> what you paste here is saved on our server and can be read by the Street ka Dalal team, so do not paste passwords, phone numbers, bank details or anything private. The "Fresh wording" score compares the new text with what you pasted; it does not search the internet. New words do not make someone else's ideas yours: credit your sources, and follow your school's or employer's rules on AI tools.</p>
+</main>
+
+<footer class="foot"><div class="wrap">Street ka Dalal Humanizer · built on the open humanizer writing guide (github.com/blader/humanizer, MIT licence) · <a href="./">street-ka-dalal.pages.dev</a></div></footer>
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const inp = $('#inp'), out = $('#out'), view = $('#view');
+  const MAXW = 2000;
+  let tone = 'natural', last = null, marking = false, busy = false;
+  const wc = (s) => (String(s).match(/\S+/g) || []).length;
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const toast = (m) => { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 1800); };
+  const SAMPLE = "In today's fast-paced digital landscape, artificial intelligence has emerged as a pivotal force that is fundamentally transforming the way businesses operate. It's not just about automation, it's about unlocking unprecedented levels of efficiency and innovation. By leveraging cutting-edge machine learning algorithms, organizations can seamlessly streamline their workflows, enhance decision-making, and deliver exceptional customer experiences. Moreover, AI empowers teams to focus on what truly matters. In conclusion, embracing AI is no longer optional; it is essential for any company that wants to thrive in the future.";
+
+  function counts() {
+    const n = wc(inp.value);
+    $('#inCount').innerHTML = `<b class="${n > MAXW ? 'over' : ''}">${n.toLocaleString('en-IN')}</b> words · ${inp.value.length.toLocaleString('en-IN')} characters${n > MAXW ? ` <span class="over">(max ${MAXW.toLocaleString('en-IN')})</span>` : ''}`;
+    $('#goBtn').disabled = busy || n < 5 || n > MAXW;
+    try { localStorage.setItem('hz_draft', inp.value.slice(0, 30000)); } catch {}
+  }
+  function outCounts() {
+    const n = wc(out.value);
+    $('#outCount').innerHTML = `<b>${n.toLocaleString('en-IN')}</b> words · about ${Math.max(1, Math.round(n / 220))} min read`;
+  }
+  function setState(s) {
+    $('#ph').hidden = s !== 'empty'; $('#work').hidden = s !== 'work';
+    out.hidden = s !== 'done' || marking; view.hidden = s !== 'done' || !marking; $('#outFoot').hidden = s !== 'done';
+    for (const b of ['#copyBtn', '#dlBtn', '#markBtn', '#againBtn']) $(b).disabled = s !== 'done';
+  }
+  function freshBadge(reuse) {
+    const f = Math.max(0, Math.round(100 - (reuse || 0)));
+    const cls = f >= 90 ? '' : f >= 75 ? 'mid' : 'low';
+    $('#fresh').innerHTML = `<span class="badge ${cls}" title="Share of your original 5-word phrases that are gone from the new text">Fresh wording ${f}%</span>`;
+  }
+  // words of the new text that also appear, in order, in the original (longest common run of words)
+  function markKept(a, b) {
+    const A = a.split(/(\s+)/), B = b.split(/(\s+)/);
+    const aw = A.filter((x, i) => i % 2 === 0).map((w) => w.toLowerCase().replace(/[^\p{L}\p{N}']/gu, ''));
+    const bi = [], bw = [];
+    B.forEach((x, i) => { if (i % 2 === 0) { bi.push(i); bw.push(x.toLowerCase().replace(/[^\p{L}\p{N}']/gu, '')); } });
+    const n = aw.length, m = bw.length;
+    if (n * m > 6e6) return esc(b);
+    const L = Array.from({ length: n + 1 }, () => new Uint16Array(m + 1));
+    for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) L[i][j] = aw[i] && aw[i] === bw[j] ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
+    const keep = new Set();
+    for (let i = 0, j = 0; i < n && j < m;) {
+      if (aw[i] && aw[i] === bw[j]) { keep.add(j); i++; j++; } else if (L[i + 1][j] >= L[i][j + 1]) i++; else j++;
+    }
+    // mark only runs of 3+ kept words in a row (single common words like "the" are not copying)
+    const run = new Set();
+    let s = -1;
+    for (let j = 0; j <= m; j++) {
+      if (j < m && keep.has(j)) { if (s < 0) s = j; }
+      else { if (s >= 0 && j - s >= 3) for (let k = s; k < j; k++) run.add(k); s = -1; }
+    }
+    return B.map((x, i) => (i % 2 === 0 && run.has(bi.indexOf(i)) ? `<mark>${esc(x)}</mark>` : esc(x))).join('');
+  }
+  const MSGS = ['Reading your text...', 'Spotting the AI habits...', 'Rebuilding each sentence in fresh words...', 'Checking every fact is kept...', 'Almost done...'];
+  async function go() {
+    const text = inp.value.trim();
+    if (busy || wc(text) < 5) return;
+    if (wc(text) > MAXW) { showErr(`Please paste up to ${MAXW.toLocaleString('en-IN')} words at a time.`); return; }
+    busy = true; $('#err').hidden = true; setState('work');
+    $('#goBtn').innerHTML = '<span class="spin"></span> Humanizing...'; $('#goBtn').disabled = true;
+    let k = 0; $('#workMsg').textContent = MSGS[0];
+    const tick = setInterval(() => { k = Math.min(k + 1, MSGS.length - 1); $('#workMsg').textContent = MSGS[k]; }, 3500);
+    try {
+      const r = await fetch('/api/humanize', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, tone, website: $('#website').value }) });
+      const d = await r.json().catch(() => ({ error: 'Something went wrong. Please try again.' }));
+      if (!r.ok || d.error) throw new Error(d.error || 'Something went wrong. Please try again.');
+      last = { in: text, out: d.text, reuse: d.reuse, tone };
+      out.value = d.text; marking = false; $('#markBtn').classList.remove('on'); $('#markBtn').textContent = 'Show kept words';
+      setState('done'); outCounts(); freshBadge(d.reuse);
+      $('#left').textContent = d.left != null ? `${d.left} rewrite${d.left === 1 ? '' : 's'} left today` : '';
+      save(last);
+      if (window.innerWidth < 860) out.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (e) {
+      setState(last ? 'done' : 'empty'); if (last) out.value = last.out;
+      showErr(e.message === 'Failed to fetch' ? 'No internet connection. Please check and try again.' : e.message);
+    } finally {
+      clearInterval(tick); busy = false; $('#goBtn').textContent = 'Humanize + make it original'; counts();
+    }
+  }
+  const showErr = (m) => { $('#err').textContent = m; $('#err').hidden = false; };
+  async function copy(t) {
+    try { await navigator.clipboard.writeText(t); }
+    catch { const x = Object.assign(document.createElement('textarea'), { value: t }); document.body.appendChild(x); x.select(); document.execCommand('copy'); x.remove(); }
+    toast('Copied');
+  }
+  // history: last 10 rewrites, in this browser only
+  const H = () => { try { return JSON.parse(localStorage.getItem('hz_hist') || '[]'); } catch { return []; } };
+  function save(e) { const h = [{ ...e, t: Date.now() }, ...H()].slice(0, 10); try { localStorage.setItem('hz_hist', JSON.stringify(h)); } catch {} drawHist(); }
+  function drawHist() {
+    const h = H(); $('#histSec').hidden = !h.length;
+    $('#hist').innerHTML = h.map((e, i) => `<button class="hist-item" data-i="${i}"><span>${esc(e.out.slice(0, 160))}</span><small>${new Date(e.t).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} · ${wc(e.out)} words</small></button>`).join('');
+  }
+
+  $('#tones').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; tone = b.dataset.t; for (const x of $('#tones').children) x.classList.toggle('on', x === b); });
+  inp.addEventListener('input', counts);
+  out.addEventListener('input', () => { outCounts(); if (last) last.out = out.value; });
+  document.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); go(); } });
+  $('#goBtn').onclick = go;
+  $('#againBtn').onclick = () => { if (last) { inp.value = last.in; counts(); go(); } };
+  $('#pasteBtn').onclick = async () => {
+    try { const t = await navigator.clipboard.readText(); if (!t) return toast('Clipboard is empty'); inp.value = t; counts(); toast('Pasted'); }
+    catch { inp.focus(); toast('Press Ctrl + V to paste'); }
+  };
+  $('#clearBtn').onclick = () => { inp.value = ''; counts(); inp.focus(); };
+  $('#sampleBtn').onclick = () => { inp.value = SAMPLE; counts(); };
+  $('#fileIn').onchange = (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    if (f.size > 400000) { showErr('That file is too big. Please use a text file under 400 KB.'); return; }
+    const r = new FileReader(); r.onload = () => { inp.value = String(r.result); counts(); toast('File loaded'); }; r.readAsText(f); e.target.value = '';
+  };
+  $('#copyBtn').onclick = () => copy(out.value);
+  $('#dlBtn').onclick = () => {
+    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([out.value], { type: 'text/plain;charset=utf-8' })), download: `humanized-${new Date().toISOString().slice(0, 10)}.txt` });
+    a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  };
+  $('#markBtn').onclick = () => {
+    if (!last) return;
+    marking = !marking; $('#markBtn').classList.toggle('on', marking); $('#markBtn').textContent = marking ? 'Hide kept words' : 'Show kept words';
+    if (marking) view.innerHTML = markKept(last.in, out.value);
+    setState('done');
+  };
+  $('#hist').onclick = (e) => {
+    const b = e.target.closest('.hist-item'); if (!b) return;
+    const h = H()[+b.dataset.i]; if (!h) return;
+    last = { ...h }; inp.value = h.in; out.value = h.out; marking = false; $('#markBtn').classList.remove('on'); $('#markBtn').textContent = 'Show kept words';
+    counts(); setState('done'); outCounts(); freshBadge(h.reuse); $('#left').textContent = ''; window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  $('#histClear').onclick = () => { try { localStorage.removeItem('hz_hist'); } catch {} drawHist(); toast('History cleared'); };
+
+  try { inp.value = localStorage.getItem('hz_draft') || ''; } catch {}
+  counts(); setState('empty'); drawHist();
+})();
+</script>
+</body>
+</html>
