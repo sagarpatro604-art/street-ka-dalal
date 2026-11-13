@@ -192,7 +192,7 @@ export async function onRequestPost({ request, env }) {
     if (sources.length >= MAX_SOURCES) break;
   }
   const ins = await within(d.prepare('INSERT INTO plag_log (created, day, uid, email, name, country, words, probes, engine, sources, usd, ms, status, text_in) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-    .bind(...base, res.engine, JSON.stringify(sources), res.usd, Date.now() - t0, 'ok', text.slice(0, 20000)).run(), 5000).catch((e) => { console.warn('plag log', e.message); return null; });
+    .bind(...base, errs.length ? `${res.engine} (after ${errs.join(' || ').slice(0, 300)})` : res.engine, JSON.stringify(sources), res.usd, Date.now() - t0, 'ok', text.slice(0, 20000)).run(), 5000).catch((e) => { console.warn('plag log', e.message); return null; });
   await Promise.all([res.usd ? addSpend(d, res.usd) : null, lim.bump(), person(d, user, country, 'check')]);
   return json({ id: ins?.meta?.last_row_id || null, probes, sources: sources.map((s, i) => ({ i, ...s })), engine: res.engine.split(' ')[0], left: Math.max(0, lim.left - 1) }, 200, origin);
 }
