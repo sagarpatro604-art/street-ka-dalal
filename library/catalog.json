@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-18",
+  "updated": "2026-11-16",
   "note": "Library shelf. To add an item, put the file in library/<shelf>/ and add a row here. download true = members may download it (meet-up decks only). protect true = file is stored scrambled (.bin, XOR key in js/library.js) and can only be read in the site reader. A locked row shows a lock card and has no file on the site; to open it, add the file and set locked false.",
   "shelves": [
     {
@@ -42,17 +42,41 @@
       "id": "meetup-2",
       "shelf": "meetups",
       "kind": "pdf",
-      "locked": true,
       "title": "Community Meet Up #2",
       "date": "2026-10-18",
       "by": "Sagar Patro and Bhuvan",
-      "sub": "The data centre story, the market week, and how to read mutual funds without falling for the common traps.",
+      "sub": "The week that was, the Nifty, Midcap and Smallcap report, the data centre theme (what a data centre is, who builds it, the listed suppliers, what companies said on their calls), and 5 checks before you start a SIP.",
       "tags": [
-        "Data centres",
         "Markets",
+        "Index report",
+        "Data centres",
+        "Concalls",
         "Mutual funds"
       ],
-      "lock_note": "Opens here once the session is done and the deck is final."
+      "file": "library/meetups/community-meetup-2.pdf",
+      "pages": 30,
+      "mb": 5.4,
+      "download": true
+    },
+    {
+      "id": "meetup-3",
+      "shelf": "meetups",
+      "kind": "pdf",
+      "title": "Community Meet Up #3",
+      "date": "2026-10-25",
+      "by": "Sagar Patro and Bhuvan",
+      "sub": "Where the money moved this week and capital rotation in simple words, can lab-grown gold crash like diamonds did, RSI divergence with real charts, and a contra investing screener you can copy.",
+      "tags": [
+        "Rotation",
+        "Gold",
+        "RSI divergence",
+        "Contra investing",
+        "Screener"
+      ],
+      "file": "library/meetups/community-meetup-3.pdf",
+      "pages": 29,
+      "mb": 5.0,
+      "download": true
     },
     {
       "id": "data-centre",
