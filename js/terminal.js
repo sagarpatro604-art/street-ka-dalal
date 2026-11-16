@@ -5,26 +5,45 @@
 // Facts only: no buy / sell words, no entry / stop / target anywhere (SEBI). A list shows what fired or moved.
 
 let H = null; // helpers from app.js
+export function setHelpers(h) { H = h; }
 const $ = (s, r = document) => r.querySelector(s);
 const KEY = 'skd.term';
 const S = (() => { try { return { list: 'wl', sym: '', tf: 'D', sort: null, filt: '', ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch { return { list: 'wl', sym: '', tf: 'D', sort: null, filt: '' }; } })();
 const saveS = () => { try { localStorage.setItem(KEY, JSON.stringify({ list: S.list, sym: S.sym, tf: S.tf, sort: S.sort })); } catch {} };
 export const pickStock = (sym) => { S.sym = String(sym || '').toUpperCase(); saveS(); };
 
-/* ---------------- my watchlist (saved on the member's login) ---------------- */
-let WL = null; // array of symbols, newest first
+/* ---------------- my watchlists (named lists, saved on the member's login) ---------------- */
+let WLS = null; // [{ name, syms }], syms newest first
 let wlSaveT = null;
-async function wlLoad() { if (WL) return WL; try { WL = await H.A.getWatchlist(); } catch { WL = []; } return WL; }
-const inWl = (s) => !!WL && WL.includes(s);
-function wlToggle(sym) {
-  if (!WL) WL = [];
-  const had = inWl(sym);
-  WL = had ? WL.filter((x) => x !== sym) : [sym, ...WL];
+export async function wlLoad(force) { if (WLS && !force) return WLS; try { WLS = await H.A.getWatchlists(); } catch { WLS = [{ name: 'My watchlist', syms: [] }]; } if (!WLS.length) WLS = [{ name: 'My watchlist', syms: [] }]; return WLS; }
+export const myLists = () => WLS || [];
+const inWl = (s) => !!WLS && WLS.some((l) => l.syms.includes(s));
+const isMine = (id) => /^wl[0-9]+$/.test(id || '');
+const activeIdx = () => (isMine(S.list) ? Math.min(+S.list.slice(2), (WLS || []).length - 1) : 0);
+function wlSave() {
   clearTimeout(wlSaveT);
-  wlSaveT = setTimeout(() => H.A.saveWatchlist(WL).catch(() => H.toast('Could not save your watchlist just now. It is kept in this browser.')), 600);
-  H.toast(had ? `${sym} removed from your watchlist` : `${sym} added to your watchlist`);
+  wlSaveT = setTimeout(() => H.A.saveWatchlists(WLS).catch(() => H.toast('Could not save your lists just now. They are kept in this browser.')), 500);
+}
+export function wlToggle(sym, idx = activeIdx()) {
+  if (!WLS) WLS = [{ name: 'My watchlist', syms: [] }];
+  const l = WLS[idx] || WLS[0];
+  const had = l.syms.includes(sym);
+  l.syms = had ? l.syms.filter((x) => x !== sym) : [sym, ...l.syms];
+  wlSave();
+  H.toast(had ? `${sym} removed from ${l.name}` : `${sym} added to ${l.name}`);
   return !had;
 }
+export function wlNew(name) {
+  name = String(name || '').trim().slice(0, 40);
+  if (!name) return -1;
+  if (!WLS) WLS = [];
+  if (WLS.length >= 20) { H.toast('You can keep up to 20 lists'); return -1; }
+  WLS.push({ name, syms: [] });
+  wlSave();
+  return WLS.length - 1;
+}
+export function wlRename(idx, name) { name = String(name || '').trim().slice(0, 40); if (!name || !WLS?.[idx]) return; WLS[idx].name = name; wlSave(); }
+export function wlDelete(idx) { if (!WLS?.[idx]) return; WLS.splice(idx, 1); if (!WLS.length) WLS.push({ name: 'My watchlist', syms: [] }); wlSave(); }
 export const STAR = (on) => `<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" fill="${on ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>`;
 
 /* ---------------- data ---------------- */
@@ -46,7 +65,7 @@ function lists(D) {
   const info = st.info, daily = st.daily;
   const byCap = Object.keys(daily).filter((s) => info[s] && daily[s].mc != null).sort((a, b) => daily[b].mc - daily[a].mc);
   const L = [];
-  L.push({ id: 'wl', g: 'My lists', n: 'My watchlist', about: 'Stocks you starred. Saved on your login, so they show on your phone too. Press W or the star to add the open stock.', syms: () => (WL || []).filter((s) => info[s]) });
+  (WLS || []).forEach((w, i) => L.push({ id: 'wl' + i, g: 'My lists', n: `${w.name} (${w.syms.length})`, mine: i, about: 'Your own list, saved on your login so it shows on your phone too. Press W or the star to add the open stock.', syms: () => w.syms.filter((s) => info[s]) }));
   L.push({ id: 'gain', g: 'Market today', n: 'Top gainers', about: 'Biggest rises on the last session (Nifty 500 and larger companies).', syms: () => bySym(mkt.gainers) });
   L.push({ id: 'lose', g: 'Market today', n: 'Top losers', about: 'Biggest falls on the last session.', syms: () => bySym(mkt.losers) });
   L.push({ id: 'nh', g: 'Market today', n: 'New 52-week highs', about: 'Leaders closing at a new 52-week high.', syms: () => bySym(scr.leadership?.new_highs) });
@@ -89,6 +108,7 @@ export async function viewTerminal(helpers) {
       <div class="tw-find"><input id="twQ" type="search" autocomplete="off" spellcheck="false" placeholder="Open any stock (name or ticker)" aria-label="Open any stock"><kbd>/</kbd><div class="tw-ac" id="twAc" hidden></div></div>
       <select id="twList" aria-label="Pick a list"><option>Loading lists</option></select>
       <div class="tw-about" id="twAbout"></div>
+      <div class="tw-lists" id="twLists"></div>
       <input id="twFilt" type="search" placeholder="Filter this list" aria-label="Filter this list" autocomplete="off">
     </div>
     <div class="tw-head" id="twHead"></div>
@@ -106,12 +126,12 @@ async function mount() {
   D = await all();
   await wlLoad();
   LISTS = lists(D);
-  if (!LISTS.find((l) => l.id === S.list)) S.list = 'wl';
-  if (S.list === 'wl' && !(WL || []).length) S.list = 'cap100';
-  const groups = [...new Set(LISTS.map((l) => l.g))];
-  $('#twList').innerHTML = groups.map((g) => `<optgroup label="${H.esc(g)}">${LISTS.filter((l) => l.g === g).map((l) => `<option value="${H.esc(l.id)}">${H.esc(l.n)}</option>`).join('')}</optgroup>`).join('');
-  $('#twList').value = S.list;
-  $('#twList').addEventListener('change', (e) => { S.list = e.target.value; S.filt = ''; $('#twFilt').value = ''; saveS(); paintList(true); });
+  if (S.list === 'wl') S.list = 'wl0';
+  if (!LISTS.find((l) => l.id === S.list)) S.list = 'wl0';
+  if (S.list === 'wl0' && !(WLS[0]?.syms || []).length) S.list = 'cap100';
+  fillPicker();
+  $('#twList').addEventListener('change', (e) => { S.list = e.target.value; S.filt = ''; $('#twFilt').value = ''; saveS(); fillPicker(); paintList(true); });
+  $('#twLists').addEventListener('click', onListsClick);
   $('#twFilt').addEventListener('input', (e) => { S.filt = e.target.value; paintList(false); });
   $('#twHead').addEventListener('click', (e) => { const k = e.target.closest('[data-k]')?.dataset.k; if (!k) return; S.sort = S.sort?.k === k ? { k, d: -S.sort.d } : { k, d: k === 'sym' ? 1 : -1 }; saveS(); paintList(false); });
   $('#twRows').addEventListener('click', (e) => { const r = e.target.closest('[data-s]'); if (!r) return; select(r.dataset.s, true); if (window.innerWidth < 900) $('#twMain').scrollIntoView({ behavior: 'smooth', block: 'start' }); }); // on a phone the chart sits below the list
@@ -120,6 +140,21 @@ async function mount() {
   paintList(false); // keeps a stock opened from search, the heatmap or a link even when it is not in this list
 }
 
+function fillPicker() {
+  LISTS = lists(D);
+  const groups = [...new Set(LISTS.map((l) => l.g))];
+  $('#twList').innerHTML = groups.map((g) => `<optgroup label="${H.esc(g)}">${LISTS.filter((l) => l.g === g).map((l) => `<option value="${H.esc(l.id)}">${H.esc(l.n)}</option>`).join('')}</optgroup>`).join('');
+  if (!LISTS.find((l) => l.id === S.list)) S.list = 'wl0';
+  $('#twList').value = S.list;
+  $('#twLists').innerHTML = `<button class="k-chip" data-wlact="new">New list</button>${isMine(S.list) ? '<button class="k-chip" data-wlact="rename">Rename</button><button class="k-chip" data-wlact="delete">Delete</button>' : ''}`;
+}
+function onListsClick(e) {
+  const a = e.target.closest('[data-wlact]')?.dataset.wlact;
+  if (!a) return;
+  if (a === 'new') { const n = prompt('Name of the new list'); const i = wlNew(n); if (i >= 0) { S.list = 'wl' + i; saveS(); fillPicker(); paintList(true); } }
+  if (a === 'rename') { const i = activeIdx(); const n = prompt('New name for this list', WLS[i]?.name || ''); if (n) { wlRename(i, n); fillPicker(); paintList(false); } }
+  if (a === 'delete') { const i = activeIdx(); if (confirm(`Delete the list "${WLS[i]?.name}"? Only the list goes, nothing else changes.`)) { wlDelete(i); S.list = 'wl0'; saveS(); fillPicker(); paintList(true); } }
+}
 function rowsOf(list) {
   const { info, daily } = D.st;
   return list.syms().filter((s) => info[s]).map((s, i) => { const d = daily[s] || {}; return { sym: s, n: info[s].n || s, p: d.p, c: (d.r || [])[0], mc: d.mc ?? info[s].mc, i }; });
@@ -134,10 +169,10 @@ function paintList(reset) {
   const hd = (k, t, cls = '') => `<span data-k="${k}" class="${cls} ${S.sort?.k === k ? 'on' : ''}">${t}${S.sort?.k === k ? (S.sort.d > 0 ? ' &uarr;' : ' &darr;') : ''}</span>`;
   $('#twHead').innerHTML = hd('sym', 'Stock') + hd('p', 'Last', 'r') + hd('c', 'Chg%', 'r') + hd('mc', 'Mcap cr', 'r');
   if (!CUR.length) {
-    $('#twRows').innerHTML = `<div class="tw-empty">${list.id === 'wl' ? 'Your watchlist is empty. Open any stock and press the star (or W) to add it.' : f ? 'No stock in this list matches.' : 'Nothing in this list today.'}</div>`;
+    $('#twRows').innerHTML = `<div class="tw-empty">${list.mine != null ? 'This list is empty. Open any stock and press the star (or W) to add it here.' : f ? 'No stock in this list matches.' : 'Nothing in this list today.'}</div>`;
   } else {
     $('#twRows').innerHTML = CUR.map((r) => `<div class="tw-row${r.sym === S.sym ? ' sel' : ''}" data-s="${H.esc(r.sym)}" role="button" tabindex="-1">
-      <span class="s">${inWl(r.sym) ? '<i class="wl-dot" title="In your watchlist"></i>' : ''}${H.esc(r.sym)}<small>${H.esc(r.n)}</small></span>
+      <span class="s">${inWl(r.sym) ? '<i class="wl-dot" title="In one of your lists"></i>' : ''}${H.esc(r.sym)}<small>${H.esc(r.n)}</small></span>
       <span class="r">${H.num(r.p, r.p < 100 ? 2 : 1)}</span><span class="r ${H.tone(r.c)}">${H.pct(r.c, 2)}</span><span class="r m">${r.mc == null ? '-' : H.num(r.mc)}</span></div>`).join('');
   }
   $('#twFoot').innerHTML = `${CUR.length} stock${CUR.length === 1 ? '' : 's'} &middot; ${fresh(D.st.asOf)} &middot; &uarr; / &darr; walk &middot; W watchlist`;
@@ -169,7 +204,7 @@ async function select(sym, user, scrollList) {
     </div>
     <div class="tw-bar">
       <div class="k-seg" role="group" aria-label="Chart timeframe">${[['D', 'Daily'], ['W', 'Weekly'], ['M', 'Monthly']].map(([k, t]) => `<button data-tf="${k}" class="${S.tf === k ? 'on' : ''}">${t}</button>`).join('')}</div>
-      <button class="k-btn tw-star${on ? ' on' : ''}" data-twact="star" title="Add to or remove from your watchlist (W)">${STAR(on)} ${on ? 'In watchlist' : 'Watchlist'}</button>
+      <span class="tw-wlwrap"><button class="k-btn tw-star${on ? ' on' : ''}" data-twact="star" title="Add to or remove from your lists (W adds to the open list)">${STAR(on)} ${on ? 'In my lists' : 'Add to list'}</button><div class="tw-wlmenu" id="twWlMenu" hidden></div></span>
       <a class="k-btn" href="#/compare/${encodeURIComponent(sym)}" title="Compare with another stock">Compare</a>
       <button class="k-btn" data-twact="dalal" title="Ask Dalal about this stock">Ask Dalal</button>
       <span class="links"><a class="k-link" href="${H.tvUrl(sym)}" target="_blank" rel="noopener">TradingView</a><a class="k-link" href="${H.screenerUrl(sym)}" target="_blank" rel="noopener">Screener</a></span>
@@ -191,17 +226,28 @@ function onMainClick(e) {
   const tf = e.target.closest('[data-tf]');
   if (tf) { S.tf = tf.dataset.tf; saveS(); document.querySelectorAll('#twMain [data-tf]').forEach((b) => b.classList.toggle('on', b.dataset.tf === S.tf)); tvWidget('twChart', S.sym, S.tf); return; }
   const a = e.target.closest('[data-twact]')?.dataset.twact;
-  if (a === 'star') { starOpen(); }
+  if (a === 'star') { wlMenu(); return; }
+  const wi = e.target.closest('[data-wli]');
+  if (wi) { const i = +wi.dataset.wli; if (i < 0) { const n = prompt('Name of the new list'); const k = wlNew(n); if (k < 0) return; wlToggle(S.sym, k); } else wlToggle(S.sym, i); afterStar(); wlMenu(true); }
   if (a === 'dalal') H.openDalal();
 }
-function starOpen() {
-  if (!S.sym) return;
-  const on = wlToggle(S.sym);
-  const b = $('#twMain .tw-star');
-  if (b) { b.classList.toggle('on', on); b.innerHTML = `${STAR(on)} ${on ? 'In watchlist' : 'Watchlist'}`; }
-  if (S.list === 'wl') paintList(false);
-  else { const row = document.querySelector(`#twRows .tw-row[data-s="${CSS.escape(S.sym)}"] .s`); if (row) { row.querySelector('.wl-dot')?.remove(); if (on) row.insertAdjacentHTML('afterbegin', '<i class="wl-dot" title="In your watchlist"></i>'); } }
+function wlMenu(keepOpen) {
+  const m = $('#twWlMenu');
+  if (!m) return;
+  if (!keepOpen && !m.hidden) { m.hidden = true; return; }
+  m.innerHTML = (WLS || []).map((l, i) => `<button data-wli="${i}" class="${l.syms.includes(S.sym) ? 'on' : ''}"><i class="box"></i>${H.esc(l.name)}<small>${l.syms.length}</small></button>`).join('') + '<button data-wli="-1"><i class="plus">+</i>New list</button>';
+  m.hidden = false;
 }
+function afterStar() {
+  const on = inWl(S.sym);
+  const b = $('#twMain .tw-star');
+  if (b) { b.classList.toggle('on', on); b.innerHTML = `${STAR(on)} ${on ? 'In my lists' : 'Add to list'}`; }
+  fillPicker();
+  if (isMine(S.list)) paintList(false);
+  else { const row = document.querySelector(`#twRows .tw-row[data-s="${CSS.escape(S.sym)}"] .s`); if (row) { row.querySelector('.wl-dot')?.remove(); if (on) row.insertAdjacentHTML('afterbegin', '<i class="wl-dot" title="In one of your lists"></i>'); } }
+}
+function starOpen() { if (!S.sym) return; wlToggle(S.sym); afterStar(); }
+document.addEventListener('click', (e) => { const m = $('#twWlMenu'); if (m && !m.hidden && !e.target.closest('.tw-wlwrap')) m.hidden = true; });
 
 // keys: up / down walk the list, W stars the open stock, / jumps to the search box (only on this screen)
 document.addEventListener('keydown', (e) => {

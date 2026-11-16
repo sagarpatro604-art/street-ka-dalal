@@ -249,3 +249,30 @@ export async function saveWatchlist(list) {
   if (state.demo) { LS('skd.demo.wl', clean); return; }
   await fb.fs.setDoc(fb.fs.doc(fb.db, 'users', u.uid), { email: u.email || '', watchlist: clean, watchlistAt: fb.fs.serverTimestamp() }, { merge: true });
 }
+
+/* ---------- named watchlists (Sagar 2026-11-16: members can make their own lists) ----------
+   users/{uid}.watchlists = [{ name, syms }]; the first list is also written to `watchlist` so older code keeps working.
+   A member who only ever had the single list sees it as "My watchlist". */
+const LISTS_MAX = 20;
+const cleanSyms = (a) => [...new Set((a || []).map((x) => String(x).toUpperCase()).filter(Boolean))].slice(0, WL_MAX);
+export async function getWatchlists() {
+  const u = state.user;
+  if (!u) return [];
+  let d = null;
+  if (state.demo) d = { watchlists: LS('skd.demo.wls'), watchlist: LS('skd.demo.wl') };
+  else {
+    try { const s = await fb.fs.getDoc(fb.fs.doc(fb.db, 'users', u.uid)); d = s.exists() ? s.data() : {}; }
+    catch { d = { watchlists: LS('skd.wls.' + u.uid) }; }
+  }
+  const ls = Array.isArray(d?.watchlists) ? d.watchlists.filter((x) => x && typeof x.name === 'string').map((x) => ({ name: x.name.slice(0, 40), syms: cleanSyms(x.syms) })) : [];
+  if (ls.length) return ls;
+  return [{ name: 'My watchlist', syms: cleanSyms(Array.isArray(d?.watchlist) ? d.watchlist : []) }];
+}
+export async function saveWatchlists(lists) {
+  const u = state.user;
+  if (!u) return;
+  const clean = (lists || []).filter((x) => x && x.name).slice(0, LISTS_MAX).map((x) => ({ name: String(x.name).trim().slice(0, 40), syms: cleanSyms(x.syms) }));
+  LS('skd.wls.' + u.uid, clean);
+  if (state.demo) { LS('skd.demo.wls', clean); LS('skd.demo.wl', clean[0]?.syms || []); return; }
+  await fb.fs.setDoc(fb.fs.doc(fb.db, 'users', u.uid), { email: u.email || '', watchlists: clean, watchlist: clean[0]?.syms || [], watchlistAt: fb.fs.serverTimestamp() }, { merge: true });
+}

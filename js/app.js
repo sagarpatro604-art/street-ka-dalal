@@ -5,6 +5,7 @@ import * as CH from './charts.js';
 import * as RS from './research.js';
 import * as LB from './library.js';
 import * as T from './terminal.js';
+import * as DC from './discover.js';
 
 /* ---------------- helpers ---------------- */
 const $ = (s, r = document) => r.querySelector(s);
@@ -74,6 +75,8 @@ const ICONS = {
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
   refresh: '<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',
   watch: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M12 9h6M12 13h6M12 17h4"/>',
+  compass: '<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/>',
+  side: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/>',
   heat: '<rect x="3" y="3" width="10" height="10" rx="1.5"/><rect x="15" y="3" width="6" height="6" rx="1.5"/><rect x="15" y="11" width="6" height="10" rx="1.5"/><rect x="3" y="15" width="10" height="6" rx="1.5"/>',
   book: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/><path d="M9 7h7"/>',
 };
@@ -581,11 +584,11 @@ async function viewStock(sym, embed = false) {
   const dma = d.dma || [];
   const yearsListed = x.ld ? ((Date.now() - pd(x.ld)) / (365.25 * 86400000)) : null;
   const sp = d.sp || [];
-  const wlOn = embed ? false : (await A.getWatchlist().catch(() => [])).includes(sym);
+  const wlOn = embed ? false : (await T.wlLoad().catch(() => [])).some((l) => l.syms.includes(sym));
   return `${embed ? '' : `<p class="crumb"><a href="#/equity">Research: all companies</a> &middot; <a href="#/" data-act="hmOpen" data-v="${esc(sym)}">Open in Stock watch</a></p>
   ${pageHead(esc(x.sec || 'NSE'), `${esc(x.n || sym)}`, `<span class="mood">${esc(sym)}</span>`)}
   <p class="asof">${T.fresh(one.asOf)} Price as of close of <b>${fDay(one.asOf)}</b></p>
-  <div class="ext-big"><button class="btn sm tw-star${wlOn ? ' on' : ''}" data-act="wlStar" data-v="${esc(sym)}">${T.STAR(wlOn)} ${wlOn ? 'In watchlist' : 'Watchlist'}</button><a class="btn sm" href="#/compare/${encodeURIComponent(sym)}">Compare</a><a class="btn sm" href="${screenerUrl(sym)}" target="_blank" rel="noopener">Screener.in</a><a class="btn sm" href="${tvUrl(sym)}" target="_blank" rel="noopener">TradingView chart</a></div>`}
+  <div class="ext-big"><button class="btn sm tw-star${wlOn ? ' on' : ''}" data-act="wlStar" data-v="${esc(sym)}">${T.STAR(wlOn)} ${wlOn ? 'In my lists' : 'Add to list'}</button><a class="btn sm" href="#/compare/${encodeURIComponent(sym)}">Compare</a><a class="btn sm" href="${screenerUrl(sym)}" target="_blank" rel="noopener">Screener.in</a><a class="btn sm" href="${tvUrl(sym)}" target="_blank" rel="noopener">TradingView chart</a></div>`}
   <div class="grid2">
     <section class="card">
       ${embed ? '<h2>Price and trend</h2>' : `<div class="stk-price"><b>₹${num(d.p, 2)}</b><span class="${tone(r[0])}">${pct(r[0], 2)} today</span></div>`}
@@ -1776,24 +1779,35 @@ async function viewResearchItem(id) {
 const lbHelp = () => ({ esc, pageHead, fDate, ic, after });
 const viewLibrary = () => LB.libraryHome(lbHelp());
 // what the stock-watch screen, heatmap and compare pages (js/terminal.js) use from here
-const termHelp = () => ({ A, data, hist, stkAll, esc, num, pct, tone, pd, fDate, fShort, meta: () => meta, tvUrl, screenerUrl, extLinks, mcapCr, pageHead, toast,
+const termHelp = () => ({ A, data, hist, stkAll, esc, num, pct, tone, pd, fDate, fShort, fDay, fDT, meta: () => meta, tvUrl, screenerUrl, extLinks, symLink, chip, ic, CH, mcapCr, pageHead, toast,
+  filingsData, fresh: T.fresh, myLists: T.myLists, wlLoad: () => T.wlLoad(),
   after: (f) => after.push(f), stockBody: (s) => viewStock(s, true), setDalal: setDalalContext, openDalal });
 
 /* ---------------- shell, routing ---------------- */
-const NAV = [['', 'Stock watch', 'watch'], ['premarket', 'Pre-market', 'sun'], ['market', 'Market', 'market'], ['heatmap', 'Heatmap', 'heat'], ['screeners', 'Screeners', 'screen'], ['sectors', 'Sectors', 'sector'], ['funds', 'Mutual funds', 'funds'], ['equity', 'Research', 'search'], ['results', 'Results', 'file'], ['news', 'News', 'news'], ['research', 'Prop. Research', 'lab'], ['library', 'Library', 'book'], ['insights', 'Insights', 'pen']];
+// the left side menu (Sagar 2026-11-16: "every tab should be in left hand side ... like sector scope"); '#' rows are group titles
+const NAV_G = [
+  ['#', 'Watch'], ['', 'Stock watch', 'watch'], ['discover', 'Discover', 'compass'], ['heatmap', 'Heatmap', 'heat'],
+  ['#', 'Market'], ['premarket', 'Pre-market', 'sun'], ['market', 'Market', 'market'], ['sectors', 'Sectors', 'sector'], ['funds', 'Mutual funds', 'funds'],
+  ['#', 'Research'], ['screeners', 'Screeners', 'screen'], ['equity', 'Research', 'search'], ['results', 'Results', 'file'], ['news', 'News', 'news'], ['research', 'Prop. Research', 'lab'],
+  ['#', 'Learn'], ['library', 'Library', 'book'], ['insights', 'Insights', 'pen'],
+];
+const NAV = NAV_G.filter(([r]) => r !== '#');
 const route = () => location.hash.replace(/^#\/?/, '');
-const VIEWS = { '': () => T.viewTerminal(termHelp()), heatmap: () => T.viewHeatmap(termHelp()), premarket: viewPremarket, market: viewMarket, screeners: viewScreeners, sectors: viewSectors, funds: viewFunds, equity: viewEquity, stocks: () => { ui.eq.tab = 'companies'; return viewEquity(); }, results: viewResults, news: viewNews, insights: viewInsights, admin: viewAdmin, research: viewResearch, library: viewLibrary };
+const VIEWS = { '': () => T.viewTerminal(termHelp()), heatmap: () => T.viewHeatmap(termHelp()), discover: () => DC.viewDiscover(termHelp(), ''), premarket: viewPremarket, market: viewMarket, screeners: viewScreeners, sectors: viewSectors, funds: viewFunds, equity: viewEquity, stocks: () => { ui.eq.tab = 'companies'; return viewEquity(); }, results: viewResults, news: viewNews, insights: viewInsights, admin: viewAdmin, research: viewResearch, library: viewLibrary };
 
 function shell() {
   const u = A.state.user;
   const topEl = document.querySelector('.top');
   if (topEl) document.documentElement.style.setProperty('--top-h', `${topEl.offsetHeight}px`);
-  $('#topnav').innerHTML = u ? [...NAV, ...(A.isAdmin() ? [['admin', 'Admin', 'admin']] : [])].map(([r, l, i]) => `<a href="#/${r}" data-nav="${r}">${ic(i, 17)}<span>${l}</span></a>`).join('') : '';
+  $('#topnav').innerHTML = u ? [...NAV_G, ...(A.isAdmin() ? [['#', 'Admin'], ['admin', 'Admin', 'admin']] : [])].map(([r, l, i]) => (r === '#' ? `<p class="nv-g">${l}</p>` : `<a href="#/${r}" data-nav="${r}" title="${l}">${ic(i, 17)}<span>${l}</span></a>`)).join('')
+    + `<button class="nv-tog" data-act="navTog" title="Narrow or wide menu" aria-label="Narrow or wide menu">${ic('side', 17)}<span>Narrow menu</span></button>` : '';
+  document.body.classList.toggle('nav-mini', navMini());
   $('#me').innerHTML = u ? `<button class="me" data-act="menu" aria-label="Account">${u.photo ? `<img src="${esc(u.photo)}" alt="" referrerpolicy="no-referrer">` : `<i>${esc((u.name || '?')[0])}</i>`}</button>
     <div class="menu" id="menu" hidden><p><b>${esc(u.name)}</b><span>${esc(u.email)}</span></p>${A.isAdmin() ? `<a href="#/admin">${ic('admin', 16)} Admin terminal</a>` : ''}<button data-act="signOut">${ic('out', 16)} Sign out</button></div>` : '';
   document.body.classList.toggle('signed-out', !u);
 }
 
+const navMini = () => { try { return localStorage.getItem('skd.navmini') === '1'; } catch { return false; } };
 let renderSeq = 0;
 async function render() {
   const view = $('#view');
@@ -1804,6 +1818,7 @@ async function render() {
   const r = route();
   const top = r.split('/')[0];
   document.querySelectorAll('#topnav a').forEach((a) => a.classList.toggle('on', a.dataset.nav === (['stock', 'stocks'].includes(top) ? 'equity' : top)));
+  T.setHelpers(termHelp());
   document.body.classList.toggle('term', top === '');
   setDalalContext(null);
   const seq = ++renderSeq;
@@ -1811,7 +1826,7 @@ async function render() {
   const keep = view.dataset.route === r ? window.scrollY : 0;
   if (view.dataset.route !== r) view.innerHTML = '<div class="loading"><span class="dots"><i></i><i></i><i></i></span></div>';
   try {
-    const html = top === 'library' && r.split('/')[1] ? await LB.libraryReader(lbHelp(), decodeURIComponent(r.split('/')[1])) : top === 'research' && r.split('/')[1] ? await viewResearchItem(r.split('/')[1]) : top === 'post' ? await viewPost(r.split('/')[1]) : top === 'compare' ? await T.viewCompare(termHelp(), decodeURIComponent(r.split('/')[1] || ''), decodeURIComponent(r.split('/')[2] || '')) : top === 'stock' ? await viewStock(r.split('/')[1]) : top === 'results' && r.split('/')[1] === 'co' ? await viewResCo(r.split('/')[2]) : await (VIEWS[top] || viewMarket)();
+    const html = top === 'library' && r.split('/')[1] ? await LB.libraryReader(lbHelp(), decodeURIComponent(r.split('/')[1])) : top === 'research' && r.split('/')[1] ? await viewResearchItem(r.split('/')[1]) : top === 'post' ? await viewPost(r.split('/')[1]) : top === 'discover' ? await DC.viewDiscover(termHelp(), r.split('/')[1] || '') : top === 'compare' ? await T.viewCompare(termHelp(), decodeURIComponent(r.split('/')[1] || ''), decodeURIComponent(r.split('/')[2] || '')) : top === 'stock' ? await viewStock(r.split('/')[1]) : top === 'results' && r.split('/')[1] === 'co' ? await viewResCo(r.split('/')[2]) : await (VIEWS[top] || viewMarket)();
     if (seq !== renderSeq) return;
     CH.disposeCharts();
     view.innerHTML = html;
@@ -1831,10 +1846,15 @@ let toastT;
 function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2400); }
 
 const ACTS = {
+  navTog: () => { const on = !document.body.classList.contains('nav-mini'); try { localStorage.setItem('skd.navmini', on ? '1' : '0'); } catch {} document.body.classList.toggle('nav-mini', on); window.dispatchEvent(new Event('resize')); },
+  dcSet: (el) => { const k = el.dataset.k, v = el.dataset.v ?? ''; DC.dSet(k, /\.(mine|broad)$/.test(k) ? v === '1' : /\.n$/.test(k) ? Number(v) : v); const href = el.getAttribute('href'); if (href && href !== location.hash) location.hash = href; else render(); },
+  dcXray: () => { DC.xraySave($('#dcX')?.value || ''); render(); },
+  dcXlist: (el) => { const l = T.myLists()[+el.dataset.v]; DC.xraySave((l?.syms || []).join('\n')); render(); },
+  dcXclear: () => { DC.xraySave(''); render(); },
   hmPer: (el) => { T.hmSet('per', el.dataset.v); render(); },
   hmMin: (el) => { T.hmSet('min', el.dataset.v); render(); },
   hmOpen: (el) => { T.pickStock(el.dataset.v); if (route() === '') render(); else location.hash = '#/'; },
-  wlStar: async (el) => { const s = el.dataset.v; let w = await A.getWatchlist(); const had = w.includes(s); w = had ? w.filter((x) => x !== s) : [s, ...w]; await A.saveWatchlist(w).catch(() => {}); T.resetData(); toast(had ? `${s} removed from your watchlist` : `${s} added to your watchlist`); el.classList.toggle('on', !had); el.innerHTML = `${T.STAR(!had)} ${had ? 'Watchlist' : 'In watchlist'}`; },
+  wlStar: async (el) => { await T.wlLoad(); const on = T.wlToggle(el.dataset.v, 0); el.classList.toggle('on', on); el.innerHTML = `${T.STAR(on)} ${on ? 'In my lists' : 'Add to list'}`; },
   libTab: (el) => { LB.libSetTab(el.dataset.v); render(); },
   libDone: (el) => LB.libToggleDone(el),
   signIn: async () => { try { await A.signIn(); } catch (e) { A.state.error = e.message; render(); } },
@@ -1952,6 +1972,7 @@ const ACTS = {
   },
 };
 const INPUTS = {
+  dcGd: (el) => { DC.dSet('gd.q', el.value); rerenderKeepingFocus(el); },
   libQ: (el) => LB.libSearch(lbHelp(), el.value),
   scrQ: (el) => { ui.scr.q = el.value; rerenderKeepingFocus(el); },
   newsQ: (el) => { ui.news.q = el.value; rerenderKeepingFocus(el); },
@@ -2007,7 +2028,7 @@ window.addEventListener('beforeunload', (e) => { if (ui.edit?.dirty) { e.prevent
 // A tab left open for days (common on phones) never reloads on its own. When the reader comes back to
 // the tab, and every 10 minutes while it is open: new site code -> reload (unless they are typing);
 // new evening data -> redraw the page with it.
-const CODE = ['./', 'js/app.js', 'js/auth.js', 'js/dalal.js', 'js/charts.js', 'js/config.js', 'js/library.js', 'js/terminal.js', 'css/style.css', 'css/terminal.css', 'css/look_kit.css'];
+const CODE = ['./', 'js/app.js', 'js/auth.js', 'js/dalal.js', 'js/charts.js', 'js/config.js', 'js/library.js', 'js/terminal.js', 'js/discover.js', 'css/style.css', 'css/terminal.css', 'css/look_kit.css'];
 let codeSig = null;
 async function codeVersion() {
   // Cloudflare answers HEAD with 503. A GET with cache 'no-cache' asks "changed since my copy?" (If-None-Match):
