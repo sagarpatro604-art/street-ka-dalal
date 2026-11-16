@@ -17,8 +17,14 @@
   --down-bg: var(--coral-soft);
   --warn: var(--sand);
   --radius: 12px;
+  --zone-caut: #E0A86A; --zone-neutral: #B8AE92;
   color-scheme: dark;
 }
+/* light look (Sagar 2026-11-17: "add a light theme option"): the kit's warm paper tokens; dark stays the default */
+[data-theme="light"] { --zone-caut: #B0651E; --zone-neutral: #7D7560; color-scheme: light; }
+[data-theme="light"] .lock-card { background: radial-gradient(ellipse at center, rgba(244, 240, 229, 0.95) 30%, rgba(244, 240, 229, 0.65) 75%); }
+[data-theme="light"] .seg button.on { box-shadow: 0 1px 3px rgba(46, 40, 20, 0.18); }
+[data-theme="light"] .dalal-panel { box-shadow: 0 24px 60px rgba(46, 40, 20, 0.18); }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; background: var(--bg); background-image: var(--glow); background-attachment: fixed; color: var(--ink); font: 14.5px/1.55 var(--sans); -webkit-font-smoothing: antialiased; }
@@ -360,7 +366,7 @@ main { max-width: 1240px; margin: 0 auto; padding: 26px 24px 40px; outline: none
 .dmsg .bubble h2, .dmsg .bubble h3 { font-size: 15px; margin: 6px 0 4px; }
 .dmsgs .dmsg.me { display: flex; justify-content: flex-end; width: auto; height: auto; border: 0; border-radius: 0; padding: 0; background: none; cursor: auto; overflow: visible; }
 .dmsg.me .bubble { background: var(--accent-soft); color: var(--ink); border-color: var(--accent-line); border-radius: 16px 16px 4px 16px; white-space: pre-wrap; }
-.dmsg.err .bubble { background: var(--gold-soft); border-color: #e8d7b4; }
+.dmsg.err .bubble { background: var(--gold-soft); border-color: var(--line-2); }
 .greet .bubble { max-width: 92%; }
 .join { font-weight: 700; color: var(--ink); margin-top: 8px !important; }
 .socs { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 10px; }

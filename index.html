@@ -7,7 +7,8 @@
   <meta name="description" content="Street ka Dalal: screeners, sector views and market intelligence for our community.">
   <meta name="robots" content="noindex, nofollow">
   <meta name="theme-color" content="#0B0D0C">
-  <meta name="color-scheme" content="dark">
+  <meta name="color-scheme" content="dark light">
+  <script>try{if(localStorage.getItem('skd_theme')==='light'){document.documentElement.dataset.theme='light';document.querySelector('meta[name=theme-color]').content='#F4F0E5'}}catch(e){}</script>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Street ka Dalal">
   <link rel="manifest" href="manifest.webmanifest">
@@ -28,6 +29,7 @@
         <span class="wordmark">Street <em>ka</em> Dalal</span>
       </a>
       <nav id="topnav" class="topnav" aria-label="Main"></nav>
+      <button class="k-theme" id="themeBtn" data-act="theme" type="button" title="Light / dark look" aria-label="Switch light or dark look"></button>
       <div id="me" class="me-wrap"></div>
     </div>
   </header>

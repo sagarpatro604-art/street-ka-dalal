@@ -19,12 +19,26 @@ export function lw() {
 const live = new Set();
 export function disposeCharts() { live.forEach((c) => { try { c.remove(); } catch {} }); live.clear(); }
 
-export const C = {
-  // the look kit's dark colours (Concall Studio look, Sagar 2026-11-16: "like our own apps like confluence desk")
+// the look kit's colours (Concall Studio look, Sagar 2026-11-16: "like our own apps like confluence desk"); dark is the
+// default, light = the kit's paper theme (Sagar 2026-11-17: "add a light theme option")
+const DARK = {
   green: '#67E8A5', green2: '#67E8A5', gold: '#E2C88F', up: '#67E8A5', down: '#EFA28C', blue: '#9EC9E6',
-  muted: '#9AA49B', line: 'rgba(154, 164, 155, 0.13)', sage: '#8FBF9A', plum: '#C3A3D6',
+  muted: '#9AA49B', line: 'rgba(154, 164, 155, 0.13)', sage: '#8FBF9A', plum: '#C3A3D6', orange: '#E0A86A', teal: '#7FC4C4',
+  ink: '#F4F1E8', panel: '#0E110F', grid: 'rgba(154, 164, 155, 0.08)',
 };
-export const PALETTE = [C.green2, C.gold, C.blue, C.down, C.plum, C.sage, '#E0A86A', '#7FC4C4'];
+const LIGHT = {
+  green: '#17794C', green2: '#17794C', gold: '#8A6418', up: '#17794C', down: '#A9452C', blue: '#2D6A93',
+  muted: '#5D685F', line: 'rgba(40, 52, 43, 0.12)', sage: '#4E8A5E', plum: '#7A4F96', orange: '#B0651E', teal: '#2E8585',
+  ink: '#1C1F1D', panel: '#FBF8F0', grid: 'rgba(40, 52, 43, 0.08)',
+};
+export const C = {};
+export const PALETTE = [];
+export const isLight = () => document.documentElement.dataset.theme === 'light';
+export function setChartTheme() {
+  Object.assign(C, isLight() ? LIGHT : DARK);
+  PALETTE.splice(0, PALETTE.length, C.green2, C.gold, C.blue, C.down, C.plum, C.sage, C.orange, C.teal);
+}
+setChartTheme();
 
 const inr = (v, d = 0) => (v == null || isNaN(v) ? '-' : Number(v).toLocaleString('en-IN', { maximumFractionDigits: d, minimumFractionDigits: d }));
 // ₹ crore in short Indian form: 135703 -> "1.36 L cr", 9484 -> "9,484 cr"

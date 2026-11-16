@@ -8,6 +8,9 @@
 .topnav a:hover { background: transparent; color: var(--ink); }
 .topnav a .ic { width: 15px; height: 15px; }
 .logo rect:first-child { fill: #121613; stroke: rgba(103, 232, 165, .35); }
+[data-theme="light"] .logo rect:first-child { fill: #1F4D3A; stroke: none; }
+#themeBtn { flex: none; margin-left: auto; }
+#themeBtn + .me-wrap { margin-left: 0; }
 
 /* ---------------------------------------------------------------- the full-height screen */
 body.term { overflow: hidden; }

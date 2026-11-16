@@ -4,6 +4,8 @@
 // Also here: the market heatmap (#/heatmap) and compare two stocks (#/compare/A/B).
 // Facts only: no buy / sell words, no entry / stop / target anywhere (SEBI). A list shows what fired or moved.
 
+import * as CH from './charts.js';
+
 let H = null; // helpers from app.js
 export function setHelpers(h) { H = h; }
 const $ = (s, r = document) => r.querySelector(s);
@@ -346,8 +348,8 @@ async function tvWidget(id, sym, tf, cmp) {
     if (!document.getElementById(id)) return;
     // eslint-disable-next-line no-undef
     new TradingView.widget({
-      container_id: id, autosize: true, symbol: bse(sym), interval: tf || 'D', timezone: 'Asia/Kolkata', theme: 'dark', style: '1', locale: 'in',
-      allow_symbol_change: false, hide_side_toolbar: true, save_image: false, backgroundColor: '#0E110F', gridColor: 'rgba(154, 164, 155, 0.08)',
+      container_id: id, autosize: true, symbol: bse(sym), interval: tf || 'D', timezone: 'Asia/Kolkata', theme: CH.isLight() ? 'light' : 'dark', style: '1', locale: 'in',
+      allow_symbol_change: false, hide_side_toolbar: true, save_image: false, backgroundColor: CH.C.panel, gridColor: CH.C.grid,
       studies: cmp ? [] : [{ id: 'MAExp@tv-basicstudies', inputs: { length: 50 } }, { id: 'MAExp@tv-basicstudies', inputs: { length: 200 } }],
       ...(cmp ? { compare_symbols: [{ symbol: bse(cmp), position: 'NewPriceScale' }] } : {}),
     });

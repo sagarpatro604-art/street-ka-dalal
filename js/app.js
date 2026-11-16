@@ -58,6 +58,8 @@ function md(src) {
 }
 
 const ICONS = {
+  moon: '<path d="M20.5 14.2A8.5 8.5 0 1 1 9.8 3.5a6.8 6.8 0 0 0 10.7 10.7Z"/>',
+  sun: '<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/>',
   market: '<path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 6-7"/>',
   screen: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/><path d="M8 11h6M11 8v6"/>',
   sector: '<rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="10" width="8" height="11" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/>',
@@ -1912,7 +1914,22 @@ async function render() {
 let toastT;
 function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2400); }
 
+// light / dark look (Sagar 2026-11-17: "add a light theme option"): dark is the default, the choice is kept in this browser
+function paintThemeBtn() {
+  const b = $('#themeBtn'); if (!b) return;
+  const light = CH.isLight();
+  b.innerHTML = ic(light ? 'moon' : 'sun', 18);
+  b.title = light ? 'Dark look' : 'Light look';
+}
+paintThemeBtn();
 const ACTS = {
+  theme: () => {
+    const light = !CH.isLight();
+    if (light) document.documentElement.dataset.theme = 'light'; else document.documentElement.dataset.theme = 'dark';
+    try { localStorage.setItem('skd_theme', light ? 'light' : 'dark'); } catch {}
+    const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = light ? '#F4F0E5' : '#0B0D0C';
+    CH.setChartTheme(); paintThemeBtn(); render();
+  },
   dcCoupon: async (el) => {
     const i = $('#dcCoupon'); const code = (i?.value || '').trim();
     const msg = $('#dcCouponMsg');

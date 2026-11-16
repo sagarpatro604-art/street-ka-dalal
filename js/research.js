@@ -16,7 +16,7 @@ export const REPORTS = [
 
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const mLabel = (ym) => { if (!ym) return '-'; const [y, m] = String(ym).split('-').map(Number); return `${MON[m - 1]} ${y}`; };
-const ZONE_COL = { Fearful: '#EFA28C', Cautious: '#E0A86A', Neutral: '#B8AE92', Confident: '#67E8A5', Crowded: '#67E8A5' };
+const ZONE_COL = { Fearful: 'var(--coral)', Cautious: 'var(--zone-caut)', Neutral: 'var(--zone-neutral)', Confident: 'var(--accent)', Crowded: 'var(--accent)' };
 
 export function researchList(h) {
   const { esc, pageHead, fDate } = h;
@@ -42,15 +42,15 @@ function gaugeSVG(v, zone) {
   const pt = (x, rad) => [cx + rad * Math.cos(ang(x)), cy - rad * Math.sin(ang(x))];
   const arc = (a, b, col) => {
     const [x1, y1] = pt(a, R), [x2, y2] = pt(b, R), [x3, y3] = pt(b, r), [x4, y4] = pt(a, r);
-    return `<path d="M${x1.toFixed(1)},${y1.toFixed(1)} A${R},${R} 0 0 1 ${x2.toFixed(1)},${y2.toFixed(1)} L${x3.toFixed(1)},${y3.toFixed(1)} A${r},${r} 0 0 0 ${x4.toFixed(1)},${y4.toFixed(1)} Z" fill="${col}" opacity="0.9"/>`;
+    return `<path d="M${x1.toFixed(1)},${y1.toFixed(1)} A${R},${R} 0 0 1 ${x2.toFixed(1)},${y2.toFixed(1)} L${x3.toFixed(1)},${y3.toFixed(1)} A${r},${r} 0 0 0 ${x4.toFixed(1)},${y4.toFixed(1)} Z" style="fill:${col}" opacity="0.9"/>`;
   };
   const bands = [[0, 20, 'Fearful'], [20, 40, 'Cautious'], [40, 60, 'Neutral'], [60, 80, 'Confident'], [80, 100, 'Crowded']];
   const val = v == null ? 50 : Math.max(0, Math.min(100, v));
   const [nx, ny] = pt(val, R - 6);
   return `<svg class="rs-gauge" viewBox="0 0 ${W} ${H}" role="img" aria-label="Gauge ${v ?? '-'} of 100, ${zone || ''}">
     ${bands.map(([a, b, n]) => arc(a + 0.6, b - 0.6, ZONE_COL[n])).join('')}
-    <line x1="${cx}" y1="${cy}" x2="${nx.toFixed(1)}" y2="${ny.toFixed(1)}" stroke="#F4F1E8" stroke-width="3.5" stroke-linecap="round"/>
-    <circle cx="${cx}" cy="${cy}" r="7" fill="#F4F1E8"/>
+    <line x1="${cx}" y1="${cy}" x2="${nx.toFixed(1)}" y2="${ny.toFixed(1)}" style="stroke:var(--ink)" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="${cx}" cy="${cy}" r="7" style="fill:var(--ink)"/>
     <text x="14" y="146" class="rs-g-l">0 fearful</text><text x="246" y="146" text-anchor="end" class="rs-g-l">crowded 100</text>
   </svg>`;
 }
@@ -79,7 +79,7 @@ export async function researchParticipation(h) {
   const dropRange = drops.length ? `${Math.round(-Math.max(...drops.map((f) => f.retail_low_vs_before)) * 100)}% to ${Math.round(-Math.min(...drops.map((f) => f.retail_low_vs_before)) * 100)}%` : '-';
   const covid = falls.find((f) => f.bottom === '2020-03');
   const past = (d.phases || []).filter((p) => !p.ongoing);
-  const zc = ZONE_COL[n.zone] || '#9AA49B';
+  const zc = ZONE_COL[n.zone] || 'var(--muted)';
 
   after.push(() => drawCharts(d));
 
@@ -253,7 +253,7 @@ async function drawCharts(d) {
 export function gaugeCard(d, h) {
   const { esc, num, fDate } = h;
   const n = d.now || {};
-  const zc = ZONE_COL[n.zone] || '#9AA49B';
+  const zc = ZONE_COL[n.zone] || 'var(--muted)';
   const daily = d.daily || [];
   const last = daily[daily.length - 1] || {};
   const last5 = daily.slice(-5);
@@ -265,7 +265,7 @@ export function gaugeCard(d, h) {
   const W = 220, H = 46, lo = 0, hi = 100;
   const pts = g.map((x, i) => `${((i * W) / Math.max(1, g.length - 1)).toFixed(1)},${(H - 3 - ((x.gauge - lo) * (H - 6)) / (hi - lo)).toFixed(1)}`).join(' ');
   const y40 = (H - 3 - (40 * (H - 6)) / 100).toFixed(1);
-  const spark = g.length > 1 ? `<svg class="pgc-spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><line x1="0" x2="${W}" y1="${y40}" y2="${y40}" stroke="#E0A86A" stroke-dasharray="3 3" stroke-width="1"/><polyline points="${pts}" fill="none" stroke="#67E8A5" stroke-width="2" stroke-linejoin="round"/></svg>` : '';
+  const spark = g.length > 1 ? `<svg class="pgc-spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><line x1="0" x2="${W}" y1="${y40}" y2="${y40}" style="stroke:var(--zone-caut)" stroke-dasharray="3 3" stroke-width="1"/><polyline points="${pts}" fill="none" style="stroke:var(--accent)" stroke-width="2" stroke-linejoin="round"/></svg>` : '';
   return `<section class="card pgc">
     <div class="card-head"><h2>Participation Gauge</h2><a href="#/research/participation">The research behind it →</a></div>
     <div class="pgc-grid">
