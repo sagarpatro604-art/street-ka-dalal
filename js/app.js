@@ -77,6 +77,8 @@ const ICONS = {
   watch: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M12 9h6M12 13h6M12 17h4"/>',
   compass: '<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/>',
   side: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/>',
+  rrg: '<circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/><circle cx="16" cy="8" r="1.6"/>',
+  brief: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18"/>',
   heat: '<rect x="3" y="3" width="10" height="10" rx="1.5"/><rect x="15" y="3" width="6" height="6" rx="1.5"/><rect x="15" y="11" width="6" height="10" rx="1.5"/><rect x="3" y="15" width="10" height="6" rx="1.5"/>',
   book: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/><path d="M9 7h7"/>',
 };
@@ -1850,14 +1852,15 @@ const termHelp = () => ({ A, data, hist, stkAll, esc, num, pct, tone, pd, fDate,
 /* ---------------- shell, routing ---------------- */
 // the left side menu (Sagar 2026-11-16: "every tab should be in left hand side ... like sector scope"); '#' rows are group titles
 const NAV_G = [
-  ['#', 'Watch'], ['', 'Stock watch', 'watch'], ['discover', 'Discover', 'compass'], ['discover/investors', 'Big investors', '', 1], ['discover/valuation', 'Market valuation', '', 1], ['discover/rrg', 'Rotation (RRG)', '', 1], ['discover/management', 'What management said', '', 1], ['discover/mystocks', 'My stocks this week', '', 1], ['discover/xray', 'Portfolio X-ray', '', 1], ['heatmap', 'Heatmap', 'heat'],
+  ['#', 'Watch'], ['', 'Stock watch', 'watch'], ['discover', 'Discover', 'compass'], ['discover/triggers', 'All triggers', '', 1], ['discover/investors', 'Big investors', '', 1], ['discover/valuation', 'Market valuation', '', 1], ['discover/management', 'What management said', '', 1], ['discover/mystocks', 'My stocks this week', '', 1], ['heatmap', 'Heatmap', 'heat'], ['rrg', 'Rotation (RRG)', 'rrg'],
   ['#', 'Market'], ['premarket', 'Pre-market', 'sun'], ['market', 'Market', 'market'], ['sectors', 'Sectors', 'sector'], ['funds', 'Mutual funds', 'funds'],
   ['#', 'Research'], ['screeners', 'Screeners', 'screen'], ['equity', 'Research', 'search'], ['results', 'Results', 'file'], ['news', 'News', 'news'], ['research', 'Prop. Research', 'lab'],
   ['#', 'Learn'], ['library', 'Library', 'book'], ['insights', 'Insights', 'pen'],
+  ['#', 'My portfolio'], ['portfolio', 'Portfolio X-ray', 'brief'],
 ];
 const NAV = NAV_G.filter(([r, , , sub]) => r !== '#' && !sub);
 const route = () => location.hash.replace(/^#\/?/, '');
-const VIEWS = { '': () => T.viewTerminal(termHelp()), heatmap: () => T.viewHeatmap(termHelp()), discover: () => DC.viewDiscover(termHelp(), ''), premarket: viewPremarket, market: viewMarket, screeners: viewScreeners, sectors: viewSectors, funds: viewFunds, equity: viewEquity, stocks: () => { ui.eq.tab = 'companies'; return viewEquity(); }, results: viewResults, news: viewNews, insights: viewInsights, admin: viewAdmin, research: viewResearch, library: viewLibrary };
+const VIEWS = { '': () => T.viewTerminal(termHelp()), heatmap: () => T.viewHeatmap(termHelp()), discover: () => DC.viewDiscover(termHelp(), ''), rrg: () => DC.viewRRG(termHelp()), portfolio: () => DC.viewPortfolio(termHelp()), premarket: viewPremarket, market: viewMarket, screeners: viewScreeners, sectors: viewSectors, funds: viewFunds, equity: viewEquity, stocks: () => { ui.eq.tab = 'companies'; return viewEquity(); }, results: viewResults, news: viewNews, insights: viewInsights, admin: viewAdmin, research: viewResearch, library: viewLibrary };
 
 function shell() {
   const u = A.state.user;
@@ -1928,9 +1931,7 @@ const ACTS = {
   premCopy: async (el) => { try { await navigator.clipboard.writeText(el.dataset.v); toast('Copied ' + el.dataset.v); } catch { prompt('Copy this code', el.dataset.v); } },
   navTog: () => { const on = !document.body.classList.contains('nav-mini'); try { localStorage.setItem('skd.navmini', on ? '1' : '0'); } catch {} document.body.classList.toggle('nav-mini', on); window.dispatchEvent(new Event('resize')); },
   dcSet: (el) => { const k = el.dataset.k, v = el.dataset.v ?? ''; DC.dSet(k, /\.(mine|broad)$/.test(k) ? v === '1' : /\.n$/.test(k) ? Number(v) : v); const href = el.getAttribute('href'); if (href && href !== location.hash) location.hash = href; else render(); },
-  dcXray: () => { DC.xraySave($('#dcX')?.value || ''); render(); },
-  dcXlist: (el) => { const l = T.myLists()[+el.dataset.v]; DC.xraySave((l?.syms || []).join('\n')); render(); },
-  dcXclear: () => { DC.xraySave(''); render(); },
+  dcCall: async (el) => { el.disabled = true; try { if (await DC.call(el.dataset.fn, el)) await render(); } finally { el.disabled = false; } },
   hmPer: (el) => { T.hmSet('per', el.dataset.v); render(); },
   hmMin: (el) => { T.hmSet('min', el.dataset.v); render(); },
   hmOpen: (el) => { T.pickStock(el.dataset.v); if (route() === '') render(); else location.hash = '#/'; },

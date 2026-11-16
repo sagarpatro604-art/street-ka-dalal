@@ -10,13 +10,15 @@
 
 let H = null;
 const $ = (s, r = document) => r.querySelector(s);
-const ST = { inv: { view: 'moves', kind: 'all', mine: false, n: 150, open: '' }, rrg: { iv: 'weekly', broad: false }, gd: { q: '', mine: false, n: 30 }, val: { idx: 'Nifty 50' }, my: { list: 'all' } };
+const ST = { tr: { g: '', k: '', days: 30, mine: false, n: 200 }, pf: { lot: null }, inv: { view: 'moves', kind: 'all', mine: false, n: 150, open: '' }, rrg: { iv: 'weekly', broad: false }, gd: { q: '', mine: false, n: 30 }, val: { idx: 'Nifty 50' }, my: { list: 'all' } };
 export const dSet = (path, v) => { const [a, b] = path.split('.'); ST[a][b] = v; };
 export const dGet = (path) => { const [a, b] = path.split('.'); return ST[a][b]; };
 
+// RRG and Portfolio X-ray are their own tabs since Sagar 2026-11-16 ("rrg as a separate new tab, not in discover,
+// portfolio x ray also as a separate at the end"); old #/discover/rrg and #/discover/xray links still open them
 const SECS = [
-  ['', 'Overview'], ['investors', 'Big investors'], ['valuation', 'Market valuation'], ['rrg', 'Rotation (RRG)'],
-  ['management', 'What management said'], ['mystocks', 'My stocks this week'], ['xray', 'Portfolio X-ray'],
+  ['', 'Overview'], ['triggers', 'All triggers'], ['investors', 'Big investors'], ['valuation', 'Market valuation'],
+  ['management', 'What management said'], ['mystocks', 'My stocks this week'],
 ];
 const load = (n) => H.hist('discover/' + n).catch(() => null);
 const subnav = (cur) => `<nav class="dc-nav">${SECS.map(([k, t]) => `<a href="#/discover${k ? '/' + k : ''}" class="${k === cur ? 'on' : ''}">${t}</a>`).join('')}</nav>`;
@@ -37,15 +39,16 @@ const builtNote = (d) => (d?.built ? `<span class="k-pill plain" title="When thi
 
 export async function viewDiscover(helpers, sec) {
   H = helpers;
-  [PREM] = await Promise.all([H.premium(), H.wlLoad()]);
   sec = sec || '';
+  if (sec === 'rrg') { location.replace('#/rrg'); return ''; }
+  if (sec === 'xray') { location.replace('#/portfolio'); return ''; }
+  [PREM] = await Promise.all([H.premium(), H.wlLoad()]);
   if (!PREM.active) return locked(sec);
+  if (sec === 'triggers') return triggers();
   if (sec === 'investors') return investors();
   if (sec === 'valuation') return valuation();
-  if (sec === 'rrg') return rrg();
   if (sec === 'management') return management();
   if (sec === 'mystocks') return mystocks();
-  if (sec === 'xray') return xray();
   return overview();
 }
 
@@ -66,22 +69,64 @@ function locked(sec) {
 
 /* ---------------- overview ---------------- */
 async function overview() {
-  const [inv, val, rr, gd] = await Promise.all([load('investors'), load('valuation'), load('rrg'), load('guidance')]);
+  const [inv, val, gd, tr] = await Promise.all([load('investors'), load('valuation'), load('guidance'), load('triggers')]);
   const n50 = (val?.caps || []).find((c) => c.label === 'Nifty 50');
   const t = val?.temperature;
-  const lead = (rr?.views?.weekly?.rows || []).filter((r) => r.quadrant === 'Leading' && !r.broad).slice(0, 4).map((r) => r.name);
+  const wk = Object.values(tr?.counts || {}).reduce((a, c) => a + c.d7, 0);
   const mine = mySyms();
   const tile = (k, t2, body) => `<a class="dc-tile" href="#/discover/${k}"><p class="eyebrow">${t2}</p>${body}</a>`;
   return `${head('', 'Discover')}
   <div class="dc-tiles">
+    ${tile('triggers', 'All triggers', `<h3>${H.num(wk)} triggers in the last 7 days</h3><p class="sub">${Object.keys(tr?.buckets || {}).length} kinds: results, orders, capex, deals, ownership, guidance and red flags, from companies' own filings</p><ul class="dc-mini">${(tr?.latest || []).slice(0, 3).map((e) => `<li><b>${H.esc(e.s)}</b> ${H.esc(tr.buckets[e.k]?.title || '')}</li>`).join('')}</ul>`)}
     ${tile('investors', 'Big investors', `<h3>What well-known investors and promoters did</h3><ul class="dc-mini">${(inv?.events || []).slice(0, 4).map((e) => `<li><b>${H.esc(e.sym)}</b> ${H.esc(e.label)}</li>`).join('') || '<li>No data yet</li>'}</ul>`)}
     ${tile('valuation', 'Market valuation', `<h3>Is the market cheap or expensive?</h3>${n50 ? `<p class="dc-big">${H.esc(n50.zone || '-')}</p><p class="sub">Nifty 50 P/E ${H.num(n50.pe, 1)}, dearer than ${H.num(n50.pe_pct, 0)}% of past days</p>` : '<p class="sub">No data yet</p>'}${t ? `<p class="sub">Market temperature ${H.num(t.T, 0)} / 100 (${H.esc(t.zone || '')})</p>` : ''}`)}
-    ${tile('rrg', 'Rotation (RRG)', `<h3>Which sectors are leading the Nifty 500</h3><p class="sub">Leading this week: ${lead.map(H.esc).join(', ') || '-'}</p>`)}
     ${tile('management', 'What management said', `<h3>Guidance from earnings calls, word for word</h3><ul class="dc-mini">${(gd?.rows || []).slice(0, 3).map((r) => `<li><b>${H.esc(r.sym)}</b> ${H.esc((r.outlook || '').slice(0, 90))}</li>`).join('')}</ul>`)}
     ${tile('mystocks', 'My stocks this week', `<h3>Results, filings and big moves in your lists</h3><p class="sub">${mine.size ? `${mine.size} stocks across your lists` : 'Add stocks to a list on Stock watch to see them here'}</p>`)}
-    ${tile('xray', 'Portfolio X-ray', `<h3>Paste your holdings, see the full picture</h3><p class="sub">Sector and size mix, results coming, who else owns them. Stays in your browser.</p>`)}
   </div>
   <p class="sub legend">Facts from NSE filings and company documents. Nothing here is a recommendation to buy or sell.</p>`;
+}
+
+/* ---------------- every Discovery Desk bucket ---------------- */
+async function triggers() {
+  const [tr, st] = await Promise.all([load('triggers'), H.stkAll()]);
+  if (!tr) return `${head('triggers', 'All triggers')}<div class="empty card">This data is being put together. Please check back this evening.</div>`;
+  const s = ST.tr, info = st.info, B = tr.buckets, C = tr.counts || {};
+  const groups = tr.groups || [];
+  const g = groups.find(([n]) => n === s.g) || null;
+  const per = s.days <= 7 ? 'd7' : s.days <= 30 ? 'd30' : 'all';
+  const bucketBtn = (k) => { const b = B[k], n = C[k]?.[per] || 0; return `<button class="dc-bk ${s.k === k ? 'on' : ''} ${b.sign}" data-act="dcSet" data-k="tr.k" data-v="${s.k === k ? '' : k}" title="${H.esc(b.about)}"><span>${H.esc(b.title)}</span><b>${H.num(n)}</b></button>`; };
+  const board = `<div class="dc-board">${groups.map(([gn, slug]) => {
+    const ks = Object.keys(B).filter((k) => B[k].group === gn).sort((a, b) => (C[b]?.[per] || 0) - (C[a]?.[per] || 0));
+    const tot = ks.reduce((t, k) => t + (C[k]?.[per] || 0), 0);
+    return `<section class="card dc-grp ${s.g === gn ? 'on' : ''}"><button class="dc-grp-h" data-act="dcSet" data-k="tr.g" data-v="${s.g === gn ? '' : H.esc(gn)}"><b>${H.esc(gn)}</b><span>${H.num(tot)}</span></button>
+      <div class="dc-bks">${ks.map(bucketBtn).join('')}</div></section>`;
+  }).join('')}</div>`;
+  let list = '';
+  const pick = s.k ? B[s.k] : null;
+  const gname = pick ? pick.group : g ? g[0] : null;
+  if (gname) {
+    const slug = (groups.find(([n]) => n === gname) || [])[1];
+    const f = slug ? await load('triggers_' + slug) : null;
+    const cut = (() => { const x = new Date(); x.setDate(x.getDate() - s.days); return x.toISOString().slice(0, 10); })();
+    const mine = mySyms();
+    let ev = (f?.events || []).filter((e) => e.d >= cut && (!s.k || e.k === s.k));
+    if (s.mine) ev = ev.filter((e) => mine.has(e.s));
+    if (s.n === 200) H.after(() => setTimeout(() => { const el = document.getElementById('dcTrList'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 70 }); }, 30));
+    list = `<section class="card flush" id="dcTrList"><div class="card-head pad"><h2>${H.esc(pick ? pick.title : gname)}</h2><span class="sub">${pick ? H.esc(pick.about) + ' · ' : ''}${ev.length} in the last ${s.days} days</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Date</th><th>Stock</th>${pick ? '' : '<th>Trigger</th>'}<th>What the filing says</th><th></th></tr></thead><tbody>
+      ${ev.slice(0, s.n).map((e) => `<tr><td class="nowrap">${H.fDate(e.d)}</td><td>${sym(e.s)}${name(e.s, info)}</td>${pick ? '' : `<td>${H.chip(B[e.k]?.title || e.k, signCls(B[e.k]?.sign))}</td>`}<td class="sub-ish">${H.esc(e.t)}</td><td>${e.u ? `<a href="${H.esc(e.u)}" target="_blank" rel="noopener">Filing</a>` : ''}</td></tr>`).join('') || `<tr><td colspan="5" class="empty">Nothing in the last ${s.days} days.</td></tr>`}
+      </tbody></table></div>${ev.length > s.n ? `<p class="more"><button class="btn sm" data-act="dcSet" data-k="tr.n" data-v="${s.n + 300}">Show more (${ev.length - s.n} left)</button></p>` : ''}</section>`;
+  } else {
+    list = `<section class="card flush"><div class="card-head pad"><h2>Latest triggers</h2><span class="sub">Pick a group or a trigger above to see all of them</span></div><div class="tbl-wrap"><table class="tbl"><tbody>
+      ${(tr.latest || []).map((e) => `<tr><td class="nowrap">${H.fDate(e.d)}</td><td>${sym(e.s)}${name(e.s, info)}</td><td>${H.chip(B[e.k]?.title || e.k, signCls(B[e.k]?.sign))}</td><td class="sub-ish">${H.esc(e.t)}</td><td>${e.u ? `<a href="${H.esc(e.u)}" target="_blank" rel="noopener">Filing</a>` : ''}</td></tr>`).join('')}
+    </tbody></table></div></section>`;
+  }
+  return `${head('triggers', 'All triggers', builtNote(tr))}
+  <div class="toolbar"><div class="k-seg">${[[7, 'Last 7 days'], [30, 'Last 30 days'], [60, 'Last 60 days']].map(([v, t]) => `<button data-act="dcSet" data-k="tr.days" data-v="${v}" class="${s.days === v ? 'on' : ''}">${t}</button>`).join('')}</div>
+    <button class="k-chip${s.mine ? ' on' : ''}" data-act="dcSet" data-k="tr.mine" data-v="${s.mine ? '' : '1'}">Only stocks in my lists</button>
+    <span class="sub">Green = a business trigger, coral = a red flag, plain = worth knowing. Tap any trigger.</span></div>
+  ${board}${list}
+  <p class="sub legend">${H.esc(tr.note || '')}</p>`;
 }
 
 /* ---------------- big investors ---------------- */
@@ -175,10 +220,11 @@ async function drawPE(v, cur) {
 
 /* ---------------- RRG ---------------- */
 const QC = { Leading: 'var(--pos)', Weakening: 'var(--sand)', Lagging: 'var(--neg)', Improving: 'var(--sky)' };
+export async function viewRRG(helpers) { H = helpers; return rrg(); }
 async function rrg() {
   const r = await load('rrg');
   const view = r?.views?.[ST.rrg.iv];
-  if (!view) return `${head('rrg', 'Rotation (RRG)')}<div class="empty card">This data is being put together. Please check back this evening.</div>`;
+  if (!view) return `${H.pageHead('Market', 'Rotation (RRG)')}<div class="empty card">This data is being put together. Please check back this evening.</div>`;
   const rows = view.rows.filter((x) => ST.rrg.broad || !x.broad);
   const pts = rows.flatMap((x) => x.rotation_path || []);
   const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
@@ -201,7 +247,7 @@ async function rrg() {
         <text x="${(X(last[0]) + 7).toFixed(1)}" y="${(Y(last[1]) + 4).toFixed(1)}" class="dc-lbl">${H.esc(x.name.replace(/^Nifty /, ''))}</text></g>`; }).join('')}
   </svg>`;
   const byQ = ['Leading', 'Improving', 'Weakening', 'Lagging'].map((q) => [q, rows.filter((x) => x.quadrant === q)]);
-  return `${head('rrg', 'Rotation (RRG)', `<span class="k-pill plain">As of ${H.fDate(view.as_of)}</span>`)}
+  return `${H.pageHead('Market', 'Rotation (RRG)', `<span class="k-pill plain">As of ${H.fDate(view.as_of)}</span>`)}
   <div class="toolbar">
     <div class="k-seg">${[['daily', 'Daily'], ['weekly', 'Weekly']].map(([k, t]) => `<button data-act="dcSet" data-k="rrg.iv" data-v="${k}" class="${ST.rrg.iv === k ? 'on' : ''}">${t}</button>`).join('')}</div>
     <button class="k-chip${ST.rrg.broad ? ' on' : ''}" data-act="dcSet" data-k="rrg.broad" data-v="${ST.rrg.broad ? '' : '1'}">Show broad indices too</button>
@@ -272,11 +318,54 @@ async function mystocks() {
   <p class="sub legend">Dividend dates show only where our corporate-actions feed has them; check the company's NSE filing. Facts only, not advice.</p>`;
 }
 
-/* ---------------- portfolio X-ray ---------------- */
-const XKEY = 'skd.xray';
-const xGet = () => { try { return localStorage.getItem(XKEY) || ''; } catch { return ''; } };
-export function xraySave(text) { try { localStorage.setItem(XKEY, String(text || '').slice(0, 20000)); } catch {} }
-function parseHoldings(text, info) {
+/* ---------------- my portfolio + X-ray (its own tab, #/portfolio) ----------------
+   Sagar 2026-11-16: "portfolio x ray also as a separate at the end ... add drop down for to put stocks in x ray and number of
+   quantity at what price so they can track the whole portfolio". Lots { s, q, p, d } saved on the member's login
+   (users/{uid}.portfolio). Prices are the last NSE close on the site, not live. */
+let PF = null;
+async function pfLoad(force) { if (PF && !force) return PF; try { PF = await H.A.getPortfolio(); } catch { PF = []; } return PF; }
+async function pfSave() { try { await H.A.savePortfolio(PF); } catch { H.toast('Could not save just now. It is kept in this browser.'); } }
+const pfv = (id) => (document.getElementById(id)?.value || '').trim();
+
+// called from app.js (data-act="dcCall" data-fn="...") ; returns true when the page should redraw
+export async function call(fn, el) {
+  await pfLoad();
+  if (fn === 'pfAdd') {
+    const s = (document.getElementById('pfQ')?.dataset.sym || '').toUpperCase();
+    const q = +pfv('pfQty'), p = +pfv('pfPrice'), d = pfv('pfDate');
+    const msg = document.getElementById('pfMsg');
+    const say = (t) => { if (msg) msg.textContent = t; };
+    if (!s) return say('Pick a stock from the list first.'), false;
+    if (!(q > 0)) return say('Type how many shares (more than 0).'), false;
+    if (!(p > 0)) return say('Type the price you bought at.'), false;
+    PF.push({ s, q, p, d: d || null });
+    await pfSave();
+    H.toast(`${s} added: ${H.num(q, 2)} at Rs ${H.num(p, 2)}`);
+    return true;
+  }
+  if (fn === 'pfDelSym') { const s = el.dataset.v; if (!confirm(`Remove every ${s} lot from your portfolio?`)) return false; PF = PF.filter((x) => x.s !== s); await pfSave(); return true; }
+  if (fn === 'pfDelLot') { PF.splice(+el.dataset.v, 1); await pfSave(); return true; }
+  if (fn === 'pfOpen') { ST.pf.lot = ST.pf.lot === el.dataset.v ? null : el.dataset.v; return true; }
+  if (fn === 'pfImport') {
+    const st = await H.stkAll();
+    const { rows, bad } = parseLines(pfv('pfPaste'), st.info);
+    rows.forEach((r) => PF.push(r));
+    await pfSave();
+    H.toast(`${rows.length} added${bad.length ? `, ${bad.length} not matched` : ''}`);
+    return true;
+  }
+  if (fn === 'pfList') {
+    const l = H.myLists()[+el.dataset.v]; const st = await H.stkAll();
+    (l?.syms || []).forEach((s) => { if (!PF.some((x) => x.s === s)) PF.push({ s, q: 1, p: st.daily[s]?.p || null, d: null }); });
+    await pfSave(); H.toast('Added with 1 share each at the last close; change the quantity and price by removing and adding again');
+    return true;
+  }
+  if (fn === 'pfClear') { if (!confirm('Remove every holding from your portfolio? This cannot be undone.')) return false; PF = []; await pfSave(); return true; }
+  return false;
+}
+
+// "SYMBOL qty price" (or a company name) per line, as copied from a broker's holdings page
+function parseLines(text, info) {
   const out = [], bad = [];
   const names = Object.entries(info).map(([s, x]) => [s, String(x.n || '').toUpperCase()]);
   for (const raw of String(text || '').split(/\n|;/)) {
@@ -286,77 +375,149 @@ function parseHoldings(text, info) {
     let s = (parts[0] || '').toUpperCase().replace(/^NSE:/, '').replace(/-EQ$/, '');
     if (!info[s]) { const n = line.toUpperCase().replace(/[0-9.,\s]+$/, '').trim(); const hit = names.find(([, nm]) => nm && (nm === n || nm.startsWith(n + ' '))); if (hit) s = hit[0]; }
     if (!info[s]) { bad.push(line); continue; }
-    const q = parts.slice(1).map((p) => Number(String(p).replace(/,/g, ''))).find((v) => isFinite(v) && v > 0);
-    out.push({ s, q: q || null });
+    const nums = parts.slice(1).map((x) => Number(String(x).replace(/,/g, ''))).filter((v) => isFinite(v) && v > 0);
+    out.push({ s, q: nums[0] || 1, p: nums[1] || null, d: null });
   }
-  const m = {}; out.forEach((h) => { m[h.s] = m[h.s] ? { s: h.s, q: (m[h.s].q || 0) + (h.q || 0) || null } : h; });
-  return { rows: Object.values(m), bad };
+  return { rows: out, bad };
 }
-// portfolio P/E the way a fund reports it: money in the stocks over the earnings behind that money (1 / sum of weight / PE)
+
+// the search box: type a name or ticker, pick from the list
+function pfSearch(info, daily) {
+  const inp = document.getElementById('pfQ'), box = document.getElementById('pfAc');
+  if (!inp || !box) return;
+  let hits = [], at = 0;
+  const paint = () => { box.hidden = !hits.length; box.innerHTML = hits.map((h, i) => `<div data-s="${H.esc(h.s)}" class="${i === at ? 'on' : ''}">${H.esc(h.n)}<small>${H.esc(h.s)}</small><em>${H.num(daily[h.s]?.p, 2)}</em></div>`).join(''); };
+  const pick = (s) => {
+    inp.value = `${s}  ${info[s]?.n || ''}`; inp.dataset.sym = s; hits = []; paint();
+    const pr = document.getElementById('pfPrice'); if (pr && !pr.value && daily[s]?.p) pr.placeholder = `Buy price (last close ${H.num(daily[s].p, 2)})`;
+    document.getElementById('pfQty')?.focus();
+  };
+  inp.addEventListener('input', () => {
+    inp.dataset.sym = '';
+    const q = inp.value.trim().toUpperCase(); at = 0;
+    if (!q) { hits = []; paint(); return; }
+    hits = Object.entries(info).filter(([s, x]) => s.includes(q) || String(x.n || '').toUpperCase().includes(q))
+      .map(([s, x]) => ({ s, n: x.n || s, w: (s === q ? 3 : s.startsWith(q) ? 2 : 0) + (daily[s]?.mc || 0) / 1e7 })).sort((a, b) => b.w - a.w).slice(0, 8);
+    paint();
+  });
+  inp.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { if (!hits.length) return; e.preventDefault(); at = (at + (e.key === 'ArrowDown' ? 1 : -1) + hits.length) % hits.length; paint(); }
+    else if (e.key === 'Enter') { e.preventDefault(); if (hits[at]) pick(hits[at].s); }
+    else if (e.key === 'Escape') { hits = []; paint(); }
+  });
+  box.addEventListener('mousedown', (e) => { const d2 = e.target.closest('[data-s]'); if (d2) { e.preventDefault(); pick(d2.dataset.s); } });
+  inp.addEventListener('blur', () => setTimeout(() => { hits = []; paint(); }, 150));
+  ['pfQty', 'pfPrice', 'pfDate'].forEach((id) => document.getElementById(id)?.addEventListener('keydown', (e) => { if (e.key === 'Enter') document.querySelector('[data-fn="pfAdd"]')?.click(); }));
+}
+
 function portPE(rows) {
   let w = 0, e = 0;
   rows.forEach((r) => { if (r.d.pe > 0) { w += r.w; e += r.w / r.d.pe; } });
   return e ? w / e : null;
 }
-async function xray() {
-  const text = xGet();
-  const st = await H.stkAll();
+
+export async function viewPortfolio(helpers) {
+  H = helpers;
+  await H.wlLoad();
+  const [st] = await Promise.all([H.stkAll(), pfLoad(true)]);
   const { info, daily, asOf } = st;
+  H.after(() => pfSearch(info, daily));
   const lists = H.myLists();
-  const form = `<section class="card"><h2>Your holdings</h2>
-    <p class="sub">One stock per line: the NSE symbol (or company name) and, if you like, the quantity. Example: <code>RELIANCE 20</code>. It stays in this browser only; nothing is sent anywhere.</p>
-    <textarea id="dcX" class="dc-xin" rows="7" placeholder="RELIANCE 20&#10;HDFCBANK 50&#10;TCS">${H.esc(text)}</textarea>
-    <div class="toolbar" style="margin-top:10px"><button class="btn primary sm" data-act="dcXray">Read holdings</button>
-      ${lists.map((l, i) => `<button class="btn sm" data-act="dcXlist" data-v="${i}">Use "${H.esc(l.name)}"</button>`).join('')}
-      ${text ? '<button class="btn sm ghost" data-act="dcXclear">Clear</button>' : ''}</div></section>`;
-  if (!text.trim()) return `${head('xray', 'Portfolio X-ray')}${form}<p class="sub legend">Facts about what you hold, not advice on what to do with it.</p>`;
-  const { rows, bad } = parseHoldings(text, info);
-  if (!rows.length) return `${head('xray', 'Portfolio X-ray')}${form}<div class="empty card">None of those lines matched an NSE stock we track.</div>`;
+  const addForm = `<section class="card pf-addcard"><h2>Add a holding</h2>
+    <div class="pf-add">
+      <div class="tw-find pf-find"><input id="pfQ" placeholder="Search a stock (name or ticker)" autocomplete="off" spellcheck="false"><div class="tw-ac" id="pfAc" hidden></div></div>
+      <input id="pfQty" type="number" min="0" step="any" placeholder="Quantity">
+      <input id="pfPrice" type="number" min="0" step="any" placeholder="Buy price (Rs)">
+      <input id="pfDate" type="date" title="Buy date (optional)">
+      <button class="btn primary" data-act="dcCall" data-fn="pfAdd">Add</button>
+    </div>
+    <p class="sub" id="pfMsg">Bought the same stock more than once? Add each buy; the average price is worked out for you. Saved on your login, so it shows on your phone and laptop.</p>
+    <details class="pf-more"><summary>Add many at once</summary>
+      <p class="sub">One per line: symbol, quantity, buy price. Example: <code>RELIANCE 20 1250</code>. You can paste the holdings list from your broker.</p>
+      <textarea id="pfPaste" class="dc-xin" rows="5" placeholder="RELIANCE 20 1250&#10;HDFCBANK 50 1620&#10;TCS 10 3900"></textarea>
+      <div class="toolbar" style="margin-top:8px"><button class="btn sm primary" data-act="dcCall" data-fn="pfImport">Add these</button>
+        ${lists.map((l, i) => `<button class="btn sm" data-act="dcCall" data-fn="pfList" data-v="${i}">Add stocks of "${H.esc(l.name)}"</button>`).join('')}</div>
+    </details></section>`;
+  const title = H.pageHead('My portfolio', 'Portfolio X-ray', H.fresh(asOf));
+  if (!PF.length) return `${title}${addForm}<p class="sub legend">Facts about what you hold, not advice on what to buy, sell or keep.</p>`;
+
+  // one row per stock: lots added up, average price over the lots that have a price
+  const by = {};
+  PF.forEach((x, i) => { (by[x.s] ||= { s: x.s, lots: [] }).lots.push({ ...x, i }); });
+  const rows = Object.values(by).filter((r) => info[r.s]).map((r) => {
+    const d = daily[r.s] || {};
+    const q = r.lots.reduce((t, x) => t + x.q, 0);
+    const priced = r.lots.filter((x) => x.p);
+    const pq = priced.reduce((t, x) => t + x.q, 0);
+    const cost = priced.reduce((t, x) => t + x.q * x.p, 0);
+    const avg = pq ? cost / pq : null;
+    const value = q * (d.p || 0);
+    const pl = avg != null ? pq * (d.p || 0) - cost : null;
+    const day = d.p && (d.r || [])[0] != null ? value - value / (1 + d.r[0] / 100) : null;
+    return { ...r, d, q, avg, cost, value, pl, plp: cost ? pl / cost * 100 : null, day, partial: pq < q };
+  }).sort((a, b) => b.value - a.value);
+  const missing = Object.keys(by).filter((s) => !info[s]);
+  const tv = rows.reduce((t, r) => t + r.value, 0) || 1;
+  rows.forEach((r) => { r.w = r.value / tv * 100; });
+  const tc = rows.reduce((t, r) => t + (r.cost || 0), 0);
+  const tpl = rows.reduce((t, r) => t + (r.pl || 0), 0);
+  const tday = rows.reduce((t, r) => t + (r.day || 0), 0);
+  const rs = (v, dgt = 0) => (v == null ? '-' : `${v < 0 ? '-' : ''}Rs ${H.num(Math.abs(v), dgt)}`);
+
+  const table = `<section class="card flush"><div class="card-head pad"><h2>Holdings</h2><span class="sub">Prices at the last NSE close (${H.fDate(asOf)}), not live</span></div><div class="tbl-wrap"><table class="tbl pf-tbl"><thead><tr>
+      <th>Stock</th><th class="r">Qty</th><th class="r">Avg buy</th><th class="r">Invested</th><th class="r">Last</th><th class="r">Value</th><th class="r">P&amp;L</th><th class="r">P&amp;L %</th><th class="r">Today</th><th class="r">Weight</th><th></th></tr></thead><tbody>
+    ${rows.map((r) => `<tr><td>${sym(r.s)}<span class="sub">${H.esc(info[r.s]?.n || '')}</span></td><td class="r">${H.num(r.q, r.q % 1 ? 2 : 0)}</td><td class="r">${H.num(r.avg, 2)}${r.partial ? '<span class="sub">some lots have no price</span>' : ''}</td>
+      <td class="r">${rs(r.cost)}</td><td class="r">${H.num(r.d.p, 2)}</td><td class="r">${rs(r.value)}</td>
+      <td class="r ${H.tone(r.pl)}">${rs(r.pl)}</td><td class="r ${H.tone(r.plp)}">${H.pct(r.plp, 1)}</td><td class="r ${H.tone(r.day)}">${rs(r.day)}</td><td class="r">${H.num(r.w, 1)}%</td>
+      <td class="nowrap"><button class="btn sm ghost" data-act="dcCall" data-fn="pfOpen" data-v="${H.esc(r.s)}">${r.lots.length} lot${r.lots.length === 1 ? '' : 's'}</button> <button class="btn sm ghost" data-act="dcCall" data-fn="pfDelSym" data-v="${H.esc(r.s)}" title="Remove this stock">Remove</button></td></tr>
+      ${ST.pf.lot === r.s ? r.lots.map((x) => `<tr class="pf-lot"><td colspan="2" class="sub">Bought ${x.d ? H.fDate(x.d) : '(no date)'}</td><td class="r">${H.num(x.q, x.q % 1 ? 2 : 0)} at ${x.p ? H.num(x.p, 2) : 'no price'}</td><td class="r">${x.p ? rs(x.q * x.p) : '-'}</td><td colspan="2"></td><td class="r ${H.tone(x.p ? x.q * (r.d.p - x.p) : null)}">${x.p ? rs(x.q * (r.d.p - x.p)) : '-'}</td><td colspan="3"></td><td><button class="btn sm ghost" data-act="dcCall" data-fn="pfDelLot" data-v="${x.i}">Remove lot</button></td></tr>`).join('') : ''}`).join('')}
+    </tbody></table></div></section>`;
+
+  // the X-ray of the same holdings, weighted by value
   const [hub, mf, inv, gd, fpart] = await Promise.all([H.hist('results/hub').catch(() => ({})), H.hist('mf/stocks').catch(() => ({})), load('investors'), load('guidance'),
     Promise.all([...new Set(rows.map((r) => (/^[A-Z]/.test(r.s[0]) ? r.s[0] : '0')))].map((c) => H.hist('stk/f/' + c).catch(() => null)))]);
-  const fund = {}; fpart.forEach((p) => Object.assign(fund, p?.rows || {}));
+  const fund = {}; fpart.forEach((p2) => Object.assign(fund, p2?.rows || {}));
   const byCap = Object.keys(daily).filter((s) => daily[s].mc != null).sort((a, b) => daily[b].mc - daily[a].mc);
   const rank = {}; byCap.forEach((s, i) => { rank[s] = i + 1; });
   const sizeOf = (s) => { const r = rank[s]; return !r ? 'Unknown' : r <= 100 ? 'Largest 100' : r <= 250 ? 'Next 150 (mid)' : r <= 500 ? 'Next 250 (small)' : 'Beyond the top 500'; };
-  const withQty = rows.every((r) => r.q);
-  rows.forEach((r) => { const d = daily[r.s] || {}; r.d = d; r.v = withQty ? r.q * (d.p || 0) : 1; });
-  const tot = rows.reduce((t, r) => t + r.v, 0) || 1;
-  rows.forEach((r) => { r.w = r.v / tot * 100; });
-  rows.sort((a, b) => b.w - a.w);
   const wavg = (f) => { let a = 0, w = 0; rows.forEach((r) => { const v = f(r); if (v != null && isFinite(v)) { a += v * r.w; w += r.w; } }); return w ? a / w : null; };
   const mix = (keyf) => { const m = {}; rows.forEach((r) => { const k = keyf(r); m[k] = (m[k] || 0) + r.w; }); return Object.entries(m).sort((a, b) => b[1] - a[1]); };
   const bars = (arr) => `<div class="dc-bars">${arr.map(([k, w]) => `<div><span>${H.esc(k)}</span><i style="width:${Math.max(1, w)}%"></i><b>${H.num(w, 1)}%</b></div>`).join('')}</div>`;
   const today = hub.today || asOf;
-  const plus = (n) => { const d = H.pd(today); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+  const plus = (n) => { const x = H.pd(today); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10); };
   const nextRes = {}; (hub.calendar || []).forEach((c) => { if (c.date >= today && (!nextRes[c.sym] || c.date < nextRes[c.sym].date)) nextRes[c.sym] = c; });
-  const owners = {}; (inv?.people || []).forEach((p) => p.holdings.forEach((h) => { (owners[h.sym] ||= []).push(`${p.name} ${H.num(h.pct, 1)}%`); }));
+  const owners = {}; (inv?.people || []).forEach((p2) => p2.holdings.forEach((h) => { (owners[h.sym] ||= []).push(`${p2.name} ${H.num(h.pct, 1)}%`); }));
   const flags = {}; (inv?.events || []).forEach((e) => { if (['flag_promoter_sell', 'flag_promoter_down', 'flag_pledge'].includes(e.kind) && e.day >= plus(-180)) (flags[e.sym] ||= new Set()).add(e.label); });
   const gdSet = new Set((gd?.rows || []).map((g) => g.sym));
   const soon = rows.filter((r) => nextRes[r.s] && nextRes[r.s].date <= plus(14));
   const deep = rows.filter((r) => (r.d.hi ?? 0) <= -30);
   const flagged = rows.filter((r) => flags[r.s]);
   const sec = mix((r) => info[r.s]?.sec || 'Unclassified');
+  const big = rows[0];
   const facts = [
-    `Biggest sector: <b>${H.esc(sec[0][0])}</b> at ${H.num(sec[0][1], 1)}% of the portfolio${sec[0][1] >= 40 ? ' (a large share in one sector)' : ''}.`,
+    `Biggest holding: <b>${H.esc(big.s)}</b> at ${H.num(big.w, 1)}% of the portfolio. Biggest sector: <b>${H.esc(sec[0][0])}</b> at ${H.num(sec[0][1], 1)}%${sec[0][1] >= 40 ? ' (a large share in one sector)' : ''}.`,
     `${soon.length} holding${soon.length === 1 ? ' has' : 's have'} results in the next 14 days${soon.length ? ': ' + soon.map((r) => `${H.esc(r.s)} (${H.fShort(nextRes[r.s].date)})`).join(', ') : ''}.`,
     `${deep.length} holding${deep.length === 1 ? ' is' : 's are'} 30% or more below the 52-week high${deep.length ? ': ' + deep.map((r) => H.esc(r.s)).join(', ') : ''}.`,
     flagged.length ? `Promoter selling, a stake cut or a pledge was filed in the last 6 months for: ${flagged.map((r) => H.esc(r.s)).join(', ')}.` : 'No promoter selling or pledge filings in the last 6 months for these holdings.',
   ];
-  return `${head('xray', 'Portfolio X-ray', H.fresh(asOf))}
-  <div class="dc-kpis">${withQty ? `<div><b>Rs ${H.num(tot, 0)}</b><span>value at the last close</span></div>` : ''}<div><b>${rows.length}</b><span>stocks${withQty ? '' : ' (equal weight: no quantities given)'}</span></div>
-    <div><b class="${H.tone(wavg((r) => (r.d.r || [])[0]))}">${H.pct(wavg((r) => (r.d.r || [])[0]), 2)}</b><span>on the last day</span></div>
-    <div><b class="${H.tone(wavg((r) => (r.d.r || [])[5]))}">${H.pct(wavg((r) => (r.d.r || [])[5]), 1)}</b><span>over 1 year (weighted)</span></div>
-    <div><b>${H.num(portPE(rows), 1)}</b><span>portfolio P/E (loss makers left out)</span></div></div>
+  return `${title}
+  <div class="dc-kpis">
+    <div><b>${rs(tc)}</b><span>invested</span></div><div><b>${rs(tv)}</b><span>value at the last close</span></div>
+    <div><b class="${H.tone(tpl)}">${rs(tpl)}</b><span>total P&amp;L ${tc ? `(<span class="${H.tone(tpl)}">${H.pct(tpl / tc * 100, 1)}</span>)` : ''}</span></div>
+    <div><b class="${H.tone(tday)}">${rs(tday)}</b><span>on the last day (${H.pct(tday / (tv - tday) * 100, 2)})</span></div>
+    <div><b>${rows.length}</b><span>stocks · portfolio P/E ${H.num(portPE(rows), 1)}</span></div></div>
+  ${table}
+  ${missing.length ? `<p class="sub">Not on our NSE list any more (kept in your portfolio, not counted): ${missing.map(H.esc).join(', ')}</p>` : ''}
+  ${addForm}
   <section class="card"><h2>What stands out</h2><ul class="dc-facts">${facts.map((f) => `<li>${f}</li>`).join('')}</ul></section>
   <div class="grid2"><section class="card"><h2>Sector mix</h2>${bars(sec)}</section><section class="card"><h2>Size mix</h2>${bars(mix((r) => sizeOf(r.s)))}<p class="sub">By market cap rank among all NSE companies on the last close.</p></section></div>
-  <section class="card flush"><div class="card-head pad"><h2>Each holding</h2></div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Stock</th><th class="r">Weight</th><th class="r">1D</th><th class="r">1Y</th><th class="r">From 52W high</th><th class="r">RS</th><th class="r">P/E</th><th class="r">Promoters</th><th>MF buying</th><th>Next results</th><th>Well-known holders</th><th>Notes</th></tr></thead><tbody>
-    ${rows.map((r) => { const d = r.d, f = fund[r.s] || {}, m = mf.stocks?.[r.s]; const nr = nextRes[r.s]; return `<tr><td>${sym(r.s)}<span class="sub">${H.esc(info[r.s]?.sec || '')}</span></td><td class="r">${H.num(r.w, 1)}%</td>
-      <td class="r ${H.tone((d.r || [])[0])}">${H.pct((d.r || [])[0], 1)}</td><td class="r ${H.tone((d.r || [])[5])}">${H.pct((d.r || [])[5], 1)}</td><td class="r">${H.pct(d.hi, 1)}</td><td class="r">${H.num(d.rs)}</td><td class="r">${H.num(d.pe, 1)}</td>
+  <section class="card flush"><div class="card-head pad"><h2>Each holding, the facts</h2></div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Stock</th><th class="r">1Y</th><th class="r">From 52W high</th><th class="r">RS</th><th class="r">P/E</th><th class="r">Promoters</th><th>MF buying</th><th>Next results</th><th>Well-known holders</th><th>Notes</th></tr></thead><tbody>
+    ${rows.map((r) => { const d = r.d, f = fund[r.s] || {}, m = mf.stocks?.[r.s]; const nr = nextRes[r.s]; return `<tr><td>${sym(r.s)}<span class="sub">${H.esc(info[r.s]?.sec || '')}</span></td>
+      <td class="r ${H.tone((d.r || [])[5])}">${H.pct((d.r || [])[5], 1)}</td><td class="r">${H.pct(d.hi, 1)}</td><td class="r">${H.num(d.rs)}</td><td class="r">${H.num(d.pe, 1)}</td>
       <td class="r">${f.pr == null ? '-' : `${H.num(f.pr, 1)}%`}${f.prc ? ` <small class="${H.tone(f.prc)}">${f.prc > 0 ? '+' : ''}${H.num(f.prc, 2)}</small>` : ''}</td>
       <td>${m ? `${m.mb} of ${(mf.months || []).length} months` : '-'}</td><td>${nr ? H.fShort(nr.date) + (nr.status === 'confirmed' ? '' : ' (est.)') : '-'}</td>
       <td class="sub-ish">${(owners[r.s] || []).map(H.esc).join('; ') || '-'}</td><td>${flags[r.s] ? [...flags[r.s]].map((t) => H.chip(t, 'bad')).join(' ') : ''}${gdSet.has(r.s) ? H.chip('management guidance', 'info') : ''}</td></tr>`; }).join('')}
   </tbody></table></div></section>
-  ${bad.length ? `<p class="sub">Not matched (check the symbol): ${bad.map(H.esc).join(', ')}</p>` : ''}
-  ${form}
-  <p class="sub legend">Facts about what you hold, from NSE filings and our data. Not advice on what to buy, sell or keep.</p>`;
+  <p class="toolbar"><button class="btn sm ghost" data-act="dcCall" data-fn="pfClear">Remove every holding</button></p>
+  <p class="sub legend">Profit and loss here is at the last close, before brokerage and tax, and does not include dividends. Facts about what you hold, not advice on what to buy, sell or keep.</p>`;
 }

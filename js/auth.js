@@ -250,6 +250,27 @@ export async function saveWatchlist(list) {
   await fb.fs.setDoc(fb.fs.doc(fb.db, 'users', u.uid), { email: u.email || '', watchlist: clean, watchlistAt: fb.fs.serverTimestamp() }, { merge: true });
 }
 
+/* ---------- my portfolio (Portfolio X-ray tab): lots of { s: symbol, q: quantity, p: buy price, d: buy date } ----------
+   Saved on users/{uid}.portfolio so it follows the member to every device. */
+const PF_MAX = 300;
+const cleanLots = (a) => (a || []).filter((x) => x && x.s && +x.q > 0).slice(0, PF_MAX)
+  .map((x) => ({ s: String(x.s).toUpperCase().slice(0, 20), q: +(+x.q).toFixed(4), p: +x.p > 0 ? +(+x.p).toFixed(4) : null, d: /^\d{4}-\d{2}-\d{2}$/.test(x.d || '') ? x.d : null }));
+export async function getPortfolio() {
+  const u = state.user;
+  if (!u) return [];
+  if (state.demo) return cleanLots(LS('skd.demo.pf'));
+  try { const s = await fb.fs.getDoc(fb.fs.doc(fb.db, 'users', u.uid)); return cleanLots(s.exists() ? s.data().portfolio : []); }
+  catch { return cleanLots(LS('skd.pf.' + u.uid)); }
+}
+export async function savePortfolio(lots) {
+  const u = state.user;
+  if (!u) return;
+  const clean = cleanLots(lots);
+  LS('skd.pf.' + u.uid, clean);
+  if (state.demo) { LS('skd.demo.pf', clean); return; }
+  await fb.fs.setDoc(fb.fs.doc(fb.db, 'users', u.uid), { email: u.email || '', portfolio: clean, portfolioAt: fb.fs.serverTimestamp() }, { merge: true });
+}
+
 /* ---------- named watchlists (Sagar 2026-11-16: members can make their own lists) ----------
    users/{uid}.watchlists = [{ name, syms }]; the first list is also written to `watchlist` so older code keeps working.
    A member who only ever had the single list sees it as "My watchlist". */
