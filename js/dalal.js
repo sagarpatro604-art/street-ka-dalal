@@ -1,9 +1,9 @@
-// "Dalal" — the floating AI buddy. Greets members with the community links, then answers questions
+// "Dalal", the floating AI buddy. Greets members with the community links, then answers questions
 // through the Cloudflare function (/api/dalal), which holds the Gemini key and the daily limit.
 import * as A from './auth.js';
 import { SOCIAL, DALAL_API } from './config.js';
 
-// The mascot: a cheerful street-smart broker — green cap with a gold band, round specs, big moustache.
+// The mascot: a cheerful street-smart broker, green cap with a gold band, round specs, big moustache.
 export const DALAL_FACE = `<img class="dalal-face" src="icons/dalal-head.webp" alt="" width="80" height="80">`;
 
 const SOCIAL_META = {
@@ -20,6 +20,11 @@ const KEY = 'skd.dalal.chat';
 const load = () => { try { return JSON.parse(sessionStorage.getItem(KEY) || '[]'); } catch { return []; } };
 const save = (m) => { try { sessionStorage.setItem(KEY, JSON.stringify(m.slice(-30))); } catch {} };
 let msgs = [];
+// the stock open on the screen (Stock watch / stock page), so Dalal knows what 'this stock' means
+let CTX = null;
+export function setDalalContext(c) { CTX = c && c.sym ? { sym: String(c.sym).toUpperCase(), name: c.name || '' } : null; if (open) paint(false); }
+export function openDalal() { if (!$('#dalalPanel')) return; toggle(true); }
+const ctxSug = () => (CTX ? [`What is going on in ${CTX.sym}?`, `${CTX.sym} latest quarterly results in simple words`, `Is ${CTX.sym} on any of our screens today?`, `Are mutual funds buying ${CTX.sym}?`] : SUGGEST);
 
 const $ = (s) => document.querySelector(s);
 const firstName = () => String(A.state.user?.name || '').split(' ')[0] || 'dost';
@@ -30,11 +35,11 @@ function greeting() {
     return `<a class="soc" href="${H.esc(url)}" target="_blank" rel="noopener" style="--c:${color}"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">${path}</svg>${label}</a>`;
   }).join('');
   return `<div class="dmsg bot greet">${DALAL_FACE}<div class="bubble">
-    <p><b>Namaste ${H.esc(firstName())}! 🙏</b> Main hoon <b>Dalal</b>, Street ka Dalal ka AI buddy.</p>
-    <p>Market, sectors, screeners, mutual-fund activity, company filings — kuch bhi poocho. I answer from our site's data first, and check trusted news when needed.</p>
+    <p><b>Namaste ${H.esc(firstName())}!</b> Main hoon <b>Dalal</b>, Street ka Dalal ka AI buddy.</p>
+    <p>Market, sectors, screeners, mutual-fund activity, company filings, kuch bhi poocho. I answer from our site's data first, and check trusted news when needed.</p>
     <p class="join">Join our community:</p>
     <div class="socs">${links}</div>
-    <div class="sugs">${SUGGEST.map((s) => `<button class="sug" data-dalal-ask="${H.esc(s)}">${H.esc(s)}</button>`).join('')}</div>
+    ${CTX ? `<p class="dctx">Looking at <b>${H.esc(CTX.sym)}</b>${CTX.name ? ` (${H.esc(CTX.name)})` : ''}. Ask about it, or anything else.</p>` : ''}<div class="sugs">${ctxSug().map((s) => `<button class="sug" data-dalal-ask="${H.esc(s)}">${H.esc(s)}</button>`).join('')}</div>
   </div></div>`;
 }
 
@@ -75,16 +80,18 @@ async function ask(q) {
   if (!q || busy) return;
   const history = msgs.filter((m) => !m.err).slice(-6).map((m) => ({ role: m.role === 'user' ? 'user' : 'model', text: m.text }));
   msgs.push({ role: 'user', text: q });
+  // tell the server which stock is open when the question does not name another one
+  const sent = CTX && !q.toUpperCase().includes(CTX.sym) && !/\b[A-Z][A-Z0-9&]{2,}\b/.test(q) ? `(I am looking at ${CTX.sym}${CTX.name ? ', ' + CTX.name : ''} on the site) ${q}` : q;
   busy = true;
   paint();
   try {
     if (A.state.demo) {
       await new Promise((r) => setTimeout(r, 700));
-      msgs.push({ role: 'bot', text: 'This is the local demo. On the live site I answer from **Street ka Dalal data** and trusted news.\n\n- Market, sectors, screeners, MF activity and filings\n- Not investment advice — please do your own research.' });
+      msgs.push({ role: 'bot', text: 'This is the local demo. On the live site I answer from **Street ka Dalal data** and trusted news.\n\n- Market, sectors, screeners, MF activity and filings\n- Not investment advice, please do your own research.' });
       left = Math.max(0, (left ?? 10) - 1);
       A.logAsk({ q, a: msgs[msgs.length - 1].text, web: false, model: 'demo' }).catch(() => {});
     } else {
-      const { ok, d } = await api('POST', { question: q, history });
+      const { ok, d } = await api('POST', { question: sent, history });
       if (ok) {
         msgs.push({ role: 'bot', text: d.answer, sources: d.sources, web: d.web, asOf: d.asOf });
         left = d.left;
@@ -121,11 +128,11 @@ export function mountDalal(helpers) {
   msgs = load();
   const wrap = document.createElement('div');
   wrap.innerHTML = `
-    <button id="dalalBtn" class="dalal-peek" aria-label="Ask Dalal, the AI buddy"><span class="peek-say">Kuch poochna hai? 👀<b>Ask Dalal</b></span><img src="icons/dalal-peek.webp" alt="" width="265" height="720"></button>
+    <button id="dalalBtn" class="dalal-peek" aria-label="Ask Dalal, the AI buddy"><span class="peek-say">Kuch poochna hai?<b>Ask Dalal</b></span><img src="icons/dalal-peek.webp" alt="" width="265" height="720"></button>
     <section id="dalalPanel" class="dalal-panel" hidden aria-label="Dalal chat">
-      <header>${DALAL_FACE}<div><b>Dalal</b><span>AI market buddy · Street ka Dalal</span></div><button class="dclose" data-dalal-close aria-label="Close">✕</button></header>
+      <header>${DALAL_FACE}<div><b>Dalal</b><span>AI market buddy · Street ka Dalal</span></div><button class="dclose" data-dalal-close aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></header>
       <div id="dalalMsgs" class="dmsgs" aria-live="polite"></div>
-      <form id="dalalForm" class="dform"><textarea id="dalalInput" rows="1" maxlength="800" placeholder="Ask Dalal about the market…"></textarea><button aria-label="Send">➤</button></form>
+      <form id="dalalForm" class="dform"><textarea id="dalalInput" rows="1" maxlength="800" placeholder="Ask Dalal about the market…"></textarea><button aria-label="Send"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></form>
       <footer><span id="dalalLeft"></span><span>AI can make mistakes · not investment advice</span></footer>
     </section>`;
   document.body.append(...wrap.children);

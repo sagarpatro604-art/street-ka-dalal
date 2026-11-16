@@ -1,6 +1,6 @@
 // Sign-in (Google), member records, login log and the insights (posts) store.
 // Firestore:  users/{uid}   one record per member (name, email, first/last seen, visits, device)
-//             logins/{id}   one row per visit (who, when, device)        — only the admin can read
+//             logins/{id}   one row per visit (who, when, device)       , only the admin can read
 //             posts/{id}    blogs / sectoral views; members read published ones, only the admin writes
 import { firebaseConfig, ADMIN_EMAILS } from './config.js';
 
@@ -229,4 +229,23 @@ export async function listLogins(n = 300) {
   const out = [];
   s.forEach((d) => { const x = d.data(); out.push({ ...x, id: d.id, at: ts(x.at) }); });
   return out;
+}
+
+/* ---------- my watchlist (stock-watch screen): saved on the member's own users/{uid} record ---------- */
+// The users rule lets a member update only their own record and keeps its email, so a merge with email is enough.
+const WL_MAX = 200;
+export async function getWatchlist() {
+  const u = state.user;
+  if (!u) return [];
+  if (state.demo) return LS('skd.demo.wl') || [];
+  try { const s = await fb.fs.getDoc(fb.fs.doc(fb.db, 'users', u.uid)); const w = s.exists() ? s.data().watchlist : null; return Array.isArray(w) ? w.filter((x) => typeof x === 'string') : []; }
+  catch { return LS('skd.wl.' + u.uid) || []; }
+}
+export async function saveWatchlist(list) {
+  const u = state.user;
+  if (!u) return;
+  const clean = [...new Set((list || []).map((x) => String(x).toUpperCase()).filter(Boolean))].slice(0, WL_MAX);
+  LS('skd.wl.' + u.uid, clean);
+  if (state.demo) { LS('skd.demo.wl', clean); return; }
+  await fb.fs.setDoc(fb.fs.doc(fb.db, 'users', u.uid), { email: u.email || '', watchlist: clean, watchlistAt: fb.fs.serverTimestamp() }, { merge: true });
 }

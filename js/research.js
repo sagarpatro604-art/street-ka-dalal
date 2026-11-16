@@ -15,8 +15,8 @@ export const REPORTS = [
 ];
 
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const mLabel = (ym) => { if (!ym) return '—'; const [y, m] = String(ym).split('-').map(Number); return `${MON[m - 1]} ${y}`; };
-const ZONE_COL = { Fearful: '#b4442f', Cautious: '#c27c3a', Neutral: '#9a8f72', Confident: '#2f6b4f', Crowded: '#1f4d3a' };
+const mLabel = (ym) => { if (!ym) return '-'; const [y, m] = String(ym).split('-').map(Number); return `${MON[m - 1]} ${y}`; };
+const ZONE_COL = { Fearful: '#EFA28C', Cautious: '#E0A86A', Neutral: '#B8AE92', Confident: '#67E8A5', Crowded: '#67E8A5' };
 
 export function researchList(h) {
   const { esc, pageHead, fDate } = h;
@@ -47,16 +47,16 @@ function gaugeSVG(v, zone) {
   const bands = [[0, 20, 'Fearful'], [20, 40, 'Cautious'], [40, 60, 'Neutral'], [60, 80, 'Confident'], [80, 100, 'Crowded']];
   const val = v == null ? 50 : Math.max(0, Math.min(100, v));
   const [nx, ny] = pt(val, R - 6);
-  return `<svg class="rs-gauge" viewBox="0 0 ${W} ${H}" role="img" aria-label="Gauge ${v ?? '—'} of 100, ${zone || ''}">
+  return `<svg class="rs-gauge" viewBox="0 0 ${W} ${H}" role="img" aria-label="Gauge ${v ?? '-'} of 100, ${zone || ''}">
     ${bands.map(([a, b, n]) => arc(a + 0.6, b - 0.6, ZONE_COL[n])).join('')}
-    <line x1="${cx}" y1="${cy}" x2="${nx.toFixed(1)}" y2="${ny.toFixed(1)}" stroke="#1d2a23" stroke-width="3.5" stroke-linecap="round"/>
-    <circle cx="${cx}" cy="${cy}" r="7" fill="#1d2a23"/>
+    <line x1="${cx}" y1="${cy}" x2="${nx.toFixed(1)}" y2="${ny.toFixed(1)}" stroke="#F4F1E8" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="${cx}" cy="${cy}" r="7" fill="#F4F1E8"/>
     <text x="14" y="146" class="rs-g-l">0 fearful</text><text x="246" y="146" text-anchor="end" class="rs-g-l">crowded 100</text>
   </svg>`;
 }
 
 const chanceWord = (p, n) => {
-  if (p == null) return '—';
+  if (p == null) return '-';
   const few = n != null && n < 5 ? ' · too few cases' : '';
   if (p < 0.05) return `Unlikely to be chance${few}`;
   if (p < 0.15) return `Maybe real${few}`;
@@ -67,19 +67,19 @@ export async function researchParticipation(h) {
   const { data, after, esc, pct, num, pageHead, table, fDate } = h;
   const d = await data('participation');
   const n = d.now || {};
-  const P = (x, dd = 0) => (x == null ? '—' : pct(x * 100, dd));
-  const L = (x) => { if (x == null) return '—'; const a = Math.abs(x); return `₹${num(a >= 100000 ? a / 100000 : a, a >= 100000 ? 2 : 0)}${a >= 100000 ? ' lakh' : ''} cr`; };
-  const Q = (x) => (x == null ? '—' : `${Math.round(x * 100)}%`);   // a share or a hit rate: no sign
+  const P = (x, dd = 0) => (x == null ? '-' : pct(x * 100, dd));
+  const L = (x) => { if (x == null) return '-'; const a = Math.abs(x); return `₹${num(a >= 100000 ? a / 100000 : a, a >= 100000 ? 2 : 0)}${a >= 100000 ? ' lakh' : ''} cr`; };
+  const Q = (x) => (x == null ? '-' : `${Math.round(x * 100)}%`);   // a share or a hit rate: no sign
   const sign = (x) => (x == null ? '' : x >= 0 ? 'bought' : 'sold');
   const hist = Object.fromEntries((d.history || []).map((x) => [x.label, x]));
   const fpiSell = hist['FPI heavy selling (3-month flow in its lowest 15%)']?.h || {};
   const rtl = hist['Retail trading 40%+ below its 12-month high']?.h || {};
   const falls = (d.falls || []).filter((f, i, a) => a.findIndex((g) => g.peak === f.peak) === i);   // one row per fall
   const drops = falls.filter((f) => f.retail_low_vs_before != null && f.retail_low_vs_before <= -0.15);
-  const dropRange = drops.length ? `${Math.round(-Math.max(...drops.map((f) => f.retail_low_vs_before)) * 100)}% to ${Math.round(-Math.min(...drops.map((f) => f.retail_low_vs_before)) * 100)}%` : '—';
+  const dropRange = drops.length ? `${Math.round(-Math.max(...drops.map((f) => f.retail_low_vs_before)) * 100)}% to ${Math.round(-Math.min(...drops.map((f) => f.retail_low_vs_before)) * 100)}%` : '-';
   const covid = falls.find((f) => f.bottom === '2020-03');
   const past = (d.phases || []).filter((p) => !p.ongoing);
-  const zc = ZONE_COL[n.zone] || '#6c786f';
+  const zc = ZONE_COL[n.zone] || '#9AA49B';
 
   after.push(() => drawCharts(d));
 
@@ -104,7 +104,7 @@ export async function researchParticipation(h) {
   const histRows = (d.history || []).map((x) => ({ ...x, m12: H12(x), m24: H24(x) }));
   const hCols = [
     { k: 'label', label: 'What we saw', fmt: (r) => esc(r.label) },
-    { k: 'ep', label: 'Times', cls: 'r', v: (r) => r.m12.episodes, fmt: (r) => `${r.m12.episodes ?? '—'} <span class="sub inline">(${r.m12.months ?? '—'} months)</span>` },
+    { k: 'ep', label: 'Times', cls: 'r', v: (r) => r.m12.episodes, fmt: (r) => `${r.m12.episodes ?? '-'} <span class="sub inline">(${r.m12.months ?? '-'} months)</span>` },
     { k: 'a12', label: 'Next 12 months, all such months', cls: 'r', v: (r) => r.m12.avg, fmt: (r) => `<b class="${(r.m12.avg ?? 0) < 0 ? 'down' : 'up'}">${P(r.m12.avg, 1)}</b> <span class="sub inline">vs ${P(r.m12.all_avg, 1)} normal</span>` },
     { k: 'e12', label: 'Next 12 months, from the first month', cls: 'r', v: (r) => r.m12.ep_avg, fmt: (r) => `${P(r.m12.ep_avg, 1)} <span class="sub inline">up ${Q(r.m12.ep_up_rate)} of times</span>` },
     { k: 'a24', label: 'Next 24 months: all · first', cls: 'r', v: (r) => r.m24.avg, fmt: (r) => `${P(r.m24.avg, 0)} · ${P(r.m24.ep_avg, 0)} <span class="sub inline">vs ${P(r.m24.all_avg, 0)}</span>` },
@@ -120,10 +120,10 @@ export async function researchParticipation(h) {
     <h2>In one minute</h2>
     <ul>
       <li><b>Yes, retail trading usually dries up when the market falls.</b> In ${drops.length} of the ${falls.length} big falls since 2006, individuals' daily trading dropped ${dropRange} from where it was before the fall. ${covid ? `Covid (2020) was the exception: in the six months after the crash, retail trading ran ${Q(covid.retail_6m_after_vs_before)} <i>above</i> its pre-crash level, as a wave of new investors came in.` : ''}</li>
-      <li><b>But retail going quiet does not tell you the fall is over.</b> Its lowest month usually came in the same month as the market's bottom, so you only know afterwards. The first time retail trading fell 40% below its 12-month high, the next 12 months were about normal: ${P(rtl['12M']?.ep_avg, 0)} vs ${P(rtl['12M']?.all_avg, 0)} (${rtl['12M']?.episodes ?? '—'} times).</li>
+      <li><b>But retail going quiet does not tell you the fall is over.</b> Its lowest month usually came in the same month as the market's bottom, so you only know afterwards. The first time retail trading fell 40% below its 12-month high, the next 12 months were about normal: ${P(rtl['12M']?.ep_avg, 0)} vs ${P(rtl['12M']?.all_avg, 0)} (${rtl['12M']?.episodes ?? '-'} times).</li>
       <li><b>Foreign funds (FPIs) usually sell heavily into the bottom, then come back.</b> Months of very heavy FPI selling were followed by better two-year returns on average (${P(fpiSell['24M']?.avg, 0)} vs ${P(fpiSell['24M']?.all_avg, 0)} normally), but mostly in the later months of a long selling spell. Acting at the <i>first</i> month of heavy selling did no better than usual (${P(fpiSell['24M']?.ep_avg, 0)} over two years, ${P(fpiSell['12M']?.ep_avg, 0)} over one): the selling usually starts well before the bottom.</li>
       <li><b>Domestic funds have been the steady buyers.</b> Mutual funds, insurers and other Indian institutions ${n.dii_net_3m >= 0 ? 'bought' : 'sold'} a net ${L(n.dii_net_3m)} in the last three months, while foreign funds were net sellers in ${n.fpi_sell_months_last12} of the last 12 months.</li>
-      <li><b>Today the gauge reads ${num(n.gauge, 0)} out of 100: <span style="color:${zc}">${esc(n.zone || '—')}</span>.</b> In the last 24 months it spent ${n.fear_months_last24} months on the fearful side.</li>
+      <li><b>Today the gauge reads ${num(n.gauge, 0)} out of 100: <span style="color:${zc}">${esc(n.zone || '-')}</span>.</b> In the last 24 months it spent ${n.fear_months_last24} months on the fearful side.</li>
     </ul>
   </section>
 
@@ -131,12 +131,12 @@ export async function researchParticipation(h) {
     <div class="card-head"><h2>Where we stand today</h2><span class="sub">${mLabel(n.month)} · complete months only</span></div>
     <div class="rs-now-grid">
       <div class="rs-gauge-box">${gaugeSVG(n.gauge, n.zone)}
-        <p class="rs-g-v"><b>${num(n.gauge, 0)}</b><span style="color:${zc}">${esc(n.zone || '—')}</span></p>
-        <p class="sub">${n.run_months} month${n.run_months === 1 ? '' : 's'} in a row on the ${esc(n.run_side || '')} · a typical past fearful phase lasted ${n.past_fear_phase_median_months ?? '—'} months, the longest ${n.past_fear_phase_longest ?? '—'}</p>
+        <p class="rs-g-v"><b>${num(n.gauge, 0)}</b><span style="color:${zc}">${esc(n.zone || '-')}</span></p>
+        <p class="sub">${n.run_months} month${n.run_months === 1 ? '' : 's'} in a row on the ${esc(n.run_side || '')} · a typical past fearful phase lasted ${n.past_fear_phase_median_months ?? '-'} months, the longest ${n.past_fear_phase_longest ?? '-'}</p>
       </div>
       <div class="kpis rs-kpis">
         <div><span>Retail trading per day</span><b>${L(n.retail_cr_day)}</b><small>${P(n.retail_vs_peak)} vs its ${mLabel(n.retail_peak_month)} peak (${n.months_since_retail_peak} months ago)</small></div>
-        <div><span>Retail share of trading</span><b>${n.retail_share_nse == null ? '—' : (n.retail_share_nse * 100).toFixed(1) + '%'}</b><small>of all cash-market buying and selling (NSE's Retail line)</small></div>
+        <div><span>Retail share of trading</span><b>${n.retail_share_nse == null ? '-' : (n.retail_share_nse * 100).toFixed(1) + '%'}</b><small>of all cash-market buying and selling (NSE's Retail line)</small></div>
         <div><span>Retail, last 3 months</span><b class="${n.retail_net_3m < 0 ? 'down' : 'up'}">${L(n.retail_net_3m)} ${sign(n.retail_net_3m)}</b><small>buying minus selling</small></div>
         <div><span>Foreign funds, last 3 months</span><b class="${n.fpi_3m < 0 ? 'down' : 'up'}">${L(n.fpi_3m)} ${sign(n.fpi_3m)}</b><small>net sellers in ${n.fpi_sell_months_last12} of the last 12 months</small></div>
         <div><span>Domestic funds, last 3 months</span><b class="${n.dii_net_3m < 0 ? 'down' : 'up'}">${L(n.dii_net_3m)} ${sign(n.dii_net_3m)}</b><small>MFs, insurers, banks, AIFs, PMS</small></div>
@@ -179,7 +179,7 @@ export async function researchParticipation(h) {
 
   <h2 class="rs-h">3. How long do fearful phases last?</h2>
   <section class="card">
-    <p class="rs-p">A fearful phase is a run of months with the gauge under 40. ${past.length} have ended since ${mLabel(d.method?.gauge_from)}. The typical one (the middle of the list) lasted ${n.past_fear_phase_median_months ?? '—'} months; the longest lasted ${n.past_fear_phase_longest ?? '—'}.</p>
+    <p class="rs-p">A fearful phase is a run of months with the gauge under 40. ${past.length} have ended since ${mLabel(d.method?.gauge_from)}. The typical one (the middle of the list) lasted ${n.past_fear_phase_median_months ?? '-'} months; the longest lasted ${n.past_fear_phase_longest ?? '-'}.</p>
     ${table('rsPhases', (d.phases || []).slice().reverse(), phCols)}
   </section>
 
@@ -253,23 +253,23 @@ async function drawCharts(d) {
 export function gaugeCard(d, h) {
   const { esc, num, fDate } = h;
   const n = d.now || {};
-  const zc = ZONE_COL[n.zone] || '#6c786f';
+  const zc = ZONE_COL[n.zone] || '#9AA49B';
   const daily = d.daily || [];
   const last = daily[daily.length - 1] || {};
   const last5 = daily.slice(-5);
   const sum = (k) => (last5.length ? last5.reduce((a, x) => a + (x[k] || 0), 0) : null);
-  const crs = (x) => { if (x == null) return '—'; const a = Math.abs(x); return `₹${num(a >= 100000 ? a / 100000 : a, a >= 100000 ? 2 : 0)}${a >= 100000 ? ' L' : ''} cr`; };
-  const flow = (x) => (x == null ? '—' : `<b class="${x < 0 ? 'down' : 'up'}">${crs(x)}</b> <span class="sub inline">${x < 0 ? 'sold' : 'bought'}</span>`);
-  const pc = (x) => (x == null ? '—' : `${x > 0 ? '+' : ''}${Math.round(x * 100)}%`);
+  const crs = (x) => { if (x == null) return '-'; const a = Math.abs(x); return `₹${num(a >= 100000 ? a / 100000 : a, a >= 100000 ? 2 : 0)}${a >= 100000 ? ' L' : ''} cr`; };
+  const flow = (x) => (x == null ? '-' : `<b class="${x < 0 ? 'down' : 'up'}">${crs(x)}</b> <span class="sub inline">${x < 0 ? 'sold' : 'bought'}</span>`);
+  const pc = (x) => (x == null ? '-' : `${x > 0 ? '+' : ''}${Math.round(x * 100)}%`);
   const g = (d.series || []).filter((x) => x.gauge != null).slice(-24);
   const W = 220, H = 46, lo = 0, hi = 100;
   const pts = g.map((x, i) => `${((i * W) / Math.max(1, g.length - 1)).toFixed(1)},${(H - 3 - ((x.gauge - lo) * (H - 6)) / (hi - lo)).toFixed(1)}`).join(' ');
   const y40 = (H - 3 - (40 * (H - 6)) / 100).toFixed(1);
-  const spark = g.length > 1 ? `<svg class="pgc-spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><line x1="0" x2="${W}" y1="${y40}" y2="${y40}" stroke="#c27c3a" stroke-dasharray="3 3" stroke-width="1"/><polyline points="${pts}" fill="none" stroke="#2f6b4f" stroke-width="2" stroke-linejoin="round"/></svg>` : '';
+  const spark = g.length > 1 ? `<svg class="pgc-spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><line x1="0" x2="${W}" y1="${y40}" y2="${y40}" stroke="#E0A86A" stroke-dasharray="3 3" stroke-width="1"/><polyline points="${pts}" fill="none" stroke="#67E8A5" stroke-width="2" stroke-linejoin="round"/></svg>` : '';
   return `<section class="card pgc">
     <div class="card-head"><h2>Participation Gauge</h2><a href="#/research/participation">The research behind it →</a></div>
     <div class="pgc-grid">
-      <div class="pgc-g">${gaugeSVG(n.gauge, n.zone)}<p class="rs-g-v"><b>${num(n.gauge, 0)}</b><span style="color:${zc}">${esc(n.zone || '—')}</span></p>
+      <div class="pgc-g">${gaugeSVG(n.gauge, n.zone)}<p class="rs-g-v"><b>${num(n.gauge, 0)}</b><span style="color:${zc}">${esc(n.zone || '-')}</span></p>
         <p class="sub">How fearful (0) or crowded (100) the market is against its own past · ${mLabel(n.month)}</p></div>
       <div class="pgc-run">
         <p><b>${n.run_months}</b> month${n.run_months === 1 ? '' : 's'} in a row on the ${esc(n.run_side || '')}</p>

@@ -20,14 +20,15 @@ const live = new Set();
 export function disposeCharts() { live.forEach((c) => { try { c.remove(); } catch {} }); live.clear(); }
 
 export const C = {
-  green: '#1f4d3a', green2: '#2f6b4f', gold: '#b08d57', up: '#23794f', down: '#b4442f', blue: '#2c5a8a',
-  muted: '#6c786f', line: 'rgba(110, 100, 80, 0.13)', sage: '#9cb89a', plum: '#7a4f86',
+  // the look kit's dark colours (Concall Studio look, Sagar 2026-11-16: "like our own apps like confluence desk")
+  green: '#67E8A5', green2: '#67E8A5', gold: '#E2C88F', up: '#67E8A5', down: '#EFA28C', blue: '#9EC9E6',
+  muted: '#9AA49B', line: 'rgba(154, 164, 155, 0.13)', sage: '#8FBF9A', plum: '#C3A3D6',
 };
-export const PALETTE = [C.green2, C.gold, C.blue, C.down, C.plum, C.sage, '#c27c3a', '#4f8a8b'];
+export const PALETTE = [C.green2, C.gold, C.blue, C.down, C.plum, C.sage, '#E0A86A', '#7FC4C4'];
 
-const inr = (v, d = 0) => (v == null || isNaN(v) ? '—' : Number(v).toLocaleString('en-IN', { maximumFractionDigits: d, minimumFractionDigits: d }));
+const inr = (v, d = 0) => (v == null || isNaN(v) ? '-' : Number(v).toLocaleString('en-IN', { maximumFractionDigits: d, minimumFractionDigits: d }));
 // ₹ crore in short Indian form: 135703 -> "1.36 L cr", 9484 -> "9,484 cr"
-export const crShort = (v) => (v == null || isNaN(v) ? '—' : Math.abs(v) >= 100000 ? `${(v / 100000).toFixed(2)} L cr` : `${inr(v)} cr`);
+export const crShort = (v) => (v == null || isNaN(v) ? '-' : Math.abs(v) >= 100000 ? `${(v / 100000).toFixed(2)} L cr` : `${inr(v)} cr`);
 
 /**
  * Time-series chart.
@@ -43,7 +44,7 @@ export async function timeChart(el, series, opts = {}) {
   const fmtAxis = opts.percent ? (v) => `${v.toFixed(Math.abs(v) < 10 ? 1 : 0)}%` : (v) => inr(v, Math.abs(v) < 100 ? 1 : 0);
   const ch = L.createChart(el, {
     autoSize: true,
-    layout: { background: { type: 'solid', color: 'transparent' }, textColor: C.muted, fontFamily: 'Inter, system-ui, sans-serif', fontSize: 11 },
+    layout: { background: { type: 'solid', color: 'transparent' }, textColor: C.muted, fontFamily: '"IBM Plex Mono", Consolas, monospace', fontSize: 11 },
     grid: { vertLines: { visible: false }, horzLines: { color: C.line } },
     rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.12, bottom: 0.08 } },
     leftPriceScale: { visible: series.some((s) => s.scale === 'left'), borderVisible: false, scaleMargins: { top: 0.12, bottom: 0.08 } },
