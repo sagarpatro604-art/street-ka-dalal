@@ -17,7 +17,7 @@ export const dGet = (path) => { const [a, b] = path.split('.'); return ST[a][b];
 // RRG and Portfolio X-ray are their own tabs since Sagar 2026-11-16 ("rrg as a separate new tab, not in discover,
 // portfolio x ray also as a separate at the end"); old #/discover/rrg and #/discover/xray links still open them
 const SECS = [
-  ['', 'Overview'], ['triggers', 'All triggers'], ['investors', 'Big investors'], ['valuation', 'Market valuation'],
+  ['', 'Stock lists'], ['triggers', 'Board of all triggers'], ['investors', 'Big investors'], ['valuation', 'Market valuation'],
   ['management', 'What management said'], ['mystocks', 'My stocks this week'],
 ];
 const load = (n) => H.hist('discover/' + n).catch(() => null);
@@ -49,7 +49,7 @@ export async function viewDiscover(helpers, sec) {
   if (sec === 'valuation') return valuation();
   if (sec === 'management') return management();
   if (sec === 'mystocks') return mystocks();
-  return overview();
+  return H.T.viewTerminal(H, 'discover', { prem: PREM });
 }
 
 /* ---------------- premium lock (after the free days) ---------------- */

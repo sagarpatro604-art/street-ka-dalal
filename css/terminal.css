@@ -288,3 +288,11 @@ body.nav-mini { --nav-w: 60px; }
 .pf-tbl td .sub { display: block; }
 .pf-lot td { background: var(--surface-2); font-size: 12.5px; }
 @media (max-width: 900px) { .pf-add { grid-template-columns: 1fr 1fr; } .pf-find { grid-column: 1 / -1; } }
+
+/* ---------------------------------------------------------------- Discover in the stock-list layout */
+.tw-why { margin: 0 18px 10px; padding: 10px 14px; border: 1px solid var(--line-2); border-radius: 10px; background: var(--surface); }
+.tw-why .k-label { margin: 0 0 6px; }
+.tw-why ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 13px; color: var(--ink-2); }
+.tw-lists a.k-chip { height: 24px; font-size: 11.5px; text-decoration: none; }
+.tw-lists a.k-chip:hover { border-color: var(--accent-line); color: var(--ink); }
+.tw-about .k-pill { margin-left: 4px; }

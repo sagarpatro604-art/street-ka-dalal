@@ -7,10 +7,26 @@
 let H = null; // helpers from app.js
 export function setHelpers(h) { H = h; }
 const $ = (s, r = document) => r.querySelector(s);
-const KEY = 'skd.term';
-const S = (() => { try { return { list: 'wl', sym: '', tf: 'D', sort: null, filt: '', ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch { return { list: 'wl', sym: '', tf: 'D', sort: null, filt: '' }; } })();
-const saveS = () => { try { localStorage.setItem(KEY, JSON.stringify({ list: S.list, sym: S.sym, tf: S.tf, sort: S.sort })); } catch {} };
-export const pickStock = (sym) => { S.sym = String(sym || '').toUpperCase(); saveS(); };
+// two screens share this code: Stock watch (#/) and Discover (#/discover, Discovery Desk's lists, Sagar 2026-11-16:
+// "add whole bucket of discovery desk into discovery"); each keeps its own list / stock / sort
+const KEYS = { watch: 'skd.term', discover: 'skd.dterm' };
+let MODE = 'watch';
+const loadS = (k, dflt) => { try { return { sym: '', tf: 'D', sort: null, filt: '', ...dflt, ...JSON.parse(localStorage.getItem(k) || '{}') }; } catch { return { sym: '', tf: 'D', sort: null, filt: '', ...dflt }; } };
+const STATES = { watch: loadS(KEYS.watch, { list: 'wl' }), discover: loadS(KEYS.discover, { list: 'today:pos' }) };
+let S = STATES.watch;
+const saveS = () => { try { localStorage.setItem(KEYS[MODE], JSON.stringify({ list: S.list, sym: S.sym, tf: S.tf, sort: S.sort })); } catch {} };
+export const pickStock = (sym) => { const w = STATES.watch; w.sym = String(sym || '').toUpperCase(); try { localStorage.setItem(KEYS.watch, JSON.stringify({ list: w.list, sym: w.sym, tf: w.tf, sort: w.sort })); } catch {} };
+
+/* ---------------- Discovery Desk lists (data/discover/lists.json + lists_<group>.json) ---------------- */
+let DL = null, DPREM = null;
+const DG = {};
+async function ensureGroup(id) {
+  const l = (DL?.lists || []).find((x) => x.id === id);
+  if (!l || DG[l.f]) return;
+  try { DG[l.f] = (await H.hist('discover/lists_' + l.f)).lists || {}; } catch { DG[l.f] = {}; }
+}
+const deskRow = (id, sym) => { const l = (DL?.lists || []).find((x) => x.id === id); return l ? (DG[l.f]?.[id] || []).find((r) => r.s === sym) : null; };
+const DLINKS = [['triggers', 'Board of all triggers'], ['investors', 'Big investors'], ['valuation', 'Market valuation'], ['management', 'What management said'], ['mystocks', 'My stocks this week']];
 
 /* ---------------- my watchlists (named lists, saved on the member's login) ---------------- */
 let WLS = null; // [{ name, syms }], syms newest first
@@ -61,6 +77,10 @@ const bySym = (rows) => [...new Set((rows || []).map((r) => r && r.sym).filter(B
 
 // Every list: id, group, name, a one-line "what is this", and the symbols in its own order
 function lists(D) {
+  if (MODE === 'discover') {
+    return (DL?.lists || []).map((l) => ({ id: l.id, g: l.g, n: l.n, f: l.f, desk: true, about: l.about,
+      syms: () => (DG[l.f]?.[l.id] || []).map((r) => r.s) }));
+  }
   const { st, scr, mkt, hub, mf } = D;
   const info = st.info, daily = st.daily;
   const byCap = Object.keys(daily).filter((s) => info[s] && daily[s].mc != null).sort((a, b) => daily[b].mc - daily[a].mc);
@@ -99,8 +119,11 @@ export function fresh(day, label = 'Close') {
 }
 
 /* ---------------- the main screen ---------------- */
-export async function viewTerminal(helpers) {
+export async function viewTerminal(helpers, mode = 'watch', extra = {}) {
   H = helpers;
+  MODE = mode;
+  S = STATES[mode];
+  DPREM = extra.prem || null;
   H.after(mount);
   return `<div class="tw" id="tw">
   <aside class="tw-left" aria-label="Lists and their stocks">
@@ -113,7 +136,7 @@ export async function viewTerminal(helpers) {
     </div>
     <div class="tw-head" id="twHead"></div>
     <div class="tw-list" id="twRows" tabindex="0"><div class="tw-empty">Loading stocks</div></div>
-    <div class="tw-foot" id="twFoot">&uarr; / &darr; walk the list &middot; W watchlist</div>
+    <div class="tw-foot" id="twFoot">&uarr; / &darr; walk the list &middot; W adds to your list</div>
   </aside>
   <section class="tw-main" id="twMain" tabindex="-1"><div class="tw-empty">Pick a stock on the left.</div></section>
 </div>`;
@@ -125,12 +148,20 @@ async function mount() {
   if (!root) return;
   D = await all();
   await wlLoad();
+  if (MODE === 'discover') {
+    try { DL = await H.hist('discover/lists'); } catch { DL = { lists: [] }; }
+    if (!DL.lists.length) { $('#twRows').innerHTML = '<div class="tw-empty">The lists are being put together. Please check back this evening.</div>'; return; }
+    if (!DL.lists.find((l) => l.id === S.list)) S.list = DL.lists[0].id;
+    await ensureGroup(S.list);
+  } else {
+    if (S.list === 'wl') S.list = 'wl0';
+    LISTS = lists(D);
+    if (!LISTS.find((l) => l.id === S.list)) S.list = 'wl0';
+    if (S.list === 'wl0' && !(WLS[0]?.syms || []).length) S.list = 'cap100';
+  }
   LISTS = lists(D);
-  if (S.list === 'wl') S.list = 'wl0';
-  if (!LISTS.find((l) => l.id === S.list)) S.list = 'wl0';
-  if (S.list === 'wl0' && !(WLS[0]?.syms || []).length) S.list = 'cap100';
   fillPicker();
-  $('#twList').addEventListener('change', (e) => { S.list = e.target.value; S.filt = ''; $('#twFilt').value = ''; saveS(); fillPicker(); paintList(true); });
+  $('#twList').addEventListener('change', async (e) => { S.list = e.target.value; S.filt = ''; $('#twFilt').value = ''; saveS(); if (MODE === 'discover') { $('#twRows').innerHTML = '<div class="tw-empty">Loading</div>'; await ensureGroup(S.list); } fillPicker(); paintList(true); });
   $('#twLists').addEventListener('click', onListsClick);
   $('#twFilt').addEventListener('input', (e) => { S.filt = e.target.value; paintList(false); });
   $('#twHead').addEventListener('click', (e) => { const k = e.target.closest('[data-k]')?.dataset.k; if (!k) return; S.sort = S.sort?.k === k ? { k, d: -S.sort.d } : { k, d: k === 'sym' ? 1 : -1 }; saveS(); paintList(false); });
@@ -144,9 +175,11 @@ function fillPicker() {
   LISTS = lists(D);
   const groups = [...new Set(LISTS.map((l) => l.g))];
   $('#twList').innerHTML = groups.map((g) => `<optgroup label="${H.esc(g)}">${LISTS.filter((l) => l.g === g).map((l) => `<option value="${H.esc(l.id)}">${H.esc(l.n)}</option>`).join('')}</optgroup>`).join('');
-  if (!LISTS.find((l) => l.id === S.list)) S.list = 'wl0';
+  if (!LISTS.find((l) => l.id === S.list)) S.list = MODE === 'discover' ? (LISTS[0]?.id || '') : 'wl0';
   $('#twList').value = S.list;
-  $('#twLists').innerHTML = `<button class="k-chip" data-wlact="new">New list</button>${isMine(S.list) ? '<button class="k-chip" data-wlact="rename">Rename</button><button class="k-chip" data-wlact="delete">Delete</button>' : ''}`;
+  $('#twLists').innerHTML = MODE === 'discover'
+    ? DLINKS.map(([k, t]) => `<a class="k-chip" href="#/discover/${k}">${t}</a>`).join('')
+    : `<button class="k-chip" data-wlact="new">New list</button>${isMine(S.list) ? '<button class="k-chip" data-wlact="rename">Rename</button><button class="k-chip" data-wlact="delete">Delete</button>' : ''}`;
 }
 function onListsClick(e) {
   const a = e.target.closest('[data-wlact]')?.dataset.wlact;
@@ -157,11 +190,12 @@ function onListsClick(e) {
 }
 function rowsOf(list) {
   const { info, daily } = D.st;
-  return list.syms().filter((s) => info[s]).map((s, i) => { const d = daily[s] || {}; return { sym: s, n: info[s].n || s, p: d.p, c: (d.r || [])[0], mc: d.mc ?? info[s].mc, i }; });
+  const when = list.desk ? Object.fromEntries((DG[list.f]?.[list.id] || []).map((r) => [r.s, r.d])) : {};
+  return list.syms().filter((s) => info[s]).map((s, i) => { const d = daily[s] || {}; return { sym: s, n: (info[s].n || s) + (when[s] ? ' · ' + H.fShort(String(when[s]).slice(0, 10)) : ''), p: d.p, c: (d.r || [])[0], mc: d.mc ?? info[s].mc, i }; });
 }
 function paintList(reset) {
   const list = LISTS.find((l) => l.id === S.list) || LISTS[0];
-  $('#twAbout').textContent = list.about;
+  $('#twAbout').innerHTML = H.esc(list.about) + (MODE === 'discover' && DPREM?.mode === 'trial' && DPREM.days_left != null ? ` <span class="k-pill warn" title="After the free days Discover is a Premium service">Free ${DPREM.days_left} more days</span>` : '');
   ROWS = rowsOf(list);
   const f = S.filt.trim().toUpperCase();
   CUR = f ? ROWS.filter((r) => r.sym.includes(f) || r.n.toUpperCase().includes(f)) : ROWS.slice();
@@ -209,6 +243,7 @@ async function select(sym, user, scrollList) {
       <button class="k-btn" data-twact="dalal" title="Ask Dalal about this stock">Ask Dalal</button>
       <span class="links"><a class="k-link" href="${H.tvUrl(sym)}" target="_blank" rel="noopener">TradingView</a><a class="k-link" href="${H.screenerUrl(sym)}" target="_blank" rel="noopener">Screener</a></span>
     </div>
+    ${whyCard(sym)}
     <div class="tw-chart" id="twChart"></div>
     <p class="tw-note">TradingView's public chart of the BSE listing (TradingView does not allow NSE charts on other websites; prices match NSE within paise, volume is BSE only). 50 and 200-day averages. The NSE chart: the TradingView button.</p>
     <div class="tw-strip">${['1D', '1W', '1M', '3M', '6M', '1Y'].map((k, i) => `<span><b>${k}</b><em class="${H.tone(r[i])}">${H.pct(r[i], 1)}</em></span>`).join('')}
@@ -220,6 +255,17 @@ async function select(sym, user, scrollList) {
     if (seq !== paneSeq) return;
     $('#twBody').innerHTML = body;
   } catch (e) { if (seq === paneSeq) $('#twBody').innerHTML = `<div class="tw-empty">Could not load the details: ${H.esc(e.message)}</div>`; }
+}
+
+// Discover: why this stock is on the list (the Discovery Desk events behind it)
+function whyCard(sym) {
+  if (MODE !== 'discover') return '';
+  const r = deskRow(S.list, sym);
+  const l = (DL?.lists || []).find((x) => x.id === S.list);
+  if (!r || !l) return '';
+  const cls = (g) => (g === 'pos' ? 'ok' : g === 'neg' ? 'bad' : 'info');
+  return `<section class="tw-why"><p class="k-label">Why ${H.esc(sym)} is on "${H.esc(l.n.replace(/ \(\d+\)$/, ''))}"</p>
+    <ul>${r.ev.map((e) => `<li><span class="k-pill ${cls(e.g)}">${H.esc(e.b || '')}</span> <span class="k-faint">${e.d ? H.fDate(e.d) : ''}</span> ${H.esc(e.t || '')}${e.u ? ` <a href="${H.esc(e.u)}" target="_blank" rel="noopener">Filing</a>` : ''}</li>`).join('')}</ul></section>`;
 }
 
 function onMainClick(e) {

@@ -1845,14 +1845,14 @@ async function premAdmin(body) {
   return r.json().catch(() => ({ error: 'No answer from the server.' }));
 }
 // what the stock-watch screen, heatmap and compare pages (js/terminal.js) use from here
-const termHelp = () => ({ A, data, hist, stkAll, esc, num, pct, tone, pd, fDate, fShort, fDay, fDT, meta: () => meta, tvUrl, screenerUrl, extLinks, symLink, chip, ic, CH, mcapCr, pageHead, toast,
+const termHelp = () => ({ T, A, data, hist, stkAll, esc, num, pct, tone, pd, fDate, fShort, fDay, fDT, meta: () => meta, tvUrl, screenerUrl, extLinks, symLink, chip, ic, CH, mcapCr, pageHead, toast,
   filingsData, fresh: T.fresh, myLists: T.myLists, wlLoad: () => T.wlLoad(), premium, whatsapp: SOCIAL.whatsapp,
   after: (f) => after.push(f), stockBody: (s) => viewStock(s, true), setDalal: setDalalContext, openDalal });
 
 /* ---------------- shell, routing ---------------- */
 // the left side menu (Sagar 2026-11-16: "every tab should be in left hand side ... like sector scope"); '#' rows are group titles
 const NAV_G = [
-  ['#', 'Watch'], ['', 'Stock watch', 'watch'], ['discover', 'Discover', 'compass'], ['discover/triggers', 'All triggers', '', 1], ['discover/investors', 'Big investors', '', 1], ['discover/valuation', 'Market valuation', '', 1], ['discover/management', 'What management said', '', 1], ['discover/mystocks', 'My stocks this week', '', 1], ['heatmap', 'Heatmap', 'heat'], ['rrg', 'Rotation (RRG)', 'rrg'],
+  ['#', 'Watch'], ['', 'Stock watch', 'watch'], ['discover', 'Discover', 'compass'], ['discover/triggers', 'Board of all triggers', '', 1], ['discover/investors', 'Big investors', '', 1], ['discover/valuation', 'Market valuation', '', 1], ['discover/management', 'What management said', '', 1], ['discover/mystocks', 'My stocks this week', '', 1], ['heatmap', 'Heatmap', 'heat'], ['rrg', 'Rotation (RRG)', 'rrg'],
   ['#', 'Market'], ['premarket', 'Pre-market', 'sun'], ['market', 'Market', 'market'], ['sectors', 'Sectors', 'sector'], ['funds', 'Mutual funds', 'funds'],
   ['#', 'Research'], ['screeners', 'Screeners', 'screen'], ['equity', 'Research', 'search'], ['results', 'Results', 'file'], ['news', 'News', 'news'], ['research', 'Prop. Research', 'lab'],
   ['#', 'Learn'], ['library', 'Library', 'book'], ['insights', 'Insights', 'pen'],
@@ -1886,7 +1886,7 @@ async function render() {
   const top = r.split('/')[0];
   document.querySelectorAll('#topnav a').forEach((a) => { const n = a.dataset.nav; a.classList.toggle('on', n.includes('/') ? r === n : n === (['stock', 'stocks'].includes(top) ? 'equity' : top) && !(top === 'discover' && r.split('/')[1])); });
   T.setHelpers(termHelp());
-  document.body.classList.toggle('term', top === '');
+  document.body.classList.toggle('term', top === '' || r === 'discover');
   setDalalContext(null);
   const seq = ++renderSeq;
   after.length = 0;
