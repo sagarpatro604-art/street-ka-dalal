@@ -20,7 +20,15 @@ const SECS = [
 ];
 const load = (n) => H.hist('discover/' + n).catch(() => null);
 const subnav = (cur) => `<nav class="dc-nav">${SECS.map(([k, t]) => `<a href="#/discover${k ? '/' + k : ''}" class="${k === cur ? 'on' : ''}">${t}</a>`).join('')}</nav>`;
-const head = (cur, title, extra = '') => `${H.pageHead('Discover', title, extra)}${subnav(cur)}`;
+let PREM = null;
+const banner = () => {
+  const p = PREM;
+  if (!p) return '';
+  if (p.mode === 'premium') return `<p class="dc-prem ok">Premium active until <b>${H.fDate(String(p.ends).slice(0, 10))}</b> (${p.days_left} days left).</p>`;
+  if (p.mode === 'trial' && p.days_left != null) return `<p class="dc-prem">Free for you for <b>${p.days_left} more day${p.days_left === 1 ? '' : 's'}</b> (until ${H.fDate(String(p.ends).slice(0, 10))}). After that Discover is a Premium service, unlocked with a coupon.</p>`;
+  return '';
+};
+const head = (cur, title, extra = '') => `${H.pageHead('Discover', title, extra)}${subnav(cur)}${banner()}`;
 const sym = (s) => H.symLink(s);
 const name = (s, info) => (info[s]?.n ? `<span class="sub">${H.esc(info[s].n)}</span>` : '');
 const signCls = (g) => (g === 'pos' ? 'good' : g === 'neg' ? 'bad' : '');
@@ -29,8 +37,9 @@ const builtNote = (d) => (d?.built ? `<span class="k-pill plain" title="When thi
 
 export async function viewDiscover(helpers, sec) {
   H = helpers;
-  await H.wlLoad();
+  [PREM] = await Promise.all([H.premium(), H.wlLoad()]);
   sec = sec || '';
+  if (!PREM.active) return locked(sec);
   if (sec === 'investors') return investors();
   if (sec === 'valuation') return valuation();
   if (sec === 'rrg') return rrg();
@@ -38,6 +47,21 @@ export async function viewDiscover(helpers, sec) {
   if (sec === 'mystocks') return mystocks();
   if (sec === 'xray') return xray();
   return overview();
+}
+
+/* ---------------- premium lock (after the free days) ---------------- */
+function locked(sec) {
+  const t = (SECS.find(([k]) => k === sec) || SECS[0])[1];
+  return `${H.pageHead('Discover', sec ? t : 'Discover', '<span class="k-pill warn">Premium</span>')}${subnav(sec)}
+  <section class="card dc-lock">
+    <p class="eyebrow">Premium service</p>
+    <h2>Your ${PREM.trial_days || 60}-day free look at Discover ended${PREM.ends ? ' on ' + H.fDate(String(PREM.ends).slice(0, 10)) : ''}.</h2>
+    <p>Discover is now part of Street ka Dalal Premium. Have a coupon? Type it below to unlock it.</p>
+    <ul class="dc-lock-list">${SECS.slice(1).map(([, n]) => `<li>${n}</li>`).join('')}</ul>
+    <div class="dc-coupon"><input id="dcCoupon" placeholder="Coupon code, like SKD-XXXX-XXXX" autocomplete="off" spellcheck="false"><button class="btn primary" data-act="dcCoupon">Unlock</button></div>
+    <p class="sub" id="dcCouponMsg"></p>
+    <p class="sub">Need a coupon? Ask us in the ${H.whatsapp ? `<a href="${H.esc(H.whatsapp)}" target="_blank" rel="noopener">WhatsApp community</a>` : 'WhatsApp community'}.</p>
+  </section>`;
 }
 
 /* ---------------- overview ---------------- */

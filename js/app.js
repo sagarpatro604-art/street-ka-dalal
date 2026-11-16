@@ -1,5 +1,5 @@
 import * as A from './auth.js';
-import { SITE, DALAL_API } from './config.js';
+import { SITE, DALAL_API, SOCIAL } from './config.js';
 import { mountDalal, setDalalContext, openDalal } from './dalal.js';
 import * as CH from './charts.js';
 import * as RS from './research.js';
@@ -1544,7 +1544,7 @@ async function adminUpdates() {
 async function viewAdmin() {
   if (!A.isAdmin()) return '<div class="empty card">This area is for the admin.</div>';
   const t = ui.admin.tab;
-  const tabs = [['publisher', 'Publisher'], ['updates', 'Updates & change log'], ['members', 'Members'], ['logins', 'Login log'], ['asks', 'Dalal questions'], ['regs', 'Registrations'], ['quiz', 'Persona test'], ['hz', 'Humanizer'], ['status', 'Data status']];
+  const tabs = [['publisher', 'Publisher'], ['updates', 'Updates & change log'], ['members', 'Members'], ['logins', 'Login log'], ['asks', 'Dalal questions'], ['regs', 'Registrations'], ['quiz', 'Persona test'], ['hz', 'Humanizer'], ['premium', 'Premium'], ['status', 'Data status']];
   if (!ui.purged) { ui.purged = true; A.purgeOld(90).then((n) => n && toast(`Cleaned ${n} records older than 90 days`)).catch(() => {}); }
   let body = '';
   if (t === 'publisher') {
@@ -1558,6 +1558,31 @@ async function viewAdmin() {
         { k: 'updatedAt', label: 'Updated', fmt: (p) => fDT(p.updatedAt) },
         { k: 'id', label: '', fmt: (p) => `<button class="btn sm" data-act="editPost" data-id="${esc(p.id)}">Edit</button> ${p.status === 'published' ? `<a class="btn sm ghost" href="#/post/${esc(p.id)}">View</a>` : ''}` },
       ], 'No posts yet. Write your first one.')}</section>`;
+    }
+  } else if (t === 'premium') {
+    const d = await premAdmin();
+    if (d.error) body = `<div class="empty card">Could not load Premium: ${esc(d.error)}</div>`;
+    else {
+      const ac = d.access || [];
+      const n = (m) => ac.filter((x) => x.mode === m).length;
+      body = `<div class="stats big"><div><b>${d.total}</b><span>opened Discover</span></div><div><b>${n('trial')}</b><span>in the ${d.trial_days}-day free trial</span></div><div><b>${n('premium')}</b><span>premium (coupon)</span></div><div><b>${n('expired')}</b><span>trial ended, locked</span></div></div>
+      <section class="card"><h2>Make a coupon</h2><p class="sub">Leave the code empty and one is made for you (like SKD-7KQ2-M9XP). Uses 0 = any number of members can use it; 1 = one member only.</p>
+        <div class="toolbar"><input id="pcCode" placeholder="Code (optional)" style="max-width:200px"><input id="pcDays" type="number" min="1" placeholder="Premium days" style="max-width:140px"><input id="pcMax" type="number" min="0" placeholder="Uses (0 = any)" style="max-width:150px"><input id="pcUntil" type="date" title="Code works until (optional)" style="max-width:170px"><input id="pcNote" placeholder="Note (who it is for)" style="max-width:240px"><button class="btn primary" data-act="premCreate">Make coupon</button></div></section>
+      <section class="card flush"><div class="card-head pad"><h2>Coupons</h2></div>${table('pcoupons', d.coupons || [], [
+        { k: 'code', label: 'Code', fmt: (c) => `<b class="sym">${esc(c.code)}</b> <button class="btn sm ghost" data-act="premCopy" data-v="${esc(c.code)}">Copy</button>` },
+        { k: 'days', label: 'Days', cls: 'r' }, { k: 'uses', label: 'Used', fmt: (c) => `${c.uses} of ${c.max_uses ? c.max_uses : 'any'}`, cls: 'r' },
+        { k: 'valid_until', label: 'Works until', fmt: (c) => (c.valid_until ? fDate(c.valid_until) : 'no end') }, { k: 'note', label: 'Note', fmt: (c) => esc(c.note || '') },
+        { k: 'created', label: 'Made', fmt: (c) => fDT(c.created) },
+        { k: 'active', label: '', fmt: (c) => `<button class="btn sm" data-act="premActive" data-v="${esc(c.code)}" data-on="${c.active ? '0' : '1'}">${c.active ? 'Switch off' : 'Switch on'}</button>` },
+      ], 'No coupons yet.')}</section>
+      <section class="card flush"><div class="card-head pad"><h2>Coupons used</h2></div>${table('predeem', d.redeemed || [], [
+        { k: 'at', label: 'When', fmt: (x) => fDT(x.at) }, { k: 'email', label: 'Member', fmt: (x) => esc(x.email) }, { k: 'code', label: 'Code', fmt: (x) => esc(x.code) }, { k: 'until', label: 'Premium until', fmt: (x) => fDate(String(x.until).slice(0, 10)) },
+      ], 'No coupon used yet.')}</section>
+      <section class="card flush"><div class="card-head pad"><h2>Members and their Discover access</h2></div>${table('paccess', ac, [
+        { k: 'email', label: 'Member', fmt: (x) => `<b>${esc(x.name || '')}</b><span class="sub">${esc(x.email)}</span>` },
+        { k: 'mode', label: 'Now', fmt: (x) => chip(x.mode === 'trial' ? 'Free trial' : x.mode === 'premium' ? 'Premium' : 'Locked', x.mode === 'expired' ? 'warn' : 'good') },
+        { k: 'days_left', label: 'Days left', cls: 'r' }, { k: 'first_seen', label: 'First opened', fmt: (x) => fDT(x.first_seen) }, { k: 'last_seen', label: 'Last opened', fmt: (x) => fDT(x.last_seen) }, { k: 'opens', label: 'Opens', cls: 'r' },
+      ], 'Nobody has opened Discover yet.')}</section>`;
     }
   } else if (t === 'updates') {
     body = await adminUpdates();
@@ -1778,20 +1803,59 @@ async function viewResearchItem(id) {
 /* ---------------- library ---------------- */
 const lbHelp = () => ({ esc, pageHead, fDate, ic, after });
 const viewLibrary = () => LB.libraryHome(lbHelp());
+// Discover access: 60 days free from the first visit, then Premium (coupon). The start date lives on the server.
+const PREMIUM_API = location.hostname.endsWith('pages.dev') ? '/api/premium' : 'https://street-ka-dalal.pages.dev/api/premium';
+let premCache = null;
+async function premium(force) {
+  if (A.state.demo) {
+    let forced = null; try { forced = localStorage.getItem('skd.demo.premium'); } catch {}
+    const end = new Date(Date.now() + 54 * 86400000).toISOString();
+    return forced === 'expired' ? { mode: 'expired', active: false, trial_days: 60, ends: new Date(Date.now() - 86400000).toISOString(), days_left: 0, demo: true }
+      : { mode: 'trial', active: true, trial_days: 60, ends: end, trial_end: end, days_left: 54, demo: true };
+  }
+  if (premCache && !force && Date.now() - premCache.at < 10 * 60000) return premCache.v;
+  const key = 'skd.prem.' + (A.state.user?.uid || '');
+  try {
+    const t = await A.idToken();
+    const r = await fetch(PREMIUM_API, { headers: { Authorization: `Bearer ${t}` }, signal: AbortSignal.timeout(12000) });
+    const d = await r.json();
+    if (!r.ok || d.error) throw new Error(d.error || 'no answer');
+    premCache = { at: Date.now(), v: d };
+    try { localStorage.setItem(key, JSON.stringify(d)); } catch {}
+    return d;
+  } catch {
+    // the access server did not answer: use the last known answer, and never lock anyone out on our own failure
+    let last = null; try { last = JSON.parse(localStorage.getItem(key) || 'null'); } catch {}
+    return last ? { ...last, offline: true } : { mode: 'trial', active: true, days_left: null, offline: true };
+  }
+}
+async function redeem(code) {
+  if (A.state.demo) return { error: 'Coupons work on the live site.' };
+  const t = await A.idToken();
+  const r = await fetch(PREMIUM_API, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` }, body: JSON.stringify({ coupon: code }), signal: AbortSignal.timeout(15000) });
+  const d = await r.json().catch(() => ({ error: 'No answer from the server.' }));
+  if (d.ok) premCache = { at: Date.now(), v: d };
+  return d;
+}
+async function premAdmin(body) {
+  const t = await A.idToken();
+  const r = await fetch(PREMIUM_API + (body ? '' : '?admin=1'), body ? { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` }, body: JSON.stringify(body) } : { headers: { Authorization: `Bearer ${t}` } });
+  return r.json().catch(() => ({ error: 'No answer from the server.' }));
+}
 // what the stock-watch screen, heatmap and compare pages (js/terminal.js) use from here
 const termHelp = () => ({ A, data, hist, stkAll, esc, num, pct, tone, pd, fDate, fShort, fDay, fDT, meta: () => meta, tvUrl, screenerUrl, extLinks, symLink, chip, ic, CH, mcapCr, pageHead, toast,
-  filingsData, fresh: T.fresh, myLists: T.myLists, wlLoad: () => T.wlLoad(),
+  filingsData, fresh: T.fresh, myLists: T.myLists, wlLoad: () => T.wlLoad(), premium, whatsapp: SOCIAL.whatsapp,
   after: (f) => after.push(f), stockBody: (s) => viewStock(s, true), setDalal: setDalalContext, openDalal });
 
 /* ---------------- shell, routing ---------------- */
 // the left side menu (Sagar 2026-11-16: "every tab should be in left hand side ... like sector scope"); '#' rows are group titles
 const NAV_G = [
-  ['#', 'Watch'], ['', 'Stock watch', 'watch'], ['discover', 'Discover', 'compass'], ['heatmap', 'Heatmap', 'heat'],
+  ['#', 'Watch'], ['', 'Stock watch', 'watch'], ['discover', 'Discover', 'compass'], ['discover/investors', 'Big investors', '', 1], ['discover/valuation', 'Market valuation', '', 1], ['discover/rrg', 'Rotation (RRG)', '', 1], ['discover/management', 'What management said', '', 1], ['discover/mystocks', 'My stocks this week', '', 1], ['discover/xray', 'Portfolio X-ray', '', 1], ['heatmap', 'Heatmap', 'heat'],
   ['#', 'Market'], ['premarket', 'Pre-market', 'sun'], ['market', 'Market', 'market'], ['sectors', 'Sectors', 'sector'], ['funds', 'Mutual funds', 'funds'],
   ['#', 'Research'], ['screeners', 'Screeners', 'screen'], ['equity', 'Research', 'search'], ['results', 'Results', 'file'], ['news', 'News', 'news'], ['research', 'Prop. Research', 'lab'],
   ['#', 'Learn'], ['library', 'Library', 'book'], ['insights', 'Insights', 'pen'],
 ];
-const NAV = NAV_G.filter(([r]) => r !== '#');
+const NAV = NAV_G.filter(([r, , , sub]) => r !== '#' && !sub);
 const route = () => location.hash.replace(/^#\/?/, '');
 const VIEWS = { '': () => T.viewTerminal(termHelp()), heatmap: () => T.viewHeatmap(termHelp()), discover: () => DC.viewDiscover(termHelp(), ''), premarket: viewPremarket, market: viewMarket, screeners: viewScreeners, sectors: viewSectors, funds: viewFunds, equity: viewEquity, stocks: () => { ui.eq.tab = 'companies'; return viewEquity(); }, results: viewResults, news: viewNews, insights: viewInsights, admin: viewAdmin, research: viewResearch, library: viewLibrary };
 
@@ -1799,7 +1863,7 @@ function shell() {
   const u = A.state.user;
   const topEl = document.querySelector('.top');
   if (topEl) document.documentElement.style.setProperty('--top-h', `${topEl.offsetHeight}px`);
-  $('#topnav').innerHTML = u ? [...NAV_G, ...(A.isAdmin() ? [['#', 'Admin'], ['admin', 'Admin', 'admin']] : [])].map(([r, l, i]) => (r === '#' ? `<p class="nv-g">${l}</p>` : `<a href="#/${r}" data-nav="${r}" title="${l}">${ic(i, 17)}<span>${l}</span></a>`)).join('')
+  $('#topnav').innerHTML = u ? [...NAV_G, ...(A.isAdmin() ? [['#', 'Admin'], ['admin', 'Admin', 'admin']] : [])].map(([r, l, i, sub]) => (r === '#' ? `<p class="nv-g">${l}</p>` : sub ? `<a href="#/${r}" data-nav="${r}" class="nv-sub" title="${l}"><span>${l}</span></a>` : `<a href="#/${r}" data-nav="${r}" title="${l}">${ic(i, 17)}<span>${l}</span>${r === 'discover' ? '<small class="nv-tag">Premium</small>' : ''}</a>`)).join('')
     + `<button class="nv-tog" data-act="navTog" title="Narrow or wide menu" aria-label="Narrow or wide menu">${ic('side', 17)}<span>Narrow menu</span></button>` : '';
   document.body.classList.toggle('nav-mini', navMini());
   $('#me').innerHTML = u ? `<button class="me" data-act="menu" aria-label="Account">${u.photo ? `<img src="${esc(u.photo)}" alt="" referrerpolicy="no-referrer">` : `<i>${esc((u.name || '?')[0])}</i>`}</button>
@@ -1817,7 +1881,7 @@ async function render() {
   if (!A.state.user) { view.innerHTML = viewSignIn(); document.title = SITE.name; return; }
   const r = route();
   const top = r.split('/')[0];
-  document.querySelectorAll('#topnav a').forEach((a) => a.classList.toggle('on', a.dataset.nav === (['stock', 'stocks'].includes(top) ? 'equity' : top)));
+  document.querySelectorAll('#topnav a').forEach((a) => { const n = a.dataset.nav; a.classList.toggle('on', n.includes('/') ? r === n : n === (['stock', 'stocks'].includes(top) ? 'equity' : top) && !(top === 'discover' && r.split('/')[1])); });
   T.setHelpers(termHelp());
   document.body.classList.toggle('term', top === '');
   setDalalContext(null);
@@ -1846,6 +1910,22 @@ let toastT;
 function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2400); }
 
 const ACTS = {
+  dcCoupon: async (el) => {
+    const i = $('#dcCoupon'); const code = (i?.value || '').trim();
+    const msg = $('#dcCouponMsg');
+    if (!code) { if (msg) msg.textContent = 'Type the coupon code first.'; return; }
+    el.disabled = true; if (msg) msg.textContent = 'Checking...';
+    try { const d = await redeem(code); if (d.ok) { toast(`Premium unlocked for ${d.added_days} days`); render(); } else if (msg) msg.textContent = d.error || 'That did not work.'; }
+    catch { if (msg) msg.textContent = 'No answer from the server. Please try again.'; }
+    el.disabled = false;
+  },
+  premCreate: async () => {
+    const v = (id) => ($(id)?.value || '').trim();
+    const d = await premAdmin({ action: 'create', code: v('#pcCode'), days: v('#pcDays'), max_uses: v('#pcMax'), valid_until: v('#pcUntil'), note: v('#pcNote') });
+    toast(d.ok ? `Coupon ${d.code} made` : d.error || 'Could not make the coupon'); if (d.ok) render();
+  },
+  premActive: async (el) => { const d = await premAdmin({ action: 'active', code: el.dataset.v, active: el.dataset.on === '1' }); toast(d.ok ? 'Saved' : d.error || 'Could not save'); render(); },
+  premCopy: async (el) => { try { await navigator.clipboard.writeText(el.dataset.v); toast('Copied ' + el.dataset.v); } catch { prompt('Copy this code', el.dataset.v); } },
   navTog: () => { const on = !document.body.classList.contains('nav-mini'); try { localStorage.setItem('skd.navmini', on ? '1' : '0'); } catch {} document.body.classList.toggle('nav-mini', on); window.dispatchEvent(new Event('resize')); },
   dcSet: (el) => { const k = el.dataset.k, v = el.dataset.v ?? ''; DC.dSet(k, /\.(mine|broad)$/.test(k) ? v === '1' : /\.n$/.test(k) ? Number(v) : v); const href = el.getAttribute('href'); if (href && href !== location.hash) location.hash = href; else render(); },
   dcXray: () => { DC.xraySave($('#dcX')?.value || ''); render(); },

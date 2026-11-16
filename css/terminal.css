@@ -247,3 +247,20 @@ body.nav-mini { --nav-w: 60px; }
   .dc-rel > div { grid-template-columns: 1fr; gap: 4px; }
   .dc-bars > div { grid-template-columns: 120px minmax(0, 1fr) 50px; }
 }
+
+/* ---------------------------------------------------------------- Discover premium: trial line, lock, menu sub-items */
+.dc-prem { margin: -6px 0 16px; padding: 9px 12px; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--sand) 35%, transparent); background: var(--sand-soft); color: var(--ink-2); font-size: 13.5px; }
+.dc-prem.ok { border-color: var(--accent-line); background: var(--accent-soft); }
+.dc-lock { max-width: 720px; padding: 26px 28px; }
+.dc-lock h2 { font-size: 28px; margin: 4px 0 10px; }
+.dc-lock-list { columns: 2; margin: 14px 0 18px; padding-left: 18px; color: var(--ink-2); font-size: 14px; }
+.dc-coupon { display: flex; gap: 10px; flex-wrap: wrap; }
+.dc-coupon input { flex: 1; min-width: 220px; height: 40px; padding: 0 12px; font: 500 14px var(--mono); letter-spacing: .04em; text-transform: uppercase; }
+.nv-tag { margin-left: auto; padding: 1px 6px; border-radius: 5px; font: 500 9.5px/1.5 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--sand); background: var(--sand-soft); }
+@media (min-width: 901px) {
+  #topnav.topnav a.nv-sub { padding: 5px 10px 5px 37px; font-size: 12.5px; color: var(--faint); }
+  #topnav.topnav a.nv-sub:hover { color: var(--ink); }
+  #topnav.topnav a.nv-sub.on { color: var(--ink); }
+  body.nav-mini #topnav a.nv-sub, body.nav-mini .nv-tag { display: none; }
+}
+@media (max-width: 900px) { #topnav a.nv-sub, .nv-tag { display: none; } }
