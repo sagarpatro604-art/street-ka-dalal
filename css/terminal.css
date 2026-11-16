@@ -139,3 +139,9 @@ body.term .foot { display: none; }
 /* the peeking mascot would sit on the chart: on the stock-watch screen Dalal opens from the "Ask Dalal" button */
 body.term .dalal-peek { display: none; }
 .tw-row:focus, .tw-list:focus { outline: none; }
+
+/* every page uses the whole screen width (Sagar 2026-11-16: "i want all the page to be full width");
+   only an article (.post) keeps a reading width */
+main { max-width: none; padding: 22px 28px 40px; }
+.foot p { max-width: none; padding: 18px 28px 28px; }
+@media (max-width: 760px) { main { padding: 18px 14px 32px; } .foot p { padding: 16px 14px 24px; } }
