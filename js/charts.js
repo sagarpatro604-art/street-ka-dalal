@@ -18,6 +18,9 @@ export function lw() {
 
 const live = new Set();
 export function disposeCharts() { live.forEach((c) => { try { c.remove(); } catch {} }); live.clear(); }
+// charts made outside timeChart (the stock chart in js/scan.js) register here so a page change removes them too
+export function track(ch) { live.add(ch); return ch; }
+export function untrack(ch) { if (!ch) return; live.delete(ch); try { ch.remove(); } catch {} }
 
 // the look kit's colours (Concall Studio look, Sagar 2026-11-16: "like our own apps like confluence desk"); dark is the
 // default, light = the kit's paper theme (Sagar 2026-11-17: "add a light theme option")

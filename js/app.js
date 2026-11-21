@@ -5,6 +5,7 @@ import * as CH from './charts.js';
 import * as RS from './research.js';
 import * as LB from './library.js';
 import * as T from './terminal.js';
+import * as SC from './scan.js';
 import * as DC from './discover.js';
 
 /* ---------------- helpers ---------------- */
@@ -111,8 +112,6 @@ async function data(name) {
 
 /* ---------------- ui state ---------------- */
 const ui = {
-  scr: { tab: 'flag_pole', q: '', sector: 'all' },
-  sec: { period: '1D' },
   pm: { story: 'ai', sent: 'all', more: false },
   mkt: { idx: 'Nifty 50', cmp: '', range: '1Y', itab: 'broad' },
   stk: { q: '', sector: 'all', limit: 100 },
@@ -277,21 +276,6 @@ async function drawIdxChart() {
   }
 }
 
-async function drawBreadth() {
-  const el = $('#brChart');
-  if (!el) return;
-  const h = await hist('hist/breadth');
-  const ser = (k) => h.d.map((t, i) => ({ time: t, value: h[k]?.[i] }));
-  const n500 = (await idxPoints('Nifty 500', '1Y')).filter((p) => p.time >= h.d[0]);
-  await CH.timeChart(el, [
-    { name: '% above 200-DMA', type: 'line', color: CH.C.green2, data: ser('a200'), fmt: (v) => `${v.toFixed(1)}%` },
-    { name: '% above 50-DMA', type: 'line', color: CH.C.gold, data: ser('a50'), fmt: (v) => `${v.toFixed(1)}%` },
-    { name: 'Nifty 500', type: 'line', color: '#8a8f86', dashed: true, width: 1, scale: 'left', data: n500, fmt: (v) => num(v, 0) },
-  ], { percent: true, legend: $('#brLegend') });
-  const nh = $('#nhChart');
-  if (nh) await CH.timeChart(nh, [{ name: 'Net new highs', type: 'hist', axis: (v) => num(v), data: h.d.map((t, i) => ({ time: t, value: h.nnh?.[i], color: (h.nnh?.[i] || 0) >= 0 ? CH.C.up : CH.C.down })), fmt: (v) => num(v) }], { legend: $('#nhLegend') });
-}
-
 async function drawFlows() {
   const box = $('#fiiBars');
   if (!box) return;
@@ -434,9 +418,10 @@ async function viewMarket() {
     { k: 'from_high', label: 'From 52W high', fmt: (r) => `<span class="${r.from_high < -10 ? 'down' : ''}">${pct(r.from_high, 1)}</span>`, cls: 'r' }];
   const streak = fl.fii_streak || {};
   const heatList = (m.sector_heat || []).slice().sort((a, c) => (c.score ?? 0) - (a.score ?? 0));
-  after.push(drawIdxChart, drawBreadth, drawFlows);
+  await SC.scanData().catch(() => null);
+  after.push(drawIdxChart, SC.drawInternals, drawFlows);
   const delta = (o) => (o && o.now != null && o['1m_ago'] != null ? o.now - o['1m_ago'] : null);
-  return `${pageHead('Market intelligence', 'Market today', `<span class="mood ${b.state === 'Risk-on' ? 'up' : b.state === 'Risk-off' ? 'down' : ''}" title="${esc(String(md2.note || '').replace(/�/g, '-'))}">Mood: ${esc(b.state || '-')}</span>`)}
+  return `${pageHead('Market intelligence', 'Market today')}
   ${dataNote(m)}
   <section class="idx-grid">${(m.indices || []).map((i) => `<button class="card idx" data-act="pickIdx" data-v="${esc(i.name === 'NIFTY 50' ? 'Nifty 50' : i.name === 'NIFTY 500' ? 'Nifty 500' : i.name === 'NIFTY MIDCAP 150' ? 'Nifty Midcap 150' : i.name === 'NIFTY SMALLCAP 250' ? 'Nifty Smallcap 250' : i.name)}">
     <p class="idx-name">${esc(i.name)}</p>
@@ -445,6 +430,8 @@ async function viewMarket() {
     ${spark(i.spark, 160, 40)}
     <p class="idx-meta"><span>1W <b class="${tone(i.returns?.['1W'])}">${pct(i.returns?.['1W'], 1)}</b></span><span>1M <b class="${tone(i.returns?.['1M'])}">${pct(i.returns?.['1M'], 1)}</b></span><span>1Y <b class="${tone(i.returns?.['12M'])}">${pct(i.returns?.['12M'], 1)}</b></span></p>
   </button>`).join('')}</section>
+
+  ${SC.marketReadCard()}
 
   <section class="card" id="idxCard">
     <div class="card-head"><h2>Index chart</h2><span class="sub">Official NSE closes since 2005 · 42 indices</span></div>
@@ -480,15 +467,7 @@ async function viewMarket() {
 
   ${pg && pg.now ? RS.gaugeCard(pg, rsHelp()) : ''}
 
-  <section class="card">
-    <div class="card-head"><h2>Breadth: how many stocks are in uptrends</h2><span class="sub">last 12 months · dashed line = Nifty 500 (left scale)</span></div>
-    <p class="sub">When the index rises but fewer stocks stay above their 200-day average, the rally is narrow. A healthy market lifts most stocks.</p>
-    <div class="chart-legend" id="brLegend"><span><i style="background:${CH.C.green2}"></i>% above 200-DMA</span><span><i style="background:${CH.C.gold}"></i>% above 50-DMA</span><span><i style="background:#8a8f86"></i>Nifty 500</span></div>
-    <div class="chart-box" id="brChart"></div>
-    <div class="card-head" style="margin-top:14px"><h3>Net new 52-week highs</h3><span class="sub">new highs minus new lows, each day</span></div>
-    <div class="chart-legend" id="nhLegend"></div>
-    <div class="chart-box short" id="nhChart"></div>
-  </section>
+  ${SC.internalsCard()}
 
   <section class="card">
     <div class="card-head"><h2>FII / DII flows</h2><span class="sub">cash market, ₹ crore · since ${fDate(fl.from)}</span></div>
@@ -573,7 +552,7 @@ async function viewStocks(embedded) {
 async function viewStock(sym, embed = false) {
   sym = decodeURIComponent(sym || '').toUpperCase();
   const [one, news, scr, mfs, feed, fo] = await Promise.all([stkOne(sym), filingsData(), data('screeners').catch(() => ({})), hist('mf/stocks').catch(() => ({})), newsfeed(), fundOne(sym).catch(() => ({}))]);
-  const [resRows, tvd] = await Promise.all([resHistory(sym), tvData()]);
+  const [resRows, tvd] = await Promise.all([resHistory(sym), tvData(), SC.scanData().catch(() => null)]);
   const tvS = (tvd.summaries || {})[sym];
   const inNews = [...((feed.movers || {})[sym] || []), ...(feed.items || []).filter((i) => (i.sy || []).includes(sym))].filter((i, k, a) => a.findIndex((j) => j.t === i.t) === k).slice(0, 8);
   const x = one.info, d = one.d || {};
@@ -600,7 +579,7 @@ async function viewStock(sym, embed = false) {
       <div class="ret-grid">${RET.map((k, i) => `<div><span>${k}</span><b class="${tone(r[i])}">${pct(r[i], 1)}</b></div>`).join('')}</div>
       <dl class="kv"><dt>From 52-week high</dt><dd class="${(d.hi ?? 0) < -15 ? 'down' : ''}">${pct(d.hi, 1)}${d.nh ? ' ' + chip('new 52W high', 'good') : ''}${d.nl ? ' ' + chip('new 52W low', 'warn') : ''}</dd>
         <dt>Above moving averages</dt><dd>${['20', '50', '200'].map((k, i) => chip(`${k}-DMA`, dma[i] ? 'good' : '')).join(' ')}</dd>
-        <dt>Relative strength (0–100)</dt><dd>${num(d.rs)}</dd></dl>
+        <dt>RS rating (1-99)</dt><dd>${num(SC.row(sym)?.rs)}</dd></dl>
     </section>
     <section class="card"><h2>Company</h2>
       <dl class="kv"><dt>Sector</dt><dd>${esc(x.sec || '-')}</dd><dt>Industry</dt><dd>${esc(x.ind || '-')}</dd>
@@ -1094,76 +1073,14 @@ function fundCard(g, updated) {
   </div>`;
 }
 
-const PATTERN_COLS = {
-  flag_pole: [{ k: 'pole_gain', label: 'Pole gain', fmt: (r) => pct(r.pole_gain, 1), cls: 'r' }, { k: 'flag_bars', label: 'Flag days', cls: 'r' }, { k: 'flag_depth', label: 'Flag depth', fmt: (r) => `${num(r.flag_depth, 1)}%`, cls: 'r' }, { k: 'breakout_level', label: 'Breakout level', fmt: (r) => num(r.breakout_level, 2), cls: 'r' }],
-  rectangle: [{ k: 'base_bars', label: 'Base (days)', cls: 'r' }, { k: 'base_depth', label: 'Base depth', fmt: (r) => `${num(r.base_depth, 1)}%`, cls: 'r' }, { k: 'ceiling', label: 'Ceiling', fmt: (r) => num(r.ceiling, 2), cls: 'r' }, { k: 'touches_top', label: 'Touches', cls: 'r' }],
-  early_base: [{ k: 'base_bars', label: 'Base (days)', cls: 'r' }, { k: 'base_depth', label: 'Base depth', fmt: (r) => `${num(r.base_depth, 1)}%`, cls: 'r' }, { k: 'ceiling', label: 'Ceiling', fmt: (r) => num(r.ceiling, 2), cls: 'r' }, { k: 'from_ceiling', label: 'Below ceiling', fmt: (r) => `${num(r.from_ceiling, 1)}%`, cls: 'r' }, { k: 'prior_gain', label: 'Run-up before', fmt: (r) => pct(r.prior_gain, 1), cls: 'r' }],
-  high_52w: [{ k: 'high_52w', label: 'Old 52W high', fmt: (r) => num(r.high_52w, 2), cls: 'r' }, { k: 'days_since_high', label: 'Days since', cls: 'r' }],
-};
 const LEAD_TABS = [['leaders', 'RS leaders', 'Stocks with the strongest 12-month relative strength (RS rating 80+), liquid and mostly in Stage 2 uptrends.'],
   ['momentum', 'Momentum', 'The fastest movers over the last 1–3 months among liquid stocks.'],
   ['emerging', 'Emerging strength', 'Stocks whose relative strength rating jumped sharply in recent weeks: early names in new moves.'],
   ['new_highs', 'At new highs', 'Leaders trading at or within 2% of their 52-week high.']];
 
-async function viewScreeners() {
-  const d = await data('screeners');
-  const tabs = [...(d.patterns || []).map((p) => [p.key, p.title.replace(/ \(.*/, '')]), ...LEAD_TABS.map(([k, l]) => [k, l])];
-  const tab = tabs.some(([k]) => k === ui.scr.tab) ? ui.scr.tab : tabs[0]?.[0];
-  const p = (d.patterns || []).find((x) => x.key === tab);
-  const lt = LEAD_TABS.find(([k]) => k === tab);
-  let rows = p ? p.rows : (d.leadership?.[tab] || []);
-  const sectors = [...new Set(rows.map((r) => r.sector).filter(Boolean))].sort();
-  const q = ui.scr.q.trim().toLowerCase();
-  rows = rows.filter((r) => (ui.scr.sector === 'all' || r.sector === ui.scr.sector) && (!q || `${r.sym} ${r.name || ''}`.toLowerCase().includes(q)));
-  const h = p?.history || {};
-  const cols = p
-    ? [{ k: 'sym', label: 'Stock', fmt: stockCell }, { k: 'sector', label: 'Sector', fmt: (r) => esc(r.sector || '-') }, { k: 'status', label: 'Status', fmt: (r) => `${chip(r.status === 'breakout' ? 'Breakout' : r.status === 'in base' ? 'Setting up' : r.status || '-', r.status === 'breakout' ? 'good' : '')}<span class="sub">${fDate(r.date)}</span>`, v: (r) => r.date },
-      { k: 'last', label: 'Last', fmt: (r) => num(r.last, 2), cls: 'r' }, ...(PATTERN_COLS[tab] || [])]
-    : [{ k: 'sym', label: 'Stock', fmt: stockCell }, { k: 'sector', label: 'Sector', fmt: (r) => esc(r.sector || '-') }, { k: 'rs', label: 'RS rating', fmt: (r) => `<b>${r.rs ?? '-'}</b>${r.rs_change ? ` <span class="sub ${tone(r.rs_change)}">${r.rs_change > 0 ? '▲' : '▼'}${Math.abs(r.rs_change)}</span>` : ''}`, cls: 'r' },
-      pctCell('ret_1m'), pctCell('ret_3m'), pctCell('ret_6m'), { k: 'from_high', label: 'From 52W high', fmt: (r) => `${num(r.from_high, 1)}%`, cls: 'r' }, { k: 'stage2', label: 'Stage 2', fmt: (r) => (r.stage2 ? chip('Yes', 'good') : '-') }];
-  cols.find((c) => c.k === 'ret_1m') && Object.assign(cols.find((c) => c.k === 'ret_1m'), { label: '1M' });
-  cols.find((c) => c.k === 'ret_3m') && Object.assign(cols.find((c) => c.k === 'ret_3m'), { label: '3M' });
-  cols.find((c) => c.k === 'ret_6m') && Object.assign(cols.find((c) => c.k === 'ret_6m'), { label: '6M' });
-  return `${pageHead('Screeners', 'Stock screeners')}
-  ${dataNote(d)}
-  <div class="tabs" role="tablist">${tabs.map(([k, l]) => `<button class="tab ${k === tab ? 'on' : ''}" data-act="scrTab" data-v="${k}">${esc(l)}</button>`).join('')}${(d.coming || []).map((c) => `<span class="tab soon" title="Coming soon">${esc(c)} · soon</span>`).join('')}</div>
-  <section class="card explain">
-    <h2>${esc(p ? p.title : lt?.[1] || '')}</h2>
-    <p>${esc(p ? p.idea : lt?.[2] || '')}</p>
-    ${p && h.events ? `<div class="stats"><div><b>${num(h.hit_rate, 1)}%</b><span>past setups that reached the measured move</span></div><div><b>${num(h.events)}</b><span>past setups tested on NSE data</span></div><div><b class="up">${pct(h.avg_win, 1)}</b><span>average win</span></div><div><b class="down">${pct(h.avg_loss, 1)}</b><span>average loss</span></div></div>` : ''}
-    <p class="sub">${num(rows.length)} stock${rows.length === 1 ? '' : 's'} today${p?.scanned ? ` · ${num(p.scanned)} scanned` : ''}. A screen shows a setup, not a recommendation.</p>
-  </section>
-  <div class="toolbar"><label class="search">${ic('search', 16)}<input placeholder="Search stock" value="${esc(ui.scr.q)}" data-input="scrQ"></label>
-    <select data-change="scrSector" aria-label="Sector"><option value="all">All sectors</option>${sectors.map((s) => `<option ${s === ui.scr.sector ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></div>
-  <section class="card flush">${table('scr-' + tab, rows, cols, 'No stock fits this screen today.')}</section>`;
-}
-
-async function viewSectors() {
-  const d = await data('sectors');
-  const P = ui.sec.period;
-  const rows = (d.sectors || []).map((x) => ({ ...x, ret: x.returns?.[P] }));
-  const maxAbs = Math.max(0.01, ...rows.map((x) => Math.abs(x.ret || 0)));
-  const cols = [{ k: 'rank', label: '#', cls: 'r' }, { k: 'name', label: 'Sector', fmt: (r) => `<b>${esc(r.name)}</b><span class="sub">${num(r.n)} stocks</span>` },
-    { k: 'ret', label: `Return ${P}`, fmt: (r) => `<span class="cellbar"><i class="${tone(r.ret)}" style="width:${(Math.abs(r.ret || 0) * 100) / maxAbs}%"></i></span><b class="${tone(r.ret)}">${pct(r.ret, 1)}</b>`, cls: 'r' },
-    { k: 'trend', label: 'Trend', fmt: (r) => esc(r.trend || '-') }, { k: 'quadrant', label: 'Rotation', fmt: (r) => quadChip(r.quadrant) },
-    { k: 'above_50', label: 'Above 50-DMA', fmt: (r) => (r.above_50 == null ? '-' : `${num(r.above_50, 0)}%`), cls: 'r' },
-    { k: 'rank_change', label: 'Rank move', fmt: (r) => (r.rank_change ? `<span class="${tone(-r.rank_change)}">${r.rank_change < 0 ? '▲' : '▼'} ${Math.abs(r.rank_change)}</span>` : '-'), v: (r) => -(r.rank_change || 0), cls: 'r' }];
-  const icols = [{ k: 'name', label: 'Index', fmt: (r) => `<b>${esc(r.name)}</b>` }, ...['1D', '1W', '1M', '3M'].map((k) => ({ k, label: k, v: (r) => r.returns?.[k], fmt: (r) => `<span class="${tone(r.returns?.[k])}">${pct(r.returns?.[k], 1)}</span>`, cls: 'r' })), { k: 'quadrant', label: 'Rotation', fmt: (r) => quadChip(r.quadrant) }];
-  const m = await data('market').catch(() => ({}));
-  return `${pageHead('Market intelligence', 'Sector-wise coverage')}
-  ${dataNote(d)}
-  <div class="tabs">${['1D', '1W', '1M', '3M', '6M', '12M'].map((k) => `<button class="tab ${k === P ? 'on' : ''}" data-act="secPeriod" data-v="${k}">${k}</button>`).join('')}</div>
-  <section class="card flush">${table('sectors', rows, cols)}</section>
-  <p class="sub legend">Rotation: <b>Leading</b> = strong and getting stronger · <b>Weakening</b> = strong but slowing · <b>Lagging</b> = weak · <b>Improving</b> = weak but picking up (relative to the market).</p>
-  <div class="grid2">
-    <section class="card"><div class="card-head"><h2>Strongest industries</h2><span class="sub">ranked daily · days in the top group</span></div>
-      <ol class="ranklist">${(d.top_industries || []).slice(0, 15).map((g) => `<li><span><b>${esc(g.name)}</b><span class="sub">${esc(g.sector || '')}</span></span><span class="r">${quadChip(g.quad_w)}<span class="${tone(g.ret_1m)}">${pct(g.ret_1m, 1)} 1M</span><span class="sub">${g.streak || 1} day${g.streak === 1 ? '' : 's'}</span></span></li>`).join('')}</ol>
-    </section>
-    <section class="card"><div class="card-head"><h2>Themes</h2><span class="sub">1-month return · rotation</span></div>
-      <div class="theme-grid">${(d.themes || []).slice().sort((a, b) => (b.ret_1m ?? -99) - (a.ret_1m ?? -99)).map((t) => `<div class="theme ${tone(t.ret_1m)}"><b>${esc(t.name)}</b><span>${pct(t.ret_1m, 1)}</span><small>${esc(t.quadrant || '')} · ${t.n || ''} stocks</small></div>`).join('')}</div>
-    </section>
-  </div>
-  <section class="card flush"><div class="card-head pad"><h2>Sectoral indices</h2><span class="sub">NSE indices</span></div>${table('sidx', m.sectoral || [], icols)}</section>`;
+// Groups > Rotation (RRG): the RRG chart under the Groups tab bar (Sagar 2026-11-21: RRG becomes a tab inside Groups)
+async function viewGroupsRRG() {
+  return `<div class="tabs grp-tabs"><a class="tab" href="#/sectors">Groups</a><a class="tab on" href="#/sectors/rrg">Rotation (RRG)</a></div>${await DC.viewRRG(termHelp())}`;
 }
 
 /* ---------------- mutual funds ---------------- */
@@ -1849,20 +1766,20 @@ async function premAdmin(body) {
 // what the stock-watch screen, heatmap and compare pages (js/terminal.js) use from here
 const termHelp = () => ({ T, A, data, hist, stkAll, esc, num, pct, tone, pd, fDate, fShort, fDay, fDT, meta: () => meta, tvUrl, screenerUrl, extLinks, symLink, chip, ic, CH, mcapCr, pageHead, toast,
   filingsData, fresh: T.fresh, myLists: T.myLists, wlLoad: () => T.wlLoad(), premium, whatsapp: SOCIAL.whatsapp,
-  after: (f) => after.push(f), stockBody: (s) => viewStock(s, true), setDalal: setDalalContext, openDalal });
+  after: (f) => after.push(f), stockBody: (s) => viewStock(s, true), setDalal: setDalalContext, openDalal, table, heat, quadChip });
 
 /* ---------------- shell, routing ---------------- */
 // the left side menu (Sagar 2026-11-16: "every tab should be in left hand side ... like sector scope"); '#' rows are group titles
 const NAV_G = [
-  ['#', 'Watch'], ['', 'Stock watch', 'watch'], ['discover', 'Discover', 'compass'], ['discover/triggers', 'Board of all triggers', '', 1], ['discover/investors', 'Big investors', '', 1], ['discover/valuation', 'Market valuation', '', 1], ['discover/management', 'What management said', '', 1], ['discover/mystocks', 'My stocks this week', '', 1], ['heatmap', 'Heatmap', 'heat'], ['rrg', 'Rotation (RRG)', 'rrg'],
-  ['#', 'Market'], ['premarket', 'Pre-market', 'sun'], ['market', 'Market', 'market'], ['sectors', 'Sectors', 'sector'], ['funds', 'Mutual funds', 'funds'],
-  ['#', 'Research'], ['screeners', 'Screeners', 'screen'], ['equity', 'Research', 'search'], ['results', 'Results', 'file'], ['news', 'News', 'news'], ['research', 'Prop. Research', 'lab'],
+  ['#', 'Watch'], ['', 'Stock watch', 'watch'], ['screeners', 'Screeners', 'screen'], ['sectors', 'Groups', 'sector'], ['heatmap', 'Heatmap', 'heat'], ['discover', 'Discover', 'compass'], ['discover/triggers', 'Board of all triggers', '', 1], ['discover/investors', 'Big investors', '', 1], ['discover/valuation', 'Market valuation', '', 1], ['discover/management', 'What management said', '', 1], ['discover/mystocks', 'My stocks this week', '', 1],
+  ['#', 'Market'], ['premarket', 'Pre-market', 'sun'], ['market', 'Market', 'market'], ['funds', 'Mutual funds', 'funds'],
+  ['#', 'Research'], ['equity', 'Research', 'search'], ['results', 'Results', 'file'], ['news', 'News', 'news'], ['research', 'Prop. Research', 'lab'],
   ['#', 'Learn'], ['library', 'Library', 'book'], ['insights', 'Insights', 'pen'],
   ['#', 'My portfolio'], ['portfolio', 'Portfolio X-ray', 'brief'],
 ];
 const NAV = NAV_G.filter(([r, , , sub]) => r !== '#' && !sub);
 const route = () => location.hash.replace(/^#\/?/, '');
-const VIEWS = { '': () => T.viewTerminal(termHelp()), heatmap: () => T.viewHeatmap(termHelp()), discover: () => DC.viewDiscover(termHelp(), ''), rrg: () => DC.viewRRG(termHelp()), portfolio: () => DC.viewPortfolio(termHelp()), premarket: viewPremarket, market: viewMarket, screeners: viewScreeners, sectors: viewSectors, funds: viewFunds, equity: viewEquity, stocks: () => { ui.eq.tab = 'companies'; return viewEquity(); }, results: viewResults, news: viewNews, insights: viewInsights, admin: viewAdmin, research: viewResearch, library: viewLibrary };
+const VIEWS = { '': () => T.viewTerminal(termHelp()), heatmap: () => T.viewHeatmap(termHelp()), discover: () => DC.viewDiscover(termHelp(), ''), rrg: () => { location.replace('#/sectors/rrg'); return ''; }, portfolio: () => DC.viewPortfolio(termHelp()), premarket: viewPremarket, market: viewMarket, screeners: () => T.viewTerminal(termHelp(), 'scan'), sectors: () => (route().split('/')[1] === 'rrg' ? viewGroupsRRG() : T.viewTerminal(termHelp(), 'groups')), funds: viewFunds, equity: viewEquity, stocks: () => { ui.eq.tab = 'companies'; return viewEquity(); }, results: viewResults, news: viewNews, insights: viewInsights, admin: viewAdmin, research: viewResearch, library: viewLibrary };
 
 function shell() {
   const u = A.state.user;
@@ -1888,7 +1805,7 @@ async function render() {
   const top = r.split('/')[0];
   document.querySelectorAll('#topnav a').forEach((a) => { const n = a.dataset.nav; a.classList.toggle('on', n.includes('/') ? r === n : n === (['stock', 'stocks'].includes(top) ? 'equity' : top) && !(top === 'discover' && r.split('/')[1])); });
   T.setHelpers(termHelp());
-  document.body.classList.toggle('term', top === '' || r === 'discover');
+  document.body.classList.toggle('term', top === '' || r === 'discover' || top === 'screeners' || r === 'sectors');
   setDalalContext(null);
   const seq = ++renderSeq;
   after.length = 0;
@@ -1960,8 +1877,8 @@ const ACTS = {
   menu: () => { const m = $('#menu'); m.hidden = !m.hidden; },
   copyLink: async () => { try { await navigator.clipboard.writeText(location.href.split('#')[0]); toast('Link copied, paste it in Chrome or Safari'); } catch { toast(location.href.split('#')[0]); } },
   sort: (el) => { const k = el.dataset.t; const cur = ui.sort[k]; ui.sort[k] = { k: el.dataset.k, dir: cur?.k === el.dataset.k ? -cur.dir : -1 }; render(); },
-  scrTab: (el) => { ui.scr.tab = el.dataset.v; ui.scr.sector = 'all'; render(); },
-  secPeriod: (el) => { ui.sec.period = el.dataset.v; ui.sort.sectors = { k: 'ret', dir: -1 }; render(); },
+  openList: (el) => { location.hash = T.pickList(el.dataset.v); },
+  mrRange: (el) => { SC.setMrRange(el.dataset.v); document.querySelectorAll('#intCard [data-act=mrRange]').forEach((b) => b.classList.toggle('on', b.dataset.v === el.dataset.v)); SC.drawInternals(); },
   pickIdx: (el) => { ui.mkt.idx = el.dataset.v; if (ui.mkt.cmp === ui.mkt.idx) ui.mkt.cmp = ''; if (route().split('/')[0] !== 'market') { location.hash = '#/market'; return; } render().then(() => $('#idxCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' })); },
   pmStory: (el) => { ui.pm.story = el.dataset.v; render(); },
   pmSent: (el) => { ui.pm.sent = el.dataset.v; ui.pm.more = false; render(); },
@@ -2072,7 +1989,6 @@ const ACTS = {
 const INPUTS = {
   dcGd: (el) => { DC.dSet('gd.q', el.value); rerenderKeepingFocus(el); },
   libQ: (el) => LB.libSearch(lbHelp(), el.value),
-  scrQ: (el) => { ui.scr.q = el.value; rerenderKeepingFocus(el); },
   newsQ: (el) => { ui.news.q = el.value; rerenderKeepingFocus(el); },
   resQ: (el) => { ui.res.q = el.value; rerenderKeepingFocus(el); },
   clQ: (el) => { ui.admin.clq = el.value; rerenderKeepingFocus(el); },
@@ -2083,7 +1999,6 @@ const INPUTS = {
 };
 const CHANGES = {
   hzQ: (el) => { ui.admin.hzQ = el.value.trim(); ui.admin.hzRow = null; render(); },
-  scrSector: (el) => { ui.scr.sector = el.value; render(); },
   eqF: (el) => { ui.eq.f[el.dataset.k] = el.type === 'checkbox' ? el.checked : el.value; render(); },
   stkSector: (el) => { ui.stk.sector = el.value; ui.stk.limit = 100; render(); },
   newsSrc: (el) => { ui.news.src = el.value; ui.news.limit = 60; render(); },
@@ -2126,7 +2041,7 @@ window.addEventListener('beforeunload', (e) => { if (ui.edit?.dirty) { e.prevent
 // A tab left open for days (common on phones) never reloads on its own. When the reader comes back to
 // the tab, and every 10 minutes while it is open: new site code -> reload (unless they are typing);
 // new evening data -> redraw the page with it.
-const CODE = ['./', 'js/app.js', 'js/auth.js', 'js/dalal.js', 'js/charts.js', 'js/config.js', 'js/library.js', 'js/terminal.js', 'js/discover.js', 'css/style.css', 'css/terminal.css', 'css/look_kit.css'];
+const CODE = ['./', 'js/app.js', 'js/auth.js', 'js/dalal.js', 'js/charts.js', 'js/config.js', 'js/library.js', 'js/terminal.js', 'js/discover.js', 'js/scan.js', 'css/scan.css', 'css/style.css', 'css/terminal.css', 'css/look_kit.css'];
 let codeSig = null;
 async function codeVersion() {
   // Cloudflare answers HEAD with 503. A GET with cache 'no-cache' asks "changed since my copy?" (If-None-Match):

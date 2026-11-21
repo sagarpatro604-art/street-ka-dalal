@@ -40,7 +40,7 @@ const builtNote = (d) => (d?.built ? `<span class="k-pill plain" title="When thi
 export async function viewDiscover(helpers, sec) {
   H = helpers;
   sec = sec || '';
-  if (sec === 'rrg') { location.replace('#/rrg'); return ''; }
+  if (sec === 'rrg') { location.replace('#/sectors/rrg'); return ''; }
   if (sec === 'xray') { location.replace('#/portfolio'); return ''; }
   [PREM] = await Promise.all([H.premium(), H.wlLoad()]);
   if (!PREM.active) return locked(sec);
