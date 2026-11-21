@@ -8,6 +8,7 @@ import * as T from './terminal.js';
 import * as SC from './scan.js';
 import * as DC from './discover.js';
 import * as RP from './resplus.js';
+import * as LP from './landing.js';
 
 /* ---------------- helpers ---------------- */
 const $ = (s, r = document) => r.querySelector(s);
@@ -197,6 +198,12 @@ async function filingsData() {
 
 /* ---------------- views ---------------- */
 function viewSignIn() {
+  // the landing page (Sagar 2026-11-21): about the terminal and its two co-founders, with the Google sign-in
+  const inApp = A.inAppBrowser();
+  return LP.landingHtml({ inApp, error: A.state.error || '', logo: LOGO,
+    signInBtn: `<button class="btn google lg" data-act="signIn">${GOOGLE}<span>Continue with Google</span></button>` });
+}
+function viewSignInCard() {
   const inApp = A.inAppBrowser();
   return `<section class="welcome">
     <div class="welcome-card">
@@ -1777,12 +1784,12 @@ const NAV_G = [
   ['#', 'Watch'], ['', 'Stock watch', 'watch'], ['screeners', 'Screeners', 'screen'], ['sectors', 'Groups', 'sector'], ['heatmap', 'Heatmap', 'heat'], ['discover', 'Discover', 'compass'], ['discover/triggers', 'Board of all triggers', '', 1], ['discover/investors', 'Big investors', '', 1], ['discover/valuation', 'Market valuation', '', 1], ['discover/management', 'What management said', '', 1], ['discover/mystocks', 'My stocks this week', '', 1],
   ['#', 'Market'], ['premarket', 'Pre-market', 'sun'], ['market', 'Market', 'market'], ['funds', 'Mutual funds', 'funds'],
   ['#', 'Research'], ['equity', 'Research', 'search'], ['results', 'Results', 'file'], ['resplus', 'Reactions after results', '', 1], ['resplus/sectors', 'Sectors after results', '', 1], ['resplus/pool', 'Profit pool', '', 1], ['resplus/guidance', 'Guidance changes', '', 1], ['resplus/season', 'Season report', '', 1], ['news', 'News', 'news'], ['research', 'Prop. Research', 'lab'],
-  ['#', 'Learn'], ['library', 'Library', 'book'], ['insights', 'Insights', 'pen'],
+  ['#', 'Learn'], ['library', 'Library', 'book'], ['insights', 'Insights', 'pen'], ['about', 'About us', 'link'],
   ['#', 'My portfolio'], ['portfolio', 'Portfolio X-ray', 'brief'],
 ];
 const NAV = NAV_G.filter(([r, , , sub]) => r !== '#' && !sub);
 const route = () => location.hash.replace(/^#\/?/, '');
-const VIEWS = { '': () => T.viewTerminal(termHelp()), heatmap: () => T.viewHeatmap(termHelp()), discover: () => DC.viewDiscover(termHelp(), ''), rrg: () => { location.replace('#/sectors/rrg'); return ''; }, portfolio: () => DC.viewPortfolio(termHelp()), premarket: viewPremarket, market: viewMarket, screeners: () => T.viewTerminal(termHelp(), 'scan'), sectors: () => (route().split('/')[1] === 'rrg' ? viewGroupsRRG() : T.viewTerminal(termHelp(), 'groups')), funds: viewFunds, equity: viewEquity, stocks: () => { ui.eq.tab = 'companies'; return viewEquity(); }, results: viewResults, resplus: () => RP.viewResPlus(termHelp(), route()), news: viewNews, insights: viewInsights, admin: viewAdmin, research: viewResearch, library: viewLibrary };
+const VIEWS = { '': () => T.viewTerminal(termHelp()), heatmap: () => T.viewHeatmap(termHelp()), discover: () => DC.viewDiscover(termHelp(), ''), rrg: () => { location.replace('#/sectors/rrg'); return ''; }, portfolio: () => DC.viewPortfolio(termHelp()), premarket: viewPremarket, market: viewMarket, screeners: () => T.viewTerminal(termHelp(), 'scan'), sectors: () => (route().split('/')[1] === 'rrg' ? viewGroupsRRG() : T.viewTerminal(termHelp(), 'groups')), funds: viewFunds, equity: viewEquity, stocks: () => { ui.eq.tab = 'companies'; return viewEquity(); }, results: viewResults, about: () => { after.push(() => LP.wireLanding()); return LP.landingHtml({ member: true, logo: LOGO }); }, resplus: () => RP.viewResPlus(termHelp(), route()), news: viewNews, insights: viewInsights, admin: viewAdmin, research: viewResearch, library: viewLibrary };
 
 function shell() {
   const u = A.state.user;
@@ -1803,7 +1810,7 @@ async function render() {
   shell();
   mountDalal({ md, esc });
   if (!A.state.ready) { view.innerHTML = '<div class="loading">Loading…</div>'; return; }
-  if (!A.state.user) { view.innerHTML = viewSignIn(); document.title = SITE.name; return; }
+  if (!A.state.user) { view.innerHTML = viewSignIn(); document.title = `${SITE.name}: free market research for our community`; LP.wireLanding(); return; }
   const r = route();
   const top = r.split('/')[0];
   document.querySelectorAll('#topnav a').forEach((a) => { const n = a.dataset.nav; a.classList.toggle('on', n.includes('/') ? (r === n || r.startsWith(n + '/')) : n === (['stock', 'stocks'].includes(top) ? 'equity' : top) && !(top === 'discover' && r.split('/')[1]) && !(top === 'resplus' && r.split('/')[1] && r.split('/')[1] !== 'list')); });
@@ -2044,7 +2051,7 @@ window.addEventListener('beforeunload', (e) => { if (ui.edit?.dirty) { e.prevent
 // A tab left open for days (common on phones) never reloads on its own. When the reader comes back to
 // the tab, and every 10 minutes while it is open: new site code -> reload (unless they are typing);
 // new evening data -> redraw the page with it.
-const CODE = ['./', 'js/app.js', 'js/auth.js', 'js/dalal.js', 'js/charts.js', 'js/config.js', 'js/library.js', 'js/terminal.js', 'js/discover.js', 'js/resplus.js', 'js/scan.js', 'css/scan.css', 'css/resplus.css', 'css/style.css', 'css/terminal.css', 'css/look_kit.css'];
+const CODE = ['./', 'js/app.js', 'js/auth.js', 'js/dalal.js', 'js/charts.js', 'js/config.js', 'js/library.js', 'js/terminal.js', 'js/discover.js', 'js/resplus.js', 'js/landing.js', 'js/scan.js', 'css/scan.css', 'css/resplus.css', 'css/landing.css', 'css/style.css', 'css/terminal.css', 'css/look_kit.css'];
 let codeSig = null;
 async function codeVersion() {
   // Cloudflare answers HEAD with 503. A GET with cache 'no-cache' asks "changed since my copy?" (If-None-Match):
