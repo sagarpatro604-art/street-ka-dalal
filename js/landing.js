@@ -42,10 +42,10 @@ const PRINCIPLES = [
 
 export function landingHtml({ member = false, inApp = false, error = '', signInBtn = '', logo = '' } = {}) {
   const cta = member
-    ? '<a class="btn primary lg" href="#/">Open the terminal</a>'
+    ? '<a class="btn primary lg" href="#/" data-act="enterTerminal">Open the terminal</a>'
     : `${inApp ? `<div class="notice lp-notice"><b>Open this page in Chrome or Safari to sign in.</b> Google does not allow sign-in inside Instagram or Facebook's browser. Tap the menu and choose "Open in browser".<button class="btn ghost sm" data-act="copyLink">Copy link</button></div>` : ''}${signInBtn}${error ? `<p class="err">${esc(error)}</p>` : ''}`;
   const card = ([r, t, d]) => member
-    ? `<a class="lp-card" href="#/${r}"><b>${t}</b><span>${d}</span><i>Open</i></a>`
+    ? `<a class="lp-card" href="#/${r}" data-act="enterTerminal" data-v="${r}"><b>${t}</b><span>${d}</span><i>Open</i></a>`
     : `<button class="lp-card" data-act="signIn" type="button"><b>${t}</b><span>${d}</span><i>Sign in to open</i></button>`;
   return `<div class="lp${member ? ' lp-in-app' : ''}">
   <section class="lp-hero" id="lpHero">
@@ -89,7 +89,7 @@ export function landingHtml({ member = false, inApp = false, error = '', signInB
     </div></section>
 
   <section class="lp-end lp-reveal"><h2>Thank you for learning with us</h2><p>Here is to sharper decisions and calmer conviction. Let us read the market together.</p>
-    <div class="lp-cta">${member ? '<a class="btn primary lg" href="#/">Open the terminal</a>' : signInBtn}</div></section>
+    <div class="lp-cta">${member ? '<a class="btn primary lg" href="#/" data-act="enterTerminal">Open the terminal</a>' : signInBtn}</div></section>
   <p class="lp-disc">Street ka Dalal is for learning. Nothing here is investment advice or a recommendation to buy or sell any security. We are not SEBI-registered advisers; please do your own research or consult one before investing.</p>
 </div>`;
 }

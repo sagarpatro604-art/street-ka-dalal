@@ -1804,6 +1804,7 @@ function shell() {
 }
 
 const navMini = () => { try { return localStorage.getItem('skd.navmini') === '1'; } catch { return false; } };
+const entered = (set) => { try { if (set) sessionStorage.setItem('skd.entered', '1'); return sessionStorage.getItem('skd.entered') === '1'; } catch { return true; } };
 let renderSeq = 0;
 async function render() {
   const view = $('#view');
@@ -1812,6 +1813,9 @@ async function render() {
   if (!A.state.ready) { view.innerHTML = '<div class="loading">Loading…</div>'; return; }
   if (!A.state.user) { view.innerHTML = viewSignIn(); document.title = `${SITE.name}: free market research for our community`; LP.wireLanding(); return; }
   const r = route();
+  // every new visit opens on the landing page first (Sagar 2026-11-21); 'Open the terminal' or any deep link lets the member in
+  if (r !== '' && r !== 'about') entered(true);
+  else if (r === '' && !entered()) { location.replace('#/about'); return; }
   const top = r.split('/')[0];
   document.querySelectorAll('#topnav a').forEach((a) => { const n = a.dataset.nav; a.classList.toggle('on', n.includes('/') ? (r === n || r.startsWith(n + '/')) : n === (['stock', 'stocks'].includes(top) ? 'equity' : top) && !(top === 'discover' && r.split('/')[1]) && !(top === 'resplus' && r.split('/')[1] && r.split('/')[1] !== 'list')); });
   T.setHelpers(termHelp());
@@ -1876,13 +1880,14 @@ const ACTS = {
   navTog: () => { const on = !document.body.classList.contains('nav-mini'); try { localStorage.setItem('skd.navmini', on ? '1' : '0'); } catch {} document.body.classList.toggle('nav-mini', on); window.dispatchEvent(new Event('resize')); },
   dcSet: (el) => { const k = el.dataset.k, v = el.dataset.v ?? ''; DC.dSet(k, /\.(mine|broad)$/.test(k) ? v === '1' : /\.n$/.test(k) ? Number(v) : v); const href = el.getAttribute('href'); if (href && href !== location.hash) location.hash = href; else render(); },
   dcCall: async (el) => { el.disabled = true; try { if (await DC.call(el.dataset.fn, el)) await render(); } finally { el.disabled = false; } },
+  enterTerminal: (el) => { entered(true); const v = el.dataset.v || ''; if (route() === v) render(); else location.hash = '#/' + v; },
   hmPer: (el) => { T.hmSet('per', el.dataset.v); render(); },
   hmMin: (el) => { T.hmSet('min', el.dataset.v); render(); },
   hmOpen: (el) => { T.pickStock(el.dataset.v); if (route() === '') render(); else location.hash = '#/'; },
   wlStar: async (el) => { await T.wlLoad(); const on = T.wlToggle(el.dataset.v, 0); el.classList.toggle('on', on); el.innerHTML = `${T.STAR(on)} ${on ? 'In my lists' : 'Add to list'}`; },
   libTab: (el) => { LB.libSetTab(el.dataset.v); render(); },
   libDone: (el) => LB.libToggleDone(el),
-  signIn: async () => { try { await A.signIn(); } catch (e) { A.state.error = e.message; render(); } },
+  signIn: async () => { entered(true); try { await A.signIn(); } catch (e) { A.state.error = e.message; render(); } },
   signOut: async () => { await A.signOut(); location.hash = '#/'; },
   menu: () => { const m = $('#menu'); m.hidden = !m.hidden; },
   copyLink: async () => { try { await navigator.clipboard.writeText(location.href.split('#')[0]); toast('Link copied, paste it in Chrome or Safari'); } catch { toast(location.href.split('#')[0]); } },
