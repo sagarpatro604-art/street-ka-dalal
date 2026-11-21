@@ -1811,7 +1811,7 @@ async function render() {
   mountDalal({ md, esc });
   LP.closeLanding();
   if (!A.state.ready) { view.innerHTML = '<div class="loading">Loading…</div>'; return; }
-  if (!A.state.user) { view.innerHTML = viewSignIn(); document.title = `${SITE.name}: free market research for our community`; LP.wireLanding(); return; }
+  if (!A.state.user) { view.innerHTML = viewSignIn(); document.title = `${SITE.name}: free stock market research for Indian investors`; LP.wireLanding(); return; }
   const r = route();
   // every new visit opens on the landing page first (Sagar 2026-11-21); 'Open the terminal' or any deep link lets the member in
   if (r !== '' && r !== 'about') entered(true);

@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /data/
+Disallow: /api/
+
+Sitemap: https://street-ka-dalal.pages.dev/sitemap.xml

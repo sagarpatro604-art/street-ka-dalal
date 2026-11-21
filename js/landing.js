@@ -14,10 +14,10 @@ const LINKS = {
 const FOUNDERS = [
   // Sagar 2026-11-21: the company name is not decided, so no "co-founder of Street ka Dalal" anywhere on this page
   { name: 'K. Sagar Patro', role: 'Research and trading', img: 'icons/founder-sagar.webp', ig: LINKS.sagarIg, igH: '@sagarpatro604', li: LINKS.sagarLi,
-    bio: '<b>Three years in the Indian markets</b> as a profitable trader, now managing a <b>₹50 lakh portfolio</b>. Earlier at <b>Digit Insurance</b> and <b>Vayu Capital</b>, working on financial modelling and equity research. Studied Capital Markets and Trading (CMT) at <b>Masters\' Union</b>, after a BBA in Finance from <b>Jain University</b>.',
+    bio: '<b>Three years in the Indian markets</b>, trading and investing his own <b>₹50 lakh portfolio</b>. Earlier at <b>Digit Insurance</b> and <b>Vayu Capital</b>, working on financial modelling and equity research. Studied Capital Markets and Trading (CMT) at <b>Masters\' Union</b>, after a BBA in Finance from <b>Jain University</b>.',
     tags: ['Ex Digit Insurance', 'Ex Vayu Capital', 'Financial modelling', 'Equity research', 'CMT, Masters\' Union', 'BBA Finance, Jain University'] },
   { name: 'Bhuvan Pasari', role: 'Markets and growth', img: 'icons/founder-bhuvan.webp', ig: LINKS.bhuvanIg, igH: '@bhuvan_psri', li: LINKS.bhuvanLi,
-    bio: '<b>Five years in the stock market</b>, now managing a <b>₹20 lakh portfolio</b>, with a year of building as an <b>entrepreneur</b>. Studies finance and marketing, and holds a BBA from <b>Jain University</b>.',
+    bio: '<b>Five years in the stock market</b>, investing his own <b>₹20 lakh portfolio</b>, with a year of building as an <b>entrepreneur</b>. Studies finance and marketing, and holds a BBA from <b>Jain University</b>.',
     tags: ['5 years in markets', 'Entrepreneur', 'Finance and marketing', 'BBA, Jain University'] },
 ];
 // [route, title, one line, icon name, green?]

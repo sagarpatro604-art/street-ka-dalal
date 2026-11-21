@@ -125,3 +125,10 @@ body.lx-open { overflow: hidden; }
   .lx-head { top: 20%; }
   .lx-cards, .lx-commgrid { grid-template-columns: 1fr; }
 }
+
+/* readable text for search engines and no-script readers; the app replaces it on load (index.html #view) */
+.seo-pre { position: fixed; inset: 0; z-index: 800; overflow: auto; background: #080d0b; color: #e8f2ec; padding: 48px max(24px, 8vw); font-family: var(--sans); line-height: 1.6; }
+.seo-pre h1 { font: italic 400 clamp(32px, 5vw, 56px)/1.1 var(--serif); color: #fff; margin: 0 0 16px; }
+.seo-pre h2 { font-size: 18px; color: #18d68a; margin: 26px 0 8px; }
+.seo-pre p, .seo-pre li { color: #b9c9c0; max-width: 820px; }
+.seo-pre a { color: #18d68a; }
