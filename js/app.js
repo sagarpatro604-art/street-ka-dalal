@@ -7,6 +7,7 @@ import * as LB from './library.js';
 import * as T from './terminal.js';
 import * as SC from './scan.js';
 import * as DC from './discover.js';
+import * as RP from './resplus.js';
 
 /* ---------------- helpers ---------------- */
 const $ = (s, r = document) => r.querySelector(s);
@@ -554,6 +555,7 @@ async function viewStock(sym, embed = false) {
   const [one, news, scr, mfs, feed, fo] = await Promise.all([stkOne(sym), filingsData(), data('screeners').catch(() => ({})), hist('mf/stocks').catch(() => ({})), newsfeed(), fundOne(sym).catch(() => ({}))]);
   const [resRows, tvd] = await Promise.all([resHistory(sym), tvData(), SC.scanData().catch(() => null)]);
   const tvS = (tvd.summaries || {})[sym];
+  const rpBlock = await RP.stockBlock(termHelp(), sym).catch(() => '');
   const inNews = [...((feed.movers || {})[sym] || []), ...(feed.items || []).filter((i) => (i.sy || []).includes(sym))].filter((i, k, a) => a.findIndex((j) => j.t === i.t) === k).slice(0, 8);
   const x = one.info, d = one.d || {};
   if (!x) return `${pageHead('Stocks', esc(sym))}<div class="empty card">This symbol is not in our NSE list. <a href="#/stocks">Search all stocks</a></div>`;
@@ -591,6 +593,7 @@ async function viewStock(sym, embed = false) {
     </section>
   </div>
   ${resHistoryCard(resRows, sym)}
+  ${rpBlock}
   ${tvS ? `<section class="card">${tvBlock(tvS, true)}</section>` : ''}
   ${fundCard(fo?.f, fo?.updated)}
   <div class="grid2">
@@ -1773,13 +1776,13 @@ const termHelp = () => ({ T, A, data, hist, stkAll, esc, num, pct, tone, pd, fDa
 const NAV_G = [
   ['#', 'Watch'], ['', 'Stock watch', 'watch'], ['screeners', 'Screeners', 'screen'], ['sectors', 'Groups', 'sector'], ['heatmap', 'Heatmap', 'heat'], ['discover', 'Discover', 'compass'], ['discover/triggers', 'Board of all triggers', '', 1], ['discover/investors', 'Big investors', '', 1], ['discover/valuation', 'Market valuation', '', 1], ['discover/management', 'What management said', '', 1], ['discover/mystocks', 'My stocks this week', '', 1],
   ['#', 'Market'], ['premarket', 'Pre-market', 'sun'], ['market', 'Market', 'market'], ['funds', 'Mutual funds', 'funds'],
-  ['#', 'Research'], ['equity', 'Research', 'search'], ['results', 'Results', 'file'], ['news', 'News', 'news'], ['research', 'Prop. Research', 'lab'],
+  ['#', 'Research'], ['equity', 'Research', 'search'], ['results', 'Results', 'file'], ['resplus', 'Reactions after results', '', 1], ['resplus/sectors', 'Sectors after results', '', 1], ['resplus/pool', 'Profit pool', '', 1], ['resplus/guidance', 'Guidance changes', '', 1], ['resplus/season', 'Season report', '', 1], ['news', 'News', 'news'], ['research', 'Prop. Research', 'lab'],
   ['#', 'Learn'], ['library', 'Library', 'book'], ['insights', 'Insights', 'pen'],
   ['#', 'My portfolio'], ['portfolio', 'Portfolio X-ray', 'brief'],
 ];
 const NAV = NAV_G.filter(([r, , , sub]) => r !== '#' && !sub);
 const route = () => location.hash.replace(/^#\/?/, '');
-const VIEWS = { '': () => T.viewTerminal(termHelp()), heatmap: () => T.viewHeatmap(termHelp()), discover: () => DC.viewDiscover(termHelp(), ''), rrg: () => { location.replace('#/sectors/rrg'); return ''; }, portfolio: () => DC.viewPortfolio(termHelp()), premarket: viewPremarket, market: viewMarket, screeners: () => T.viewTerminal(termHelp(), 'scan'), sectors: () => (route().split('/')[1] === 'rrg' ? viewGroupsRRG() : T.viewTerminal(termHelp(), 'groups')), funds: viewFunds, equity: viewEquity, stocks: () => { ui.eq.tab = 'companies'; return viewEquity(); }, results: viewResults, news: viewNews, insights: viewInsights, admin: viewAdmin, research: viewResearch, library: viewLibrary };
+const VIEWS = { '': () => T.viewTerminal(termHelp()), heatmap: () => T.viewHeatmap(termHelp()), discover: () => DC.viewDiscover(termHelp(), ''), rrg: () => { location.replace('#/sectors/rrg'); return ''; }, portfolio: () => DC.viewPortfolio(termHelp()), premarket: viewPremarket, market: viewMarket, screeners: () => T.viewTerminal(termHelp(), 'scan'), sectors: () => (route().split('/')[1] === 'rrg' ? viewGroupsRRG() : T.viewTerminal(termHelp(), 'groups')), funds: viewFunds, equity: viewEquity, stocks: () => { ui.eq.tab = 'companies'; return viewEquity(); }, results: viewResults, resplus: () => RP.viewResPlus(termHelp(), route()), news: viewNews, insights: viewInsights, admin: viewAdmin, research: viewResearch, library: viewLibrary };
 
 function shell() {
   const u = A.state.user;
@@ -1803,7 +1806,7 @@ async function render() {
   if (!A.state.user) { view.innerHTML = viewSignIn(); document.title = SITE.name; return; }
   const r = route();
   const top = r.split('/')[0];
-  document.querySelectorAll('#topnav a').forEach((a) => { const n = a.dataset.nav; a.classList.toggle('on', n.includes('/') ? r === n : n === (['stock', 'stocks'].includes(top) ? 'equity' : top) && !(top === 'discover' && r.split('/')[1])); });
+  document.querySelectorAll('#topnav a').forEach((a) => { const n = a.dataset.nav; a.classList.toggle('on', n.includes('/') ? (r === n || r.startsWith(n + '/')) : n === (['stock', 'stocks'].includes(top) ? 'equity' : top) && !(top === 'discover' && r.split('/')[1]) && !(top === 'resplus' && r.split('/')[1] && r.split('/')[1] !== 'list')); });
   T.setHelpers(termHelp());
   document.body.classList.toggle('term', top === '' || r === 'discover' || top === 'screeners' || r === 'sectors');
   setDalalContext(null);
@@ -1812,7 +1815,7 @@ async function render() {
   const keep = view.dataset.route === r ? window.scrollY : 0;
   if (view.dataset.route !== r) view.innerHTML = '<div class="loading"><span class="dots"><i></i><i></i><i></i></span></div>';
   try {
-    const html = top === 'library' && r.split('/')[1] ? await LB.libraryReader(lbHelp(), decodeURIComponent(r.split('/')[1])) : top === 'research' && r.split('/')[1] ? await viewResearchItem(r.split('/')[1]) : top === 'post' ? await viewPost(r.split('/')[1]) : top === 'discover' ? await DC.viewDiscover(termHelp(), r.split('/')[1] || '') : top === 'compare' ? await T.viewCompare(termHelp(), decodeURIComponent(r.split('/')[1] || ''), decodeURIComponent(r.split('/')[2] || '')) : top === 'stock' ? await viewStock(r.split('/')[1]) : top === 'results' && r.split('/')[1] === 'co' ? await viewResCo(r.split('/')[2]) : await (VIEWS[top] || viewMarket)();
+    const html = top === 'library' && r.split('/')[1] ? await LB.libraryReader(lbHelp(), decodeURIComponent(r.split('/')[1])) : top === 'research' && r.split('/')[1] ? await viewResearchItem(r.split('/')[1]) : top === 'post' ? await viewPost(r.split('/')[1]) : top === 'discover' ? await DC.viewDiscover(termHelp(), r.split('/')[1] || '') : top === 'compare' ? await T.viewCompare(termHelp(), decodeURIComponent(r.split('/')[1] || ''), decodeURIComponent(r.split('/')[2] || '')) : top === 'stock' ? await viewStock(r.split('/')[1]) : top === 'results' && r.split('/')[1] === 'co' ? await viewResCo(r.split('/')[2]) : top === 'resplus' ? await RP.viewResPlus(termHelp(), r) : await (VIEWS[top] || viewMarket)();
     if (seq !== renderSeq) return;
     CH.disposeCharts();
     view.innerHTML = html;
@@ -2041,7 +2044,7 @@ window.addEventListener('beforeunload', (e) => { if (ui.edit?.dirty) { e.prevent
 // A tab left open for days (common on phones) never reloads on its own. When the reader comes back to
 // the tab, and every 10 minutes while it is open: new site code -> reload (unless they are typing);
 // new evening data -> redraw the page with it.
-const CODE = ['./', 'js/app.js', 'js/auth.js', 'js/dalal.js', 'js/charts.js', 'js/config.js', 'js/library.js', 'js/terminal.js', 'js/discover.js', 'js/scan.js', 'css/scan.css', 'css/style.css', 'css/terminal.css', 'css/look_kit.css'];
+const CODE = ['./', 'js/app.js', 'js/auth.js', 'js/dalal.js', 'js/charts.js', 'js/config.js', 'js/library.js', 'js/terminal.js', 'js/discover.js', 'js/resplus.js', 'js/scan.js', 'css/scan.css', 'css/resplus.css', 'css/style.css', 'css/terminal.css', 'css/look_kit.css'];
 let codeSig = null;
 async function codeVersion() {
   // Cloudflare answers HEAD with 503. A GET with cache 'no-cache' asks "changed since my copy?" (If-None-Match):

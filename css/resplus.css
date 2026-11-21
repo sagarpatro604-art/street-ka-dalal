@@ -1,0 +1,44 @@
+/* Results Plus pages (js/resplus.js). Look kit tokens only. */
+.tbl th:not(:has(button)) { padding: 10px 14px; font: 500 10.5px var(--mono); letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+.tbl th.r:not(:has(button)) { text-align: right; }
+.seg a { padding: 6px 10px; border-radius: 7px; font: 600 12.5px var(--sans); color: var(--muted); white-space: nowrap; text-decoration: none; }
+.seg a.on { background: var(--paper); color: var(--ink); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35); }
+.rp-q { height: 34px; padding: 0 10px; border-radius: 9px; }
+.chip.rp-good { background: var(--accent-soft); color: var(--accent); }
+.chip.rp-warn { background: var(--sand-soft); color: var(--sand); }
+.chip.rp-bad { background: var(--coral-soft); color: var(--coral); }
+.rp-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; }
+.rp-chips .chip { text-decoration: none; padding: 5px 11px; border: 1px solid var(--line); }
+.rp-chips .chip.on { border-color: var(--accent-line); background: var(--accent-soft); color: var(--ink); }
+.rp-chips .chip b { font-weight: 500; color: var(--faint); margin-left: 4px; }
+.rp-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin: 6px 0 16px; }
+.rp-tiles .card { margin: 0; padding: 12px 14px; }
+.rp-tiles .card b { display: block; font: 400 28px/1.15 var(--serif); margin: 4px 0; }
+.rp-mix { display: inline-flex; width: 110px; height: 8px; border-radius: 4px; overflow: hidden; background: var(--surface-2); vertical-align: middle; }
+.rp-mix i { display: block; height: 100%; }
+.rp-mix i.s { background: var(--accent); } .rp-mix i.g { background: var(--sky); } .rp-mix i.m { background: var(--sand); } .rp-mix i.w { background: var(--coral); }
+.rp-map { position: relative; height: 560px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--bg-2); }
+.rp-tm { position: absolute; overflow: hidden; border: 1px solid var(--bg); font: 500 11px/1.2 var(--mono); color: var(--ink); padding: 3px 4px; text-decoration: none; }
+.rp-tm:hover { outline: 2px solid var(--ink); z-index: 2; text-decoration: none; }
+.rp-tm small { display: block; font-weight: 400; opacity: 0.85; }
+.rp-grp { position: absolute; border: 2px solid var(--bg); pointer-events: none; }
+.rp-grp span { position: absolute; left: 4px; top: 2px; font: 500 10px/1 var(--mono); text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink); background: color-mix(in srgb, var(--bg) 70%, transparent); padding: 2px 4px; border-radius: 4px; }
+.rp-bar { display: grid; grid-template-columns: minmax(140px, 240px) minmax(0, 1fr) 64px; gap: 8px; align-items: center; font-size: 13px; padding: 3px 0; }
+.rp-bar .tr { position: relative; height: 12px; background: var(--surface-2); border-radius: 4px; }
+.rp-bar .tr i { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 4px; }
+.rp-bar.mid .tr i { left: auto; }
+.rp-bar.mid .tr::after { content: ""; position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: var(--line-2); }
+.rp-bar b { text-align: right; font: 500 12.5px var(--mono); }
+.rp-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.rp-card { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: color-mix(in srgb, var(--surface) 70%, transparent); }
+.rp-card h3 { margin: 0 0 2px; font: 400 18px/1.2 var(--serif); }
+.rp-spark { width: 100%; height: 64px; margin: 6px 0; }
+.rp-kv { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; color: var(--muted); }
+.rp-kv b { font-weight: 500; }
+.rp-call { border-bottom: 1px solid var(--line); padding: 12px 0; }
+.rp-call:last-child { border-bottom: 0; }
+.rp-call p { margin: 6px 0; color: var(--ink-2); }
+.rp-it { padding: 4px 0 4px 8px; }
+.rp-it blockquote { margin: 4px 0 6px; padding: 2px 0 2px 12px; border-left: 2px solid var(--accent-line); font: italic 400 14.5px/1.5 var(--serif); color: var(--ink-2); }
+.rp-why { white-space: normal; min-width: 240px; font-size: 12.5px; }
+@media (max-width: 760px) { .rp-map { height: 420px; } .rp-bar { grid-template-columns: 120px minmax(0, 1fr) 56px; } }
