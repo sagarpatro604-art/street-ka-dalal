@@ -47,7 +47,7 @@ export function landingHtml({ member = false, inApp = false, error = '', signInB
   const card = ([r, t, d]) => member
     ? `<a class="lp-card" href="#/${r}"><b>${t}</b><span>${d}</span><i>Open</i></a>`
     : `<button class="lp-card" data-act="signIn" type="button"><b>${t}</b><span>${d}</span><i>Sign in to open</i></button>`;
-  return `<div class="lp${member ? ' member' : ''}">
+  return `<div class="lp${member ? ' lp-in-app' : ''}">
   <section class="lp-hero" id="lpHero">
     <canvas class="lp-cv base" id="lpBase" aria-hidden="true"></canvas>
     <canvas class="lp-cv lit" id="lpLit" aria-hidden="true"></canvas>
