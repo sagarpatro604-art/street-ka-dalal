@@ -200,8 +200,7 @@ async function filingsData() {
 function viewSignIn() {
   // the landing page (Sagar 2026-11-21): about the terminal and its two co-founders, with the Google sign-in
   const inApp = A.inAppBrowser();
-  return LP.landingHtml({ inApp, error: A.state.error || '', logo: LOGO,
-    signInBtn: `<button class="btn google lg" data-act="signIn">${GOOGLE}<span>Continue with Google</span></button>` });
+  return LP.landingHtml({ inApp, error: A.state.error || '', logo: LOGO, ic, google: GOOGLE });
 }
 function viewSignInCard() {
   const inApp = A.inAppBrowser();
@@ -1789,7 +1788,7 @@ const NAV_G = [
 ];
 const NAV = NAV_G.filter(([r, , , sub]) => r !== '#' && !sub);
 const route = () => location.hash.replace(/^#\/?/, '');
-const VIEWS = { '': () => T.viewTerminal(termHelp()), heatmap: () => T.viewHeatmap(termHelp()), discover: () => DC.viewDiscover(termHelp(), ''), rrg: () => { location.replace('#/sectors/rrg'); return ''; }, portfolio: () => DC.viewPortfolio(termHelp()), premarket: viewPremarket, market: viewMarket, screeners: () => T.viewTerminal(termHelp(), 'scan'), sectors: () => (route().split('/')[1] === 'rrg' ? viewGroupsRRG() : T.viewTerminal(termHelp(), 'groups')), funds: viewFunds, equity: viewEquity, stocks: () => { ui.eq.tab = 'companies'; return viewEquity(); }, results: viewResults, about: () => { after.push(() => LP.wireLanding()); return LP.landingHtml({ member: true, logo: LOGO }); }, resplus: () => RP.viewResPlus(termHelp(), route()), news: viewNews, insights: viewInsights, admin: viewAdmin, research: viewResearch, library: viewLibrary };
+const VIEWS = { '': () => T.viewTerminal(termHelp()), heatmap: () => T.viewHeatmap(termHelp()), discover: () => DC.viewDiscover(termHelp(), ''), rrg: () => { location.replace('#/sectors/rrg'); return ''; }, portfolio: () => DC.viewPortfolio(termHelp()), premarket: viewPremarket, market: viewMarket, screeners: () => T.viewTerminal(termHelp(), 'scan'), sectors: () => (route().split('/')[1] === 'rrg' ? viewGroupsRRG() : T.viewTerminal(termHelp(), 'groups')), funds: viewFunds, equity: viewEquity, stocks: () => { ui.eq.tab = 'companies'; return viewEquity(); }, results: viewResults, about: () => { after.push(() => LP.wireLanding()); return LP.landingHtml({ member: true, logo: LOGO, ic, google: GOOGLE }); }, resplus: () => RP.viewResPlus(termHelp(), route()), news: viewNews, insights: viewInsights, admin: viewAdmin, research: viewResearch, library: viewLibrary };
 
 function shell() {
   const u = A.state.user;
@@ -1810,6 +1809,7 @@ async function render() {
   const view = $('#view');
   shell();
   mountDalal({ md, esc });
+  LP.closeLanding();
   if (!A.state.ready) { view.innerHTML = '<div class="loading">Loading…</div>'; return; }
   if (!A.state.user) { view.innerHTML = viewSignIn(); document.title = `${SITE.name}: free market research for our community`; LP.wireLanding(); return; }
   const r = route();
