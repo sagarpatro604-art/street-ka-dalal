@@ -1,0 +1,1 @@
+Chart candles for Street ka Dalal (Stock watch / Screeners / Groups), replaced every evening by Desktop/Sandbox/skd-scanners build/publish_live.py. Not the website: Cloudflare does not build this branch.
