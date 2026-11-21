@@ -12,12 +12,13 @@ const LINKS = {
   bhuvanIg: 'https://www.instagram.com/bhuvan_psri/', bhuvanLi: 'https://www.linkedin.com/in/bhuvan-pasari-8944b5250',
 };
 const FOUNDERS = [
-  { name: 'K. Sagar Patro', img: 'icons/founder-sagar.webp', ig: LINKS.sagarIg, igH: '@sagarpatro604', li: LINKS.sagarLi,
-    bio: 'Studying the <b>Capital Markets and Trading</b> programme at <b>Masters\' Union</b>, and trading and investing in Indian equities for over <b>three years</b>. Sagar builds the research tools behind the terminal and makes reels on markets, stocks and money in simple Hinglish.',
-    tags: ['Research and tools', 'Masters\' Union', 'Reels in Hinglish'] },
-  { name: 'Bhuvan Pasari', img: 'icons/founder-bhuvan.webp', ig: LINKS.bhuvanIg, igH: '@bhuvan_psri', li: LINKS.bhuvanLi,
-    bio: 'Bhuvan builds and runs the <b>Street ka Dalal community</b> with Sagar and co-hosts the <b>Sunday community sessions</b>, where members go through the week\'s market, the stories worth knowing and one strategy or theme in depth.',
-    tags: ['Community', 'Sunday sessions', 'Co-host'] },
+  // Sagar 2026-11-21: the company name is not decided, so no "co-founder of Street ka Dalal" anywhere on this page
+  { name: 'K. Sagar Patro', role: 'Research and trading', img: 'icons/founder-sagar.webp', ig: LINKS.sagarIg, igH: '@sagarpatro604', li: LINKS.sagarLi,
+    bio: '<b>Three years in the Indian markets</b> as a profitable trader, now managing a <b>₹50 lakh portfolio</b>. Earlier at <b>Digit Insurance</b> and <b>Vayu Capital</b>, working on financial modelling and equity research. Studied Capital Markets and Trading (CMT) at <b>Masters\' Union</b>, after a BBA in Finance from <b>Jain University</b>.',
+    tags: ['Ex Digit Insurance', 'Ex Vayu Capital', 'Financial modelling', 'Equity research', 'CMT, Masters\' Union', 'BBA Finance, Jain University'] },
+  { name: 'Bhuvan Pasari', role: 'Markets and growth', img: 'icons/founder-bhuvan.webp', ig: LINKS.bhuvanIg, igH: '@bhuvan_psri', li: LINKS.bhuvanLi,
+    bio: '<b>Five years in the stock market</b>, now managing a <b>₹20 lakh portfolio</b>, with a year of building as an <b>entrepreneur</b>. Studies finance and marketing, and holds a BBA from <b>Jain University</b>.',
+    tags: ['5 years in markets', 'Entrepreneur', 'Finance and marketing', 'BBA, Jain University'] },
 ];
 // [route, title, one line, icon name, green?]
 const CARDS = [
@@ -74,7 +75,7 @@ export function landingHtml({ member = false, inApp = false, error = '', logo = 
     ${FOUNDERS.map((f, k) => `<section class="lx-founder${k % 2 ? ' flip' : ''}">
       <div class="lx-photo"><img src="${f.img}" alt="${esc(f.name)}" loading="lazy" width="600" height="800"></div>
       <div class="lx-ftext">
-        <div class="lx-feyebrow"><span class="lx-dot"></span>Co-founder, Street ka Dalal</div>
+        <div class="lx-feyebrow"><span class="lx-dot"></span>${esc(f.role)}</div>
         <h2>${esc(f.name)}</h2>
         <p>${f.bio}</p>
         <div class="lx-tags">${f.tags.map((t) => `<span>${esc(t)}</span>`).join('')}</div>
