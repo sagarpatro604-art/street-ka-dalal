@@ -1,6 +1,6 @@
 /* Landing page (js/landing.js). Look kit tokens only; dark and light both. */
 .lp { width: 100vw; margin-left: calc(50% - 50vw); margin-top: -8px; }
-.lp.member { width: auto; margin-left: 0; margin-top: 0; }
+.lp.member { width: 100%; max-width: 100%; margin-left: 0; margin-top: 0; }
 .lp.member .lp-hero { border: 1px solid var(--line); border-radius: 18px; }
 .lp-hero { position: relative; min-height: min(86vh, 760px); display: grid; place-items: center; overflow: hidden; border-bottom: 1px solid var(--line); background: var(--bg-2); --mx: 70%; --my: 45%; }
 .lp-cv { position: absolute; inset: 0; pointer-events: none; }
