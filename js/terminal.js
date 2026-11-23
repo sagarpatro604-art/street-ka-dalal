@@ -344,10 +344,10 @@ function paintList(reset) {
   } else {
     $('#twRows').innerHTML = CUR.map((r) => `<div class="tw-row${r.sym === S.sym ? ' sel' : ''}${isSeen(r.sym) ? ' seen' : ''}" data-s="${H.esc(r.sym)}" role="button" tabindex="-1">
       <span class="s">${inWl(r.sym) ? '<i class="wl-dot" title="In one of your lists"></i>' : ''}${H.esc(r.sym)}<small>${H.esc(r.n)}</small></span>
-      <span class="r" data-lp="${H.esc(r.sym)}">${H.num(r.p, r.p < 100 ? 2 : 1)}</span><span class="r ${H.tone(r.c)}" data-lc="${H.esc(r.sym)}">${H.pct(r.c, 1)}</span><span class="r k">${fmtKey(k, r.k)}</span><span class="r m">${r.rs == null ? '-' : H.num(r.rs)}</span></div>`).join('');
+      <span class="r">${H.num(r.p, r.p < 100 ? 2 : 1)}</span><span class="r ${H.tone(r.c)}">${H.pct(r.c, 1)}</span><span class="r k">${fmtKey(k, r.k)}</span><span class="r m">${r.rs == null ? '-' : H.num(r.rs)}</span></div>`).join('');
   }
   const seenN = CUR.filter((r) => isSeen(r.sym)).length;
-  $('#twFoot').innerHTML = `${CUR.length}${CUR.length !== ROWS.length ? ` of ${ROWS.length}` : ''} stock${CUR.length === 1 ? '' : 's'}${fOn() ? ' (filters on) <button class="k-chip" data-clear>Clear filters</button>' : ''}${seenN ? ` &middot; ${seenN} seen` : ''} &middot; ${fresh(D.st.asOf)} <span data-live-badge hidden></span>
+  $('#twFoot').innerHTML = `${CUR.length}${CUR.length !== ROWS.length ? ` of ${ROWS.length}` : ''} stock${CUR.length === 1 ? '' : 's'}${fOn() ? ' (filters on) <button class="k-chip" data-clear>Clear filters</button>' : ''}${seenN ? ` &middot; ${seenN} seen` : ''} &middot; ${fresh(D.st.asOf)}
     <span class="keys">&uarr;&darr; next &middot; G grid &middot; R seen &middot; W watchlist &middot; 1 2 3 D/W/M</span>`;
   if (reset || !CUR.find((r) => r.sym === S.sym)) {
     if (!S.sym || (reset && !CUR.find((r) => r.sym === S.sym))) S.sym = CUR[0]?.sym || S.sym;
@@ -384,7 +384,7 @@ function paintGrid(redraw) {
     <div class="tg g${n}">${slice.map((r, i) => {
       const x = rw(r.sym);
       return `<div class="tg-t${r.sym === S.sym ? ' sel' : ''}${isSeen(r.sym) ? ' seen' : ''}" data-open="${H.esc(r.sym)}">
-        <div class="tg-h"><b>${H.esc(r.sym)}</b><span data-lp="${H.esc(r.sym)}" data-dp="2">${H.num(r.p, 2)}</span><span class="${H.tone(r.c)}" data-lc="${H.esc(r.sym)}">${H.pct(r.c, 1)}</span><span class="m">${H.esc(k.label)} ${fmtKey(k, r.k)}</span><span class="m">RS ${H.num(r.rs)}</span>${SC.stageChip(x.st)}${isSeen(r.sym) ? '<span class="m">seen</span>' : ''}</div>
+        <div class="tg-h"><b>${H.esc(r.sym)}</b><span>${H.num(r.p, 2)}</span><span class="${H.tone(r.c)}">${H.pct(r.c, 1)}</span><span class="m">${H.esc(k.label)} ${fmtKey(k, r.k)}</span><span class="m">RS ${H.num(r.rs)}</span>${SC.stageChip(x.st)}${isSeen(r.sym) ? '<span class="m">seen</span>' : ''}</div>
         <div class="tg-c" id="tg${i}"></div></div>`;
     }).join('')}</div>`;
   slice.forEach((r, i) => SC.miniChart('tg' + i, r.sym));
@@ -420,7 +420,7 @@ async function select(sym, user, scrollList) {
   $('#twMain').innerHTML = `<div class="tw-hd">
       <div><div class="tk">${H.esc(sym)} <span class="k-faint">NSE</span></div><div class="nm">${H.esc(x.n || sym)}</div>
         <div class="grp">${H.esc(x.sec || '')}${g ? ' ' + SC.trendPill(g) : ''}${x.ind ? ' &middot; ' + H.esc(x.ind) : ''}</div></div>
-      <div class="px"><span data-lp="${H.esc(sym)}" data-dp="2">${H.num(d.p, 2)}</span><small class="${H.tone(r[0])}" data-lc="${H.esc(sym)}" data-dp="2" data-suffix=" on the day">${H.pct(r[0], 2)} on the day</small><small>${fresh(asOf)} <span data-live-badge hidden></span></small></div>
+      <div class="px">${H.num(d.p, 2)}<small class="${H.tone(r[0])}">${H.pct(r[0], 2)} on the day</small><small>${fresh(asOf)}</small></div>
     </div>
     ${why}
     <div class="tw-bar">
