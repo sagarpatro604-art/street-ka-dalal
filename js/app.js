@@ -9,6 +9,7 @@ import * as SC from './scan.js';
 import * as DC from './discover.js';
 import * as RP from './resplus.js';
 import * as LP from './landing.js';
+import * as LIVE from './live.js';
 
 /* ---------------- helpers ---------------- */
 const $ = (s, r = document) => r.querySelector(s);
@@ -1819,6 +1820,7 @@ async function render() {
   const top = r.split('/')[0];
   document.querySelectorAll('#topnav a').forEach((a) => { const n = a.dataset.nav; a.classList.toggle('on', n.includes('/') ? (r === n || r.startsWith(n + '/')) : n === (['stock', 'stocks'].includes(top) ? 'equity' : top) && !(top === 'discover' && r.split('/')[1]) && !(top === 'resplus' && r.split('/')[1] && r.split('/')[1] !== 'list')); });
   T.setHelpers(termHelp());
+  LIVE.start(); // live prices on every price cell marked data-lp / data-lc, while NSE is open
   document.body.classList.toggle('term', top === '' || r === 'discover' || top === 'screeners' || r === 'sectors');
   setDalalContext(null);
   const seq = ++renderSeq;

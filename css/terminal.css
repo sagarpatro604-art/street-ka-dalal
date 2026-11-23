@@ -299,3 +299,10 @@ body.nav-mini { --nav-w: 60px; }
 .tw-lists a.k-chip { height: 24px; font-size: 11.5px; text-decoration: none; }
 .tw-lists a.k-chip:hover { border-color: var(--accent-line); color: var(--ink); }
 .tw-about .k-pill { margin-left: 4px; }
+
+/* live prices (js/live.js, 2026-11-23): a short flash when the price moves, like SectorScope */
+@keyframes lpUp { from { background: color-mix(in srgb, var(--pos, #3fb950) 35%, transparent); } to { background: transparent; } }
+@keyframes lpDn { from { background: color-mix(in srgb, var(--neg, #f85149) 35%, transparent); } to { background: transparent; } }
+.lp-up { animation: lpUp 1.2s ease-out; border-radius: 3px; }
+.lp-dn { animation: lpDn 1.2s ease-out; border-radius: 3px; }
+.lp-badge { height: 18px; padding: 0 6px; font-size: 10px; vertical-align: middle; }
