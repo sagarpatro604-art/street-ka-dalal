@@ -249,7 +249,8 @@ export function oneStrip(sym, d) {
 const XLABEL = { rs_chg: ['RS', (v) => `up ${v} points in a month`], from_hi: ['', (v) => `${v}% from its high`], res: ['resistance', (v) => H.num(v, 2)],
   res_dist: ['', (v) => `${v}% under resistance`], range: ['range', (v) => `${v}%`], chg: ['', (v) => `up ${v}% today`], rvol: ['volume', (v) => `${v}x normal`],
   hv: ['highest volume in', (v) => ({ quarter: 'a quarter', year: 'a year', all: '4 years' }[v] || v)], gap: ['gap', (v) => `${v}% at the open`], move: ['moved', (v) => `${v}% that day`],
-  q: ['quarter', (v) => v], eps_yoy: ['EPS', (v) => `${v}% yoy`], sales_yoy: ['sales', (v) => `${v}% yoy`], r: ['return', (v) => `${v}%`], listed: ['listed', (v) => H.fDate(v)] };
+  q: ['quarter', (v) => v], eps_yoy: ['EPS', (v) => `${v}% yoy`], sales_yoy: ['sales', (v) => `${v}% yoy`], r: ['return', (v) => `${v}%`], listed: ['listed', (v) => H.fDate(v)],
+  locked: ['', (v) => (v ? 'closed locked at the band' : 'touched the band, closed off it')], days: ['', (v) => `${v} day${v === 1 ? '' : 's'} in a row`], band: ['band', (v) => `${v}%`] };
 export const listExtra = (id) => (SD?.lists || []).find((x) => 'sc:' + x.id === id)?.x || null;
 export function whyLine(list, sym) {
   if (!list?.scan) return '';
