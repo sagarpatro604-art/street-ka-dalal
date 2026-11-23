@@ -76,6 +76,7 @@ const ICONS = {
   google: '',
   copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/>',
   file: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/>',
+  play: '<circle cx="12" cy="12" r="9"/><path d="M10 8.5v7l6-3.5z"/>',
   lab: '<path d="M9 3h6M10 3v6l-5.5 9.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3"/><path d="M7.5 15h9"/>',
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
   refresh: '<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',
@@ -610,7 +611,7 @@ async function viewStock(sym, embed = false) {
     <section class="card"><h2>On our screens today</h2>
       ${screens.length || lead.length ? `<div class="chip-row">${[...screens, ...lead].map((t) => chip(t, 'good')).join('')}</div><p class="sub">A screen shows a setup, not a recommendation.</p>` : '<p class="sub">Not on any screen today.</p>'}
       <h3 class="mt">Latest filings</h3>
-      ${filings.length ? `<ul class="plain">${filings.slice(0, 8).map((f) => `<li><b>${esc(f.label || f.type || 'Filing')}</b> <span class="sub">${fDT(f.ts)}</span><br>${esc(f.subject || '')}${f.pdf ? ` <a href="${esc(f.pdf)}" target="_blank" rel="noopener">PDF</a>` : ''}</li>`).join('')}</ul>` : '<p class="sub">No filings in today\'s window.</p>'}
+      ${filings.length ? `<ul class="plain">${filings.slice(0, 8).map((f) => `<li><b>${esc(f.label || f.type || 'Filing')}</b> <span class="sub">${fDT(f.ts)}</span><br>${esc(f.subject || '')}${f.pdf ? ` <a href="${esc(f.pdf)}" target="_blank" rel="noopener">PDF</a>` : ''}${nseSum(f)}</li>`).join('')}</ul>` : '<p class="sub">No filings in today\'s window.</p>'}
     </section>
   </div>
   <section class="card"><div class="card-head"><h2>In the news ${feed.updated ? `<span class="k-pill ${(Date.now() - new Date(feed.updated)) / 3600000 > 12 ? 'warn' : 'ok'}" title="When our news feed last updated">News ${ago(feed.updated)}</span>` : ''}</h2><a href="https://news.google.com/search?q=${encodeURIComponent('"' + String(x.n || sym).replace(/\s+(limited|ltd\.?)$/i, '') + '"')}&hl=en-IN&gl=IN&ceid=IN:en" target="_blank" rel="noopener">More on Google News →</a></div>
@@ -1297,6 +1298,9 @@ async function viewHeadlines() {
   </div>`;
 }
 
+// NSE's own AI summary of a filing + its audio read-out (NSE adds them from 17-Nov-2026; SectorScope passes them as ns / voice)
+const nseSum = (r) => r.ns ? `<div class="filing-ns"><span class="lbl">Summary by NSE</span><p>${esc(r.ns)}</p>${r.voice ? `<a class="link" href="${esc(r.voice)}" target="_blank" rel="noopener">${ic('play', 14)} Listen (NSE audio)</a>` : ''}</div>` : '';
+
 async function viewNews() {
   if (ui.news.view !== 'filings') return viewHeadlines();
   const d = await filingsData();
@@ -1304,7 +1308,7 @@ async function viewNews() {
   for (const r of d.filings || []) labels[r.label] = (labels[r.label] || 0) + 1;
   const types = Object.entries(labels).sort((a, b) => b[1] - a[1]);
   const q = ui.news.q.trim().toLowerCase();
-  const rows = (d.filings || []).filter((r) => (ui.news.type === 'all' || r.label === ui.news.type) && (!q || `${r.sym} ${r.name} ${r.subject || ''} ${r.summary || ''}`.toLowerCase().includes(q)));
+  const rows = (d.filings || []).filter((r) => (ui.news.type === 'all' || r.label === ui.news.type) && (!q || `${r.sym} ${r.name} ${r.subject || ''} ${r.summary || ''} ${r.ns || ''}`.toLowerCase().includes(q)));
   const facts = (r) => [r.order_cr != null ? `Order ${cr(r.order_cr)}${r.order_pct_mcap != null ? ` (${num(r.order_pct_mcap, 1)}% of m-cap)` : ''}` : '', r.amount_cr != null ? `Amount ${cr(r.amount_cr)}` : '', r.rating ? `Rating: ${esc(r.rating)}` : '', r.revenue_yoy != null ? `Revenue ${pct(r.revenue_yoy, 1)} YoY` : '', r.pat_yoy != null ? `Profit ${pct(r.pat_yoy, 1)} YoY` : '', r.mcap_cr ? `M-cap ${cr(r.mcap_cr)}` : ''].filter(Boolean);
   return `${pageHead('News & announcements', 'Company announcements scanner')}
   <div class="tabs"><button class="tab" data-act="newsView" data-v="heads">Headlines</button><button class="tab on" data-act="newsView" data-v="filings">Company filings</button></div>
@@ -1316,7 +1320,7 @@ async function viewNews() {
       <div class="filing-top"><span>${symLink(r.sym)} <span class="sub">${esc(r.name)}</span></span><span class="sub">${fDT(String(r.ts).replace(' ', 'T'))}</span></div>
       ${chip(r.label || r.type, 'type')}
       <p class="filing-sub">${esc(r.subject || '')}</p>
-      ${r.summary && r.summary !== r.subject ? `<p class="filing-sum">${esc(r.summary)}</p>` : ''}
+      ${r.ns ? nseSum(r) : (r.summary && r.summary !== r.subject ? `<p class="filing-sum">${esc(r.summary)}</p>` : '')}
       ${facts(r).length ? `<p class="facts">${facts(r).map((f) => `<span>${f}</span>`).join('')}</p>` : ''}
       ${r.pdf ? `<a class="link" href="${esc(r.pdf)}" target="_blank" rel="noopener">${ic('file', 15)} Read the filing</a>` : ''}
     </article>`).join('') || '<div class="empty">No filings match.</div>'}${rows.length > 150 ? `<p class="sub">Showing 150 of ${rows.length}. Narrow the search to see more.</p>` : ''}</section>

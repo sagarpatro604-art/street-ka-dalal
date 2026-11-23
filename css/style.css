@@ -245,6 +245,9 @@ main { max-width: 1240px; margin: 0 auto; padding: 26px 24px 40px; outline: none
 .filing-top .sub { display: inline; }
 .filing-sub { font-weight: 600; margin: 4px 0; }
 .filing-sum { color: var(--muted); font-size: 14px; }
+.filing-ns { margin: 8px 0 4px; padding: 8px 10px; border-left: 3px solid var(--accent, #e2b25a); background: color-mix(in srgb, var(--accent, #e2b25a) 7%, transparent); border-radius: 6px; }
+.filing-ns .lbl { display: block; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+.filing-ns p { margin: 0 0 4px; font-size: 14px; line-height: 1.5; }
 .facts { display: flex; flex-wrap: wrap; gap: 6px; }
 .facts span { background: var(--paper-2); border-radius: 8px; padding: 3px 9px; font-size: 12.5px; font-weight: 600; }
 .link { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 13.5px; text-decoration: none; margin-top: 4px; }
