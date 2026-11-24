@@ -7,10 +7,10 @@
 // sections are picked up automatically) plus the published Insights; Gemini may add Google Search.
 //
 // Settings (Cloudflare → Pages project → Settings → Variables and secrets):
-//   GEMINI_API_KEY  (secret, first choice)  DALAL_DAILY_LIMIT  (default 10)
-//   GROQ_API_KEY    (secret, first backup, free)  GROQ_MODELS (optional), GROQ_CONTEXT_CHARS (default 10000)
-//   ANTHROPIC_API_KEY (secret, last backup, paid: Haiku then Sonnet only)  CLAUDE_MODELS (optional, haiku/sonnet only),
-//                   CLAUDE_DAILY_MAX (default 100 answers a day), CLAUDE_CONTEXT_CHARS (default 60000)
+//   GEMINI_API_KEY  (secret, second choice since 24-Nov-2026)  DALAL_DAILY_LIMIT  (default 10)
+//   GROQ_API_KEY    (secret, last backup, free)  GROQ_MODELS (optional), GROQ_CONTEXT_CHARS (default 10000)
+//   ANTHROPIC_API_KEY (secret, FIRST choice since 24-Nov-2026, paid: Haiku then Sonnet only)  CLAUDE_MODELS (optional, haiku/sonnet only),
+//                   CLAUDE_DAILY_MAX (default 200 answers a day), CLAUDE_CONTEXT_CHARS (default 60000)
 //   GEMINI_MODELS   (optional preferred models, tried first; otherwise Dalal picks the newest available "flash" models)
 //   FIREBASE_PROJECT_ID (default street-ka-dalal)
 
@@ -600,9 +600,23 @@ async function askClaude(env, sys, history, userText) {
   throw new Error(lastErr.replace(/^ \| /, '') || 'no Claude model answered');
 }
 
-// Gemini -> Groq -> Claude. Returns the first answer; the error lists why each one failed.
+// Claude -> Gemini -> Groq (Sagar, 24-Nov-2026: "use everytime claude to answer this in dalal bot"; was Gemini first
+// since 18-Oct). Claude = Haiku 5.5, Sonnet 5.5 if Haiku fails, never Opus. Past CLAUDE_DAILY_MAX answers a day
+// (default 200) the free Gemini / Groq answer instead. Returns the first answer; the error lists why each one failed.
 async function askChain(env, sys, history, context, questionText) {
   const errs = [];
+  if (env.ANTHROPIC_API_KEY) {
+    const cap = +(env.CLAUDE_DAILY_MAX || 200);
+    const used = await getUsed(env, '_claude');
+    if (used >= cap) errs.push(`Claude: daily cap of ${cap} answers reached`);
+    else {
+      try {
+        const r = await askClaude(env, sys, history, `SITE DATA (JSON):\n${slimContext(context, +(env.CLAUDE_CONTEXT_CHARS || 60000))}\n\n${questionText}`);
+        await addUsed(env, '_claude', used);
+        return r;
+      } catch (e) { errs.push(`Claude: ${e.message}`); }
+    }
+  }
   // a slow Gemini is skipped for 10 minutes, so the next members go straight to Groq instead of waiting 25 s each
   if (env.GEMINI_API_KEY && await cacheGet(env, 'gslow')) errs.push('Gemini: skipped, slow in the last 10 minutes');
   else if (env.GEMINI_API_KEY) {
@@ -620,18 +634,6 @@ async function askChain(env, sys, history, context, questionText) {
     // about 10,000 characters of site data fit in 8,000 tokens with the rules and the answer; less when the chat is long
     const room = Math.max(5000, +(env.GROQ_CONTEXT_CHARS || 10000) - history.reduce((n, h) => n + h.text.length, 0));
     try { return await askGroq(env, sys, history, `SITE DATA (JSON):\n${slimContext(context, room)}\n\n${questionText}`); } catch (e) { errs.push(`Groq: ${e.message}`); }
-  }
-  if (env.ANTHROPIC_API_KEY) {
-    const cap = +(env.CLAUDE_DAILY_MAX || 100);
-    const used = await getUsed(env, '_claude');
-    if (used >= cap) errs.push(`Claude: daily cap of ${cap} answers reached`);
-    else {
-      try {
-        const r = await askClaude(env, sys, history, `SITE DATA (JSON):\n${slimContext(context, +(env.CLAUDE_CONTEXT_CHARS || 60000))}\n\n${questionText}`);
-        await addUsed(env, '_claude', used);
-        return r;
-      } catch (e) { errs.push(`Claude: ${e.message}`); }
-    }
   }
   throw new Error(errs.join(' || ') || 'no AI key set');
 }
