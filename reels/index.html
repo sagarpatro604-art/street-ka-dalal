@@ -120,6 +120,7 @@ blockquote small{display:block;margin-top:8px;font:400 12px var(--sans);color:va
 .list{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden}
 .list button{display:flex;justify-content:space-between;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);text-align:left;min-height:44px;font-size:14px}
 .list button:last-child{border:0}
+.hl{padding:9px 14px;border-bottom:1px solid var(--line);font-size:13.5px;line-height:1.4}.hl:last-child{border:0}.hl .num{color:var(--sand);margin-right:4px}
 .list .v{color:var(--muted);font-size:13px;text-align:right;flex:none;max-width:40%}
 .pics{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;flex:1;min-height:0;scrollbar-width:none;border-radius:14px}
 .pics::-webkit-scrollbar{display:none}
@@ -260,6 +261,7 @@ const blobs = {};
 let GID = 0;
 
 /* ---------- helpers */
+const today = () => new Date(Date.now() + 19800000).toISOString().slice(0, 10);
 const pct = (x, d = 1) => x == null ? '' : (x > 0 ? '+' : '') + Number(x).toFixed(d) + '%';
 const tone = (x) => x > 0 ? 'pos' : x < 0 ? 'neg' : '';
 const inr = (x) => x == null ? '' : Number(x).toLocaleString('en-IN', { maximumFractionDigits: x < 100 ? 2 : 0 });
@@ -270,16 +272,24 @@ function when(s) {
   return `${+m[3]} ${MON[+m[2] - 1]}` + (m[4] ? `, ${m[4]}:${m[5]}` : '');
 }
 function age(s) {
-  const a = Date.parse((s || '').slice(0, 10)), b = Date.parse(D.as_of);
+  const a = Date.parse((s || '').slice(0, 10)), b = Date.parse(D.as_of > today() ? D.as_of : today());
   return isNaN(a) ? 3 : Math.max(0, (b - a) / 864e5);
 }
+// on the live site the cards come from the repo's own branches (no Cloudflare deploy per update); locally from this folder
+const ONLINE = /pages\.dev$|streetkadalal/i.test(location.hostname);
+const RAW = 'https://raw.githubusercontent.com/sagarpatro604-art/street-ka-dalal/';
+const SRC_DAY = ONLINE ? RAW + 'reels/' : '';
+const SRC_NOW = ONLINE ? RAW + 'reels-live/' : '';
+const MIME = { mp3: 'audio/mpeg', jpg: 'image/jpeg', png: 'image/png' };
 async function blobUrl(path) {
   if (blobs[path]) return blobs[path];
-  const r = await fetch(path);
+  const r = await fetch(SRC_DAY + path);
   if (!r.ok) throw new Error('missing ' + path);
-  blobs[path] = URL.createObjectURL(await r.blob());
+  const type = MIME[(path.split('.').pop() || '').toLowerCase()] || '';
+  blobs[path] = URL.createObjectURL(new Blob([await r.arrayBuffer()], type ? { type } : {}));
   return blobs[path];
 }
+const bust = () => '?t=' + Math.floor(Date.now() / 120000);
 let tt = null;
 function toast(msg, undo) {
   const t = $('#toast');
@@ -304,8 +314,9 @@ function rank() {
     if (c.sym && mine.has(c.sym)) s += 60;
     const sec = c.sec || c.sector;
     if (secs.size && sec) s += secs.has(sec) ? 22 : -12;
-    if (seen.has(c.id)) s -= 35;
+    if (seen.has(c.id) && !c.fresh) s -= 35;
     if (c.id === 'brief-close') s += 50;
+    if (c.fresh) s += 40;                       // the last few hours come first
     return { c, s };
   }).sort((a, b) => b.s - a.s);
   // every topic the reader picked gets its best two cards near the top
@@ -399,7 +410,7 @@ function cardHtml(c, i) {
     fig = `<div class="fig" style="height:${h}px">${lineSvg(s.sp, w, h)}<span class="lab" style="left:10px;top:8px">${esc(c.sym)}, last ${s.sp.length} sessions to ${when(D.price_day)}</span></div>`;
   }
   const pics = c.pics ? `<div class="pics" data-n="${c.pics.length}">${c.pics.map((p) => `<div><img alt="" data-src="${esc(p)}"></div>`).join('')}</div><div class="dots">${c.pics.map((p, j) => `<i class="${j ? '' : 'on'}"></i>`).join('')}</div>` : '';
-  const list = c.list ? `<div class="list">${c.list.map((x) => `<button data-sym="${esc(x.sym)}"><span><b class="num">${esc(x.sym)}</b> <span class="sub">${esc(D.stocks[x.sym] ? D.stocks[x.sym].n : '')}</span></span><span class="v">${esc(x.v)}</span></button>`).join('')}</div>` : '';
+  const list = c.list ? `<div class="list">${c.list.map((x) => x.h ? `<div class="hl"><span class="num">${esc(x.at)}</span> ${esc(x.h)} <span class="sub">${esc(x.s)}</span></div>` : `<button data-sym="${esc(x.sym)}"><span><b class="num">${esc(x.sym)}</b> <span class="sub">${esc(D.stocks[x.sym] ? D.stocks[x.sym].n : '')}</span></span><span class="v">${esc(x.v)}</span></button>`).join('')}</div>` : '';
   const nums = c.nums ? `<div class="nums">${c.nums.map((n) => `<div><span>${esc(n.k)}</span><b class="${n.t || ''}">${esc(n.v)}</b></div>`).join('')}</div>` : '';
   const quiz = c.quiz ? `<div class="quiz"><p>${esc(c.quiz.q)}</p>${c.quiz.o.map((o, j) => `<button data-q="${j}">${esc(o)}</button>`).join('')}</div>` : '';
   const body = c.body ? `<p class="body">${esc(c.body)}</p>${c.body.length > 260 ? '<button class="more">Read more</button>' : ''}` : '';
@@ -438,7 +449,8 @@ function endHtml(total) {
       <button class="btn" data-end="interests">Change my interests</button>
       <button class="btn" data-end="saved">Saved cards (${saved.size})</button>
     </div>
-    <p class="sub">Data: NSE official closes of ${when(D.as_of)}. Scanner charts of ${when(D.scan_as_of)}. Built ${esc(D.built)}.</p>
+    <p class="sub">${D.latest_built ? `Right now cards updated ${esc(when(D.latest_built))} IST, every 30 minutes. ` : ''}Daily cards built ${esc(when(D.built))}. Prices: NSE official closes of ${when(D.as_of)}.</p>
+    <div class="stack"><button class="btn" data-end="reload">Check for new cards</button></div>
   </div></section>`;
 }
 
@@ -597,6 +609,7 @@ $('#feed').addEventListener('click', (e) => {
     return;
   }
   if (t.dataset.end === 'more') { shown += 24; const pos = $('#feed').scrollTop; render(true); $('#feed').scrollTop = pos; return; }
+  if (t.dataset.end === 'reload') { location.reload(); return; }
   if (t.dataset.end === 'interests') return openSettings();
   if (t.dataset.end === 'saved') return setView('saved');
 });
@@ -766,8 +779,16 @@ let rt = null;
 addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (D && view) { const pos = $('#feed').scrollTop; render(true); $('#feed').scrollTop = pos; } }, 300); });
 if (window.speechSynthesis) speechSynthesis.getVoices();
 
-fetch('reels.json').then((r) => r.json()).then((d) => {
+Promise.all([
+  fetch(SRC_DAY + 'reels.json' + bust()).then((r) => r.json()),
+  fetch(SRC_NOW + 'latest.json' + bust()).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+]).then(([d, l]) => {
   D = d;
+  if (l && l.cards) {
+    // a stale 'Right now' card is worse than none: drop latest cards older than 3 hours
+    const fresh = (Date.now() - Date.parse(l.built.replace(' ', 'T') + ':00+05:30')) / 36e5 < 3;
+    if (fresh) { D.cards = l.cards.concat(D.cards); D.latest_built = l.built; }
+  }
   D.cards.forEach((c) => { byId[c.id] = c; });
   if (!prefs) startOnboarding();
   else { feedCards = rank(); render(); }
