@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SKD Reels</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* VOICE: a calm market companion for the metro ride; facts in plain words, never a tip.
+   IDEA: a stack of index cards from Street ka Dalal's own research desk, one fact per card, swiped like reels.
+   PICTURE: each card's own chart (candles, index line, bars) drawn live from NSE closes, big and first.
+   COLOUR and TYPE: SKD look kit, near-black green ground, mint for up, coral for down, sand for money; Newsreader titles, Plex body.
+   LAYOUT: one full-height card per swipe, phone column centred on wide screens, actions in a fixed bottom row. */
+:root{
+  --bg:#0B0D0C;--bg2:#0E110F;--surface:#121613;--surface2:#161B17;--raise:#1B211C;
+  --ink:#F4F1E8;--ink2:#D8D4C8;--muted:#9AA49B;--faint:#6C766E;
+  --line:rgba(154,164,155,.13);--line2:rgba(154,164,155,.24);
+  --accent:#67E8A5;--accent-ink:#062014;--accent-soft:rgba(103,232,165,.11);--accent-line:rgba(103,232,165,.38);
+  --sand:#E2C88F;--sand-soft:rgba(226,200,143,.10);--coral:#EFA28C;--coral-soft:rgba(239,162,140,.12);
+  --sky:#9EC9E6;--sky-soft:rgba(158,201,230,.10);
+  --serif:"Newsreader","Iowan Old Style",Georgia,serif;--sans:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;--mono:"IBM Plex Mono",Consolas,monospace;
+  --pos:var(--accent);--neg:var(--coral);
+  --top:calc(54px + env(safe-area-inset-top));--act:calc(66px + env(safe-area-inset-bottom));
+  color-scheme:dark;
+}
+:root[data-theme=light]{
+  --bg:#F4F0E5;--bg2:#EFEADD;--surface:#FBF8F0;--surface2:#F7F3E8;--raise:#FFFDF7;
+  --ink:#1C1F1D;--ink2:#33382F;--muted:#5D685F;--faint:#879088;
+  --line:rgba(40,52,43,.12);--line2:rgba(40,52,43,.22);
+  --accent:#17794C;--accent-ink:#F4FFF8;--accent-soft:rgba(23,121,76,.09);--accent-line:rgba(23,121,76,.35);
+  --sand:#8A6418;--sand-soft:rgba(138,100,24,.08);--coral:#A9452C;--coral-soft:rgba(169,69,44,.08);
+  --sky:#2D6A93;--sky-soft:rgba(45,106,147,.08);color-scheme:light;
+}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 var(--sans);-webkit-font-smoothing:antialiased;overflow:hidden;overscroll-behavior:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+a{color:var(--accent);text-decoration:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+input{font:inherit;font-size:16px;color:var(--ink);background:var(--surface);border:1px solid var(--line2);border-radius:12px;padding:12px 14px;width:100%;outline:0}
+input:focus{border-color:var(--accent-line);box-shadow:0 0 0 4px var(--accent-soft)}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pos{color:var(--pos)}.neg{color:var(--neg)}
+
+#app{position:fixed;top:0;bottom:0;left:0;right:0;max-width:480px;margin:0 auto;background:var(--bg2);overflow:hidden;border-inline:1px solid var(--line)}
+@media(max-width:480px){#app{border:0}}
+
+/* top bar */
+#top{position:absolute;inset:0 0 auto;z-index:5;height:var(--top);padding:env(safe-area-inset-top) 10px 0 14px;display:flex;align-items:center;gap:6px;
+  background:linear-gradient(var(--bg2) 55%,transparent)}
+.brand{font:600 20px/1 var(--serif);letter-spacing:-.01em;margin-right:auto;white-space:nowrap}
+.brand b{color:var(--accent);font-weight:600}
+.tabs{display:flex;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px}
+.tabs button{padding:6px 11px;border-radius:999px;font-size:13px;color:var(--muted);min-height:32px}
+.tabs button[aria-pressed=true]{background:var(--raise);color:var(--ink)}
+.ib{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:var(--ink2)}
+.ib svg{width:21px;height:21px}
+.ib[aria-pressed=true]{background:var(--accent);color:var(--accent-ink)}
+#prog{position:absolute;left:14px;right:14px;top:calc(var(--top) - 4px);height:2px;background:var(--line);z-index:6;border-radius:2px;overflow:hidden}
+#prog i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+#count{position:absolute;right:16px;top:calc(var(--top) + 4px);z-index:6;font:500 11px var(--mono);color:var(--faint)}
+
+/* feed */
+#feed{height:100%;overflow-y:auto;scroll-snap-type:y mandatory;overscroll-behavior:contain;scrollbar-width:none}
+#feed::-webkit-scrollbar{display:none}
+.reel{position:relative;height:100dvh;scroll-snap-align:start;scroll-snap-stop:always;display:flex;flex-direction:column;
+  padding:calc(var(--top) + 18px) 18px var(--act)}
+.card{flex:1;display:flex;flex-direction:column;gap:12px;overflow:hidden}
+.meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.chip{padding:4px 10px;border-radius:999px;font-weight:500;font-size:12.5px;background:var(--surface2);border:1px solid var(--line2);color:var(--ink2)}
+.t-market .chip,.t-sector .chip,.t-learn .chip{background:var(--sky-soft);border-color:transparent;color:var(--sky)}
+.t-filing .chip,.t-money .chip{background:var(--sand-soft);border-color:transparent;color:var(--sand)}
+.t-chart .chip,.t-discovery .chip,.t-result.tone-pos .chip{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
+.tone-neg .chip{background:var(--coral-soft);border-color:transparent;color:var(--coral)}
+.t-story .chip{background:var(--coral-soft);color:var(--coral);border-color:transparent}
+.capt{font:500 11px var(--mono);color:var(--faint);border:1px solid var(--line2);border-radius:6px;padding:2px 6px}
+.stk{display:flex;align-items:baseline;gap:8px;padding:9px 12px;border-radius:12px;background:var(--surface);border:1px solid var(--line);text-align:left;min-height:44px}
+.stk .s{font:600 14px var(--mono);color:var(--ink)}
+.stk .n{font-size:13.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.stk .p{font:500 13px var(--mono)}
+.title{font:500 clamp(23px,6.6vw,29px)/1.15 var(--serif);letter-spacing:-.012em;margin:0;text-wrap:balance}
+.body{margin:0;color:var(--ink2);font-size:15.5px;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
+.body.open{-webkit-line-clamp:unset;overflow:visible}
+.more{align-self:flex-start;font-size:13px;color:var(--accent);padding:2px 0;min-height:30px}
+.why{border-left:2px solid var(--accent-line);padding:4px 0 4px 12px;font-size:14.5px;color:var(--ink2)}
+.why b{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:2px}
+blockquote{margin:0;padding:14px 16px;border-radius:14px;background:var(--surface);border:1px solid var(--line);font:italic 400 18px/1.4 var(--serif);color:var(--ink)}
+blockquote small{display:block;margin-top:8px;font:400 12px var(--sans);color:var(--muted);font-style:normal}
+.src{margin-top:auto;font-size:12px;color:var(--faint);line-height:1.45}
+.src a{color:var(--muted);text-decoration:underline;text-underline-offset:2px}
+
+/* figures */
+.fig{position:relative;height:clamp(150px,27dvh,250px);border-radius:14px;background:var(--surface);border:1px solid var(--line);overflow:hidden;flex:none}
+.fig svg{position:absolute;inset:0;width:100%;height:100%}
+.fig .lab{position:absolute;font:500 11px var(--mono);color:var(--muted);background:var(--surface);padding:1px 4px;border-radius:4px}
+.draw{stroke-dasharray:1;stroke-dashoffset:1}
+.in .draw{animation:draw 1.4s cubic-bezier(.2,.7,.2,1) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.cdl{opacity:0}.in .cdl{animation:fade .5s forwards}
+@keyframes fade{to{opacity:1}}
+.nums{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.nums div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:9px 12px}
+.nums span{display:block;font-size:12px;color:var(--muted)}
+.nums b{font:500 17px var(--mono);font-variant-numeric:tabular-nums}
+.bars{display:flex;flex-direction:column;gap:12px}
+.bars h4{margin:0 0 4px;font:500 12.5px var(--sans);color:var(--muted)}
+.br{display:grid;grid-template-columns:minmax(0,7.5em) 1fr 4.2em;align-items:center;gap:8px;font-size:13px;min-height:24px}
+.br .k{color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.br .tr{position:relative;height:9px}
+.br .tr::before{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;border-left:1px solid var(--line2)}
+.br .tr i{position:absolute;top:0;height:100%;border-radius:3px;transform:scaleX(0);transition:transform .9s cubic-bezier(.2,.7,.2,1)}
+.in .br .tr i{transform:scaleX(1)}
+.br .v{text-align:right}
+.cols{display:flex;align-items:flex-end;gap:4px;height:clamp(110px,18dvh,170px);padding:10px 10px 0;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.cols div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px}
+.cols i{display:block;width:100%;background:var(--sand);border-radius:3px 3px 0 0;transform:scaleY(0);transform-origin:bottom;transition:transform .8s cubic-bezier(.2,.7,.2,1)}
+.in .cols i{transform:scaleY(1)}
+.cols span{font-size:10px;color:var(--faint);font-family:var(--mono)}
+.list{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden}
+.list button{display:flex;justify-content:space-between;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);text-align:left;min-height:44px;font-size:14px}
+.list button:last-child{border:0}
+.list .v{color:var(--muted);font-size:13px;text-align:right;flex:none;max-width:40%}
+.pics{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;flex:1;min-height:0;scrollbar-width:none;border-radius:14px}
+.pics::-webkit-scrollbar{display:none}
+.pics div{flex:0 0 100%;scroll-snap-align:center;display:grid;place-items:center;background:var(--surface);border-radius:14px}
+.pics img{max-width:100%;max-height:100%;object-fit:contain;border-radius:12px}
+.dots{display:flex;justify-content:center;gap:5px}.dots i{width:6px;height:6px;border-radius:50%;background:var(--line2)}.dots i.on{background:var(--ink)}
+.quiz{display:flex;flex-direction:column;gap:8px;padding:14px;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.quiz p{margin:0 0 4px;font-weight:500}
+.quiz button{border:1px solid var(--line2);border-radius:12px;padding:11px 14px;text-align:left;min-height:44px}
+.quiz button.ok{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.quiz button.no{border-color:var(--coral);background:var(--coral-soft);color:var(--coral)}
+.playing-bar{height:3px;border-radius:2px;background:var(--line);overflow:hidden;display:none}
+.playing .playing-bar{display:block}.playing-bar i{display:block;height:100%;width:0;background:var(--sand)}
+
+/* actions */
+.acts{position:absolute;left:0;right:0;bottom:0;height:var(--act);padding:6px 10px env(safe-area-inset-bottom);display:grid;grid-template-columns:repeat(4,1fr);
+  border-top:1px solid var(--line);background:var(--bg2)}
+.acts button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11.5px;color:var(--muted);border-radius:12px;min-height:48px}
+.acts svg{width:22px;height:22px}
+.acts button[aria-pressed=true]{color:var(--accent)}
+.acts button.live{color:var(--sand)}
+.hint{position:absolute;left:50%;bottom:calc(var(--act) + 8px);transform:translateX(-50%);font-size:12px;color:var(--ink2);background:var(--raise);border:1px solid var(--line2);border-radius:999px;padding:5px 12px;display:flex;align-items:center;gap:5px;animation:bob 1.6s ease-in-out infinite}
+.reel.first .card{padding-bottom:40px}
+@keyframes bob{50%{transform:translate(-50%,-5px)}}
+
+/* end card */
+.end{justify-content:center;text-align:center;gap:16px}
+.end h2{font:500 34px/1.1 var(--serif);margin:0}
+.end p{color:var(--ink2);margin:0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:12px 18px;border-radius:999px;font-weight:500;border:1px solid var(--line2)}
+.btn.main{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.stack{display:flex;flex-direction:column;gap:10px;align-items:stretch;width:100%;max-width:320px;margin:0 auto}
+
+/* sheets */
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:20;opacity:0;pointer-events:none;transition:opacity .25s}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:21;max-height:88%;overflow-y:auto;background:var(--surface);border-radius:20px 20px 0 0;
+  padding:10px 18px calc(22px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .3s cubic-bezier(.2,.7,.2,1);border-top:1px solid var(--line2)}
+.sheet.on{transform:none}
+.sheet .grab{width:40px;height:4px;border-radius:2px;background:var(--line2);margin:0 auto 12px}
+.sheet h3{font:500 24px/1.2 var(--serif);margin:4px 0 2px}
+.sheet h4{margin:20px 0 8px;font-size:13px;font-weight:500;color:var(--muted)}
+.sub{color:var(--muted);font-size:13.5px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{border:1px solid var(--line2);border-radius:999px;padding:9px 14px;font-size:14px;min-height:42px;text-align:left}
+.chips button small{display:block;font-size:11.5px;color:var(--muted)}
+.chips button[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--ink)}
+.rets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.rets div{background:var(--surface2);border-radius:10px;padding:8px 10px}
+.rets span{display:block;font-size:11.5px;color:var(--muted)}
+.links{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.links a,.links button{font-size:14px;padding:10px 14px;border:1px solid var(--line2);border-radius:999px;color:var(--ink);min-height:44px;display:inline-flex;align-items:center}
+.sugg{display:flex;flex-direction:column;margin-top:6px}
+.sugg button{display:flex;justify-content:space-between;padding:10px 4px;border-bottom:1px solid var(--line);text-align:left;min-height:44px;font-size:14px}
+.mine{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.mine button{font:500 13px var(--mono);padding:6px 10px;border-radius:8px;background:var(--surface2);border:1px solid var(--line2)}
+
+/* onboarding */
+#onb{position:absolute;inset:0;z-index:30;background:var(--bg2);display:none;flex-direction:column;padding:calc(28px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom));overflow-y:auto}
+#onb.on{display:flex}
+#onb .step{font:500 12px var(--mono);color:var(--faint)}
+#onb h2{font:500 clamp(28px,8vw,36px)/1.1 var(--serif);margin:10px 0 8px;text-wrap:balance}
+#onb .foot{margin-top:auto;display:flex;gap:10px;padding-top:20px}
+#onb .foot .btn{flex:1}
+.hero{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0}
+.hero div{aspect-ratio:9/14;border-radius:14px;background:var(--surface);border:1px solid var(--line);padding:10px;display:flex;flex-direction:column;gap:6px;font-size:11px;color:var(--muted)}
+.hero b{font:500 13px/1.2 var(--serif);color:var(--ink)}
+.hero svg{margin-top:auto;width:100%;height:46%}
+
+#toast{position:absolute;left:50%;bottom:calc(var(--act) + 16px);transform:translate(-50%,20px);z-index:40;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;
+  font-size:14px;opacity:0;pointer-events:none;transition:.25s;display:flex;gap:12px;align-items:center;white-space:nowrap}
+#toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+#toast button{color:var(--bg);font-weight:600;text-decoration:underline}
+.empty{padding:calc(var(--top) + 40px) 24px;text-align:center;color:var(--muted)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.draw{stroke-dashoffset:0}.cdl{opacity:1}.br .tr i,.cols i{transform:none}}
+@media(max-height:640px){.fig{height:132px}.body{-webkit-line-clamp:4}.title{font-size:22px}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="top">
+    <a class="brand" href="/" style="color:inherit">SKD <b>Reels</b></a>
+    <div class="tabs" role="group" aria-label="View">
+      <button id="tabFeed" aria-pressed="true">For you</button>
+      <button id="tabSaved" aria-pressed="false">Saved</button>
+    </div>
+    <button class="ib" id="btnPlay" aria-pressed="false" aria-label="Play the feed hands-free" title="Play the feed hands-free">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2" stroke-linecap="round"/></svg></button>
+    <button class="ib" id="btnSet" aria-label="My interests" title="My interests">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
+  </header>
+  <div id="prog"><i></i></div>
+  <div id="count"></div>
+  <main id="feed" aria-live="polite"><div class="empty">Loading today's cards...</div></main>
+  <div class="scrim" id="scrim"></div>
+  <section class="sheet" id="sheet" role="dialog" aria-modal="true"></section>
+  <section id="onb" aria-label="Set up your feed"></section>
+  <div id="toast" role="status"></div>
+</div>
+<audio id="player" preload="none"></audio>
+<script>
+{
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('skdr_' + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('skdr_' + k, JSON.stringify(v)); } catch (e) {} },
+};
+const TOPICS = [
+  { id: 'charts', n: 'Charts and setups', d: '52-week highs, volume jumps, tight ranges', t: ['chart'] },
+  { id: 'news', n: 'Market news', d: 'Headlines in a few lines', t: ['news'] },
+  { id: 'filings', n: 'Company announcements', d: 'NSE filings, with NSE audio', t: ['filing'] },
+  { id: 'results', n: 'Results', d: 'The numbers and how the stock reacted', t: ['result'] },
+  { id: 'discovery', n: 'Discoveries', d: 'Big orders, guidance, red flags', t: ['discovery'] },
+  { id: 'money', n: 'Money flow', d: 'Mutual funds, FIIs, ace investors', t: ['money'] },
+  { id: 'sectors', n: 'Sectors', d: 'Which groups lead and lag', t: ['sector'] },
+  { id: 'stories', n: 'Stories', d: 'Our research carousels', t: ['story'] },
+  { id: 'learn', n: 'Learn the basics', d: '30-second lessons with a quiz', t: ['learn'] },
+];
+const CAPS = [{ id: 'L', n: 'Large caps', d: 'Top 100 companies' }, { id: 'M', n: 'Mid caps', d: 'Rank 101 to 250' }, { id: 'S', n: 'Small caps', d: 'Rank 251 and below' }];
+const CAPN = { L: 'Large cap', M: 'Mid cap', S: 'Small cap' };
+const DAILY = 36;
+const ICON = {
+  save: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4z"/></svg>',
+  saved: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4z"/></svg>',
+  listen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>',
+  stop: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>',
+  share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5M5 13v7h14v-7"/></svg>',
+  hide: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M6 18L18 6"/></svg>',
+  down: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg>',
+};
+
+let D = null, byId = {}, feedCards = [], view = 'feed', current = 0, shown = DAILY, autoplay = false, playingId = null;
+let prefs = store.get('prefs', null);
+let saved = new Set(store.get('saved', [])), hidden = new Set(store.get('hidden', [])), seen = new Set(store.get('seen', []));
+let less = store.get('less', {});
+const blobs = {};
+let GID = 0;
+
+/* ---------- helpers */
+const pct = (x, d = 1) => x == null ? '' : (x > 0 ? '+' : '') + Number(x).toFixed(d) + '%';
+const tone = (x) => x > 0 ? 'pos' : x < 0 ? 'neg' : '';
+const inr = (x) => x == null ? '' : Number(x).toLocaleString('en-IN', { maximumFractionDigits: x < 100 ? 2 : 0 });
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function when(s) {
+  const m = /^(\d{4})-(\d\d)-(\d\d)(?:[ T](\d\d):(\d\d))?/.exec(s || '');
+  if (!m) return '';
+  return `${+m[3]} ${MON[+m[2] - 1]}` + (m[4] ? `, ${m[4]}:${m[5]}` : '');
+}
+function age(s) {
+  const a = Date.parse((s || '').slice(0, 10)), b = Date.parse(D.as_of);
+  return isNaN(a) ? 3 : Math.max(0, (b - a) / 864e5);
+}
+async function blobUrl(path) {
+  if (blobs[path]) return blobs[path];
+  const r = await fetch(path);
+  if (!r.ok) throw new Error('missing ' + path);
+  blobs[path] = URL.createObjectURL(await r.blob());
+  return blobs[path];
+}
+let tt = null;
+function toast(msg, undo) {
+  const t = $('#toast');
+  t.innerHTML = esc(msg) + (undo ? ' <button type="button">Undo</button>' : '');
+  if (undo) t.querySelector('button').onclick = () => { undo(); t.classList.remove('on'); };
+  t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(() => t.classList.remove('on'), 3200);
+}
+
+/* ---------- ranking */
+function topicOf(c) { const t = TOPICS.find((x) => x.t.includes(c.type)); return t ? t.id : null; }
+function rank() {
+  const mine = new Set(prefs.mine || []), secs = new Set(prefs.sectors || []);
+  const pool = D.cards.filter((c) => {
+    if (hidden.has(c.id)) return false;
+    if (c.sym && mine.has(c.sym)) return true;
+    if (c.type !== 'market' && !prefs.topics.includes(topicOf(c))) return false;
+    if (c.cap && !prefs.caps.includes(c.cap)) return false;
+    return true;
+  }).map((c) => {
+    let s = c.prio - age(c.date) * 2.5 - (less[c.type] || 0) * 10;
+    if (c.sym && mine.has(c.sym)) s += 60;
+    const sec = c.sec || c.sector;
+    if (secs.size && sec) s += secs.has(sec) ? 22 : -12;
+    if (seen.has(c.id)) s -= 35;
+    if (c.id === 'brief-close') s += 50;
+    return { c, s };
+  }).sort((a, b) => b.s - a.s);
+  // every topic the reader picked gets its best two cards near the top
+  const nType = {};
+  pool.forEach((x) => { const k = x.c.type; nType[k] = (nType[k] || 0) + 1; x.s += nType[k] === 1 ? 50 : nType[k] === 2 ? 25 : -(nType[k] - 2) * 3; });
+  pool.sort((a, b) => b.s - a.s);
+  // mix: never three cards of one kind in a row
+  const out = [], rest = pool.slice();
+  while (rest.length) {
+    const last = out.slice(-2).map((c) => c.type);
+    let i = rest.findIndex((x) => !(last.length === 2 && last[0] === x.c.type && last[1] === x.c.type));
+    if (i < 0) i = 0;
+    out.push(rest.splice(i, 1)[0].c);
+  }
+  return out;
+}
+
+/* ---------- figures */
+function lineSvg(v, w, h) {
+  const xs = v.filter((x) => x != null), lo = Math.min(...xs), hi = Math.max(...xs), pad = 14;
+  const X = (i) => pad + i * (w - pad * 2) / (v.length - 1), Y = (x) => h - pad - (x - lo) / (hi - lo || 1) * (h - pad * 2.4);
+  const pts = v.map((x, i) => `${X(i).toFixed(1)},${Y(x).toFixed(1)}`).join(' ');
+  const up = v[v.length - 1] >= v[0], col = up ? 'var(--pos)' : 'var(--neg)', gid = 'g' + (++GID);
+  return `<svg viewBox="0 0 ${w} ${h}" aria-hidden="true"><defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".22"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>
+    <polygon class="cdl" points="${X(0)},${h} ${pts} ${X(v.length - 1)},${h}" fill="url(#${gid})"/>
+    <polyline class="draw" pathLength="1" points="${pts}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle class="cdl" cx="${X(v.length - 1)}" cy="${Y(v[v.length - 1])}" r="4" fill="${col}"/></svg>`;
+}
+function candleSvg(k, w, h) {
+  const n = k.c.length, volH = h * 0.18, top = 14, bot = h - volH - 8;
+  const lows = k.l.filter((x) => x != null), highs = k.h.filter((x) => x != null);
+  let lo = Math.min(...lows), hi = Math.max(...highs);
+  if (k.res && k.res < hi * 1.15 && k.res > lo) hi = Math.max(hi, k.res);
+  const bw = (w - 16) / n, X = (i) => 8 + i * bw + bw / 2, Y = (x) => top + (hi - x) / (hi - lo || 1) * (bot - top);
+  const vmax = Math.max(...k.v.filter((x) => x != null)) || 1;
+  let s = '';
+  for (let i = 0; i < n; i++) {
+    if (k.c[i] == null || k.o[i] == null) continue;
+    const up = k.c[i] >= k.o[i], col = up ? 'var(--pos)' : 'var(--neg)', y1 = Y(Math.max(k.o[i], k.c[i])), y2 = Y(Math.min(k.o[i], k.c[i]));
+    const d = (i / n * 0.6).toFixed(2);
+    s += `<g class="cdl" style="animation-delay:${d}s"><line x1="${X(i)}" x2="${X(i)}" y1="${Y(k.h[i])}" y2="${Y(k.l[i])}" stroke="${col}" stroke-width="1"/>
+      <rect x="${X(i) - bw * 0.36}" y="${y1}" width="${Math.max(1, bw * 0.72)}" height="${Math.max(1, y2 - y1)}" fill="${up ? 'none' : col}" stroke="${col}" stroke-width="1"/>
+      <rect x="${X(i) - bw * 0.36}" y="${h - 4 - (k.v[i] || 0) / vmax * volH}" width="${Math.max(1, bw * 0.72)}" height="${(k.v[i] || 0) / vmax * volH}" fill="${col}" opacity=".35"/></g>`;
+  }
+  const m = k.m50 || [], mp = m.map((x, i) => x == null ? null : `${X(i).toFixed(1)},${Y(x).toFixed(1)}`).filter(Boolean).join(' ');
+  if (mp) s += `<polyline class="draw" pathLength="1" points="${mp}" fill="none" stroke="var(--sky)" stroke-width="1.6" opacity=".85"/>`;
+  if (k.res) s += `<line x1="8" x2="${w - 8}" y1="${Y(k.res)}" y2="${Y(k.res)}" stroke="var(--sand)" stroke-dasharray="5 4" stroke-width="1.2"/>`;
+  return { svg: `<svg viewBox="0 0 ${w} ${h}" aria-hidden="true">${s}</svg>`, resY: k.res ? Y(k.res) : null };
+}
+function figure(c) {
+  const w = Math.max(280, Math.min(460, $('#feed').clientWidth - 36)), h = Math.round(Math.min(250, Math.max(150, innerHeight * 0.27)));
+  if (c.candles) {
+    const k = c.candles, cs = candleSvg(k, w, h);
+    return `<div class="fig">${cs.svg}<span class="lab" style="left:10px;bottom:${h * 0.18 + 10}px">${when(k.d[0])}</span>
+      <span class="lab" style="right:10px;bottom:${h * 0.18 + 10}px">${when(k.d[k.d.length - 1])}</span>
+      <span class="lab" style="left:10px;top:8px;color:var(--sky)">50-day average</span>
+      ${cs.resY != null ? `<span class="lab" style="right:10px;top:${Math.max(26, cs.resY - 20)}px;color:var(--sand)">Resistance ${inr(k.res)}</span>` : ''}</div>`;
+  }
+  if (c.line) return `<div class="fig">${lineSvg(c.line.v, w, h)}<span class="lab" style="left:10px;top:8px">${esc(c.line.name)}, last ${c.line.v.length} sessions</span></div>`;
+  return '';
+}
+function barsHtml(groups) {
+  return `<div class="bars">${groups.map((g) => {
+    const m = Math.max(...g.rows.map((r) => Math.abs(r.v)), 1);
+    return `<div><h4>${esc(g.k)}</h4>${g.rows.map((r) => {
+      const wv = Math.abs(r.v) / m * 50;
+      return `<div class="br"><span class="k">${esc(r.k)}</span><span class="tr"><i style="${r.v >= 0 ? 'left:50%' : `right:50%`};width:${wv}%;background:var(--${r.v >= 0 ? 'pos' : 'neg'});transform-origin:${r.v >= 0 ? 'left' : 'right'}"></i></span><span class="v num ${tone(r.v)}">${pct(r.v)}</span></div>`;
+    }).join('')}</div>`;
+  }).join('')}</div>`;
+}
+function colsHtml(sp) {
+  const m = Math.max(...sp.map((x) => Math.abs(x.v)), 1);
+  return `<div class="cols">${sp.map((x, i) => `<div><i style="height:${Math.max(2, Math.abs(x.v) / m * 100)}%;transition-delay:${i * 0.04}s;${x.v < 0 ? 'background:var(--neg)' : ''}"></i><span>${esc(x.k[0])}</span></div>`).join('')}</div>`;
+}
+
+/* ---------- card html */
+function stockRow(sym) {
+  const s = D.stocks[sym];
+  if (!s) return '';
+  const r1 = s.r ? s.r[0] : null;
+  return `<button class="stk" data-sym="${esc(sym)}"><span class="s">${esc(sym)}</span><span class="n">${esc(s.n)}</span>${s.p != null ? `<span class="p num">${inr(s.p)} <span class="${tone(r1)}">${pct(r1)}</span></span>` : ''}</button>`;
+}
+function cardHtml(c, i) {
+  let fig = '';
+  if (c.candles || c.line) fig = figure(c);
+  else if (c.bars) fig = barsHtml(c.bars);
+  else if (c.spark) fig = colsHtml(c.spark);
+  else if (!c.pics && !c.quiz && c.sym && D.stocks[c.sym] && D.stocks[c.sym].sp) {
+    // no chart of its own: show the stock's own recent closes, so the eye has a picture
+    const s = D.stocks[c.sym], w = Math.max(280, Math.min(460, $('#feed').clientWidth - 36)), h = 120;
+    fig = `<div class="fig" style="height:${h}px">${lineSvg(s.sp, w, h)}<span class="lab" style="left:10px;top:8px">${esc(c.sym)}, last ${s.sp.length} sessions to ${when(D.price_day)}</span></div>`;
+  }
+  const pics = c.pics ? `<div class="pics" data-n="${c.pics.length}">${c.pics.map((p) => `<div><img alt="" data-src="${esc(p)}"></div>`).join('')}</div><div class="dots">${c.pics.map((p, j) => `<i class="${j ? '' : 'on'}"></i>`).join('')}</div>` : '';
+  const list = c.list ? `<div class="list">${c.list.map((x) => `<button data-sym="${esc(x.sym)}"><span><b class="num">${esc(x.sym)}</b> <span class="sub">${esc(D.stocks[x.sym] ? D.stocks[x.sym].n : '')}</span></span><span class="v">${esc(x.v)}</span></button>`).join('')}</div>` : '';
+  const nums = c.nums ? `<div class="nums">${c.nums.map((n) => `<div><span>${esc(n.k)}</span><b class="${n.t || ''}">${esc(n.v)}</b></div>`).join('')}</div>` : '';
+  const quiz = c.quiz ? `<div class="quiz"><p>${esc(c.quiz.q)}</p>${c.quiz.o.map((o, j) => `<button data-q="${j}">${esc(o)}</button>`).join('')}</div>` : '';
+  const body = c.body ? `<p class="body">${esc(c.body)}</p>${c.body.length > 260 ? '<button class="more">Read more</button>' : ''}` : '';
+  const isSaved = saved.has(c.id);
+  return `<section class="reel${i === 0 && view === 'feed' ? ' first' : ''}" data-i="${i}" data-id="${esc(c.id)}">
+   <article class="card t-${c.type} tone-${c.tone || 'neu'}">
+    <div class="meta"><span class="chip">${esc(c.label)}</span><span>${when(c.date)}</span>${c.cap ? `<span class="capt">${CAPN[c.cap]}</span>` : ''}${c.audio ? '<span class="capt" style="color:var(--sand)">NSE audio</span>' : ''}</div>
+    ${c.sym ? stockRow(c.sym) : ''}
+    <h2 class="title">${esc(c.title)}</h2>
+    <div class="playing-bar"><i></i></div>
+    ${c.pics ? pics : fig}${c.type === 'story' ? '' : nums}${list}
+    ${c.quote ? `<blockquote>"${esc(c.quote)}"<small>Management, word for word</small></blockquote>` : ''}
+    ${body}${quiz}
+    ${c.why ? `<div class="why"><b>Why it matters</b>${esc(c.why)}</div>` : ''}
+    <div class="src">Source: ${esc(c.src)}${c.link ? `. <a href="${esc(c.link)}" target="_blank" rel="noopener">Open</a>` : ''}. Facts only, not investment advice.</div>
+   </article>
+   <nav class="acts" aria-label="Card actions">
+    <button data-act="save" aria-pressed="${isSaved}">${isSaved ? ICON.saved : ICON.save}<span>${isSaved ? 'Saved' : 'Save'}</span></button>
+    <button data-act="listen">${ICON.listen}<span>${c.audio ? 'NSE audio' : 'Listen'}</span></button>
+    <button data-act="share">${ICON.share}<span>Share</span></button>
+    <button data-act="hide">${ICON.hide}<span>Not for me</span></button>
+   </nav>
+   ${i === 0 && view === 'feed' ? `<div class="hint">${ICON.down}Swipe up</div>` : ''}
+  </section>`;
+}
+function endHtml(total) {
+  const counts = {};
+  feedCards.slice(0, shown).forEach((c) => { counts[c.type] = (counts[c.type] || 0) + 1; });
+  const more = feedCards.length - shown;
+  return `<section class="reel end" data-end="1"><div class="card end">
+    <div class="chip" style="align-self:center">Done for now</div>
+    <h2>You're caught up</h2>
+    <p>${total} cards picked for you from today's NSE data. Next update: the closing brief after 4 pm.</p>
+    <div class="stack">
+      ${more > 0 ? `<button class="btn main" data-end="more">Show ${Math.min(more, 24)} more</button>` : ''}
+      <button class="btn" data-end="interests">Change my interests</button>
+      <button class="btn" data-end="saved">Saved cards (${saved.size})</button>
+    </div>
+    <p class="sub">Data: NSE official closes of ${when(D.as_of)}. Scanner charts of ${when(D.scan_as_of)}. Built ${esc(D.built)}.</p>
+  </div></section>`;
+}
+
+/* ---------- render */
+let io = null;
+function render(keepPos) {
+  stopAudio();
+  const feed = $('#feed');
+  const list = view === 'saved' ? D.cards.filter((c) => saved.has(c.id)) : feedCards.slice(0, shown);
+  if (!list.length) {
+    feed.innerHTML = view === 'saved' ? '<div class="empty"><h2 class="title">Nothing saved yet</h2><p>Tap Save on any card to keep it here.</p></div>'
+      : '<div class="empty"><h2 class="title">No cards match</h2><p>Pick a few more topics or sizes.</p><p><button class="btn main" id="emptySet">Change my interests</button></p></div>';
+    const b = $('#emptySet'); if (b) b.onclick = openSettings;
+    $('#count').textContent = ''; $('#prog i').style.width = '0';
+    return;
+  }
+  feed.innerHTML = list.map(cardHtml).join('') + (view === 'feed' ? endHtml(list.length) : '');
+  if (io) io.disconnect();
+  io = new IntersectionObserver(onSeen, { root: feed, threshold: 0.6 });
+  feed.querySelectorAll('.reel').forEach((el) => io.observe(el));
+  if (!keepPos) { feed.scrollTop = 0; current = 0; }
+  updateCount(list.length);
+}
+function updateCount(n) {
+  const total = n ?? (view === 'saved' ? saved.size : Math.min(shown, feedCards.length));
+  $('#count').textContent = total ? `${Math.min(current + 1, total)} / ${total}` : '';
+  $('#prog i').style.width = total ? (Math.min(current + 1, total) / total * 100) + '%' : '0';
+}
+function onSeen(entries) {
+  entries.forEach((e) => {
+    if (!e.isIntersecting) return;
+    const el = e.target;
+    el.classList.add('in');
+    if (el.dataset.end) { current = Math.min(shown, feedCards.length); updateCount(); if (autoplay) setAutoplay(false); return; }
+    current = +el.dataset.i;
+    updateCount();
+    const id = el.dataset.id;
+    if (!seen.has(id)) { seen.add(id); store.set('seen', [...seen].slice(-800)); }
+    el.querySelectorAll('img[data-src]').forEach((img) => blobUrl(img.dataset.src).then((u) => { img.src = u; img.removeAttribute('data-src'); }).catch(() => {}));
+    const nxt = el.nextElementSibling;
+    if (nxt) nxt.querySelectorAll('img[data-src]').forEach((img) => blobUrl(img.dataset.src).then((u) => { img.src = u; img.removeAttribute('data-src'); }).catch(() => {}));
+    if (autoplay && playingId !== id) play(id, el);
+  });
+}
+
+/* ---------- audio: NSE's own clip, else the phone reads the card */
+const player = $('#player');
+let speaking = null, pbTimer = null;
+function speakText(c) {
+  const parts = [c.label + '.', c.sym && D.stocks[c.sym] ? D.stocks[c.sym].n + '.' : '', c.title + '.', c.quote ? 'Management said: ' + c.quote : '', c.body || '', c.why ? 'Why it matters: ' + c.why : ''];
+  if (c.quiz) parts.push('Quick question: ' + c.quiz.q);
+  return parts.filter(Boolean).join(' ').replace(/Rs /g, 'rupees ').replace(/ cr\b/g, ' crore').replace(/%/g, ' percent');
+}
+function stopAudio() {
+  player.pause(); player.removeAttribute('src');
+  if (window.speechSynthesis) speechSynthesis.cancel();
+  speaking = null; clearInterval(pbTimer);
+  document.querySelectorAll('.reel.playing').forEach((r) => { r.classList.remove('playing'); const b = r.querySelector('[data-act=listen]'); if (b) { b.classList.remove('live'); b.innerHTML = ICON.listen + `<span>${byId[r.dataset.id] && byId[r.dataset.id].audio ? 'NSE audio' : 'Listen'}</span>`; } });
+  playingId = null;
+}
+function markPlaying(el, on) {
+  const b = el.querySelector('[data-act=listen]');
+  el.classList.toggle('playing', on);
+  if (b) { b.classList.toggle('live', on); b.innerHTML = (on ? ICON.stop + '<span>Stop</span>' : ICON.listen + '<span>Listen</span>'); }
+}
+function finished(id) {
+  if (playingId !== id) return;
+  const el = document.querySelector(`.reel[data-id="${CSS.escape(id)}"]`);
+  stopAudio();
+  if (autoplay && el && el.nextElementSibling) setTimeout(() => { if (autoplay) el.nextElementSibling.scrollIntoView({ behavior: 'smooth' }); }, 700);
+}
+async function play(id, el) {
+  stopAudio();
+  const c = byId[id];
+  if (!c) return;
+  playingId = id;
+  markPlaying(el, true);
+  const bar = el.querySelector('.playing-bar i');
+  if (c.audio) {
+    try {
+      player.src = await blobUrl(c.audio);
+      if (playingId !== id) return;
+      player.onended = () => finished(id);
+      player.ontimeupdate = () => { if (bar && player.duration) bar.style.width = (player.currentTime / player.duration * 100) + '%'; };
+      await player.play();
+      return;
+    } catch (e) { /* fall through to the phone's voice */ }
+  }
+  if (!window.speechSynthesis) { toast('This browser cannot read aloud'); markPlaying(el, false); playingId = null; return; }
+  const u = new SpeechSynthesisUtterance(speakText(c));
+  const vs = speechSynthesis.getVoices();
+  const v = vs.find((x) => x.lang === 'en-IN') || vs.find((x) => /^en[-_]GB/.test(x.lang)) || vs.find((x) => /^en/.test(x.lang));
+  if (v) u.voice = v;
+  u.rate = 1.02;
+  const words = u.text.split(' ').length;
+  let k = 0;
+  u.onboundary = () => { k++; if (bar) bar.style.width = Math.min(100, k / words * 100) + '%'; };
+  u.onend = () => finished(id);
+  u.onerror = () => finished(id);
+  speaking = u;
+  speechSynthesis.speak(u);
+}
+function setAutoplay(on) {
+  autoplay = on;
+  $('#btnPlay').setAttribute('aria-pressed', on);
+  if (on) {
+    const el = document.querySelectorAll('#feed .reel')[current];
+    toast('Playing the feed. Cards move by themselves.');
+    if (el && !el.dataset.end) play(el.dataset.id, el);
+  } else stopAudio();
+}
+
+/* ---------- actions */
+function cardText(c) {
+  const s = c.sym && D.stocks[c.sym] ? `${c.sym}: ` : '';
+  return `${s}${c.title}\n${c.why || c.body || ''}\n\nMore on Street ka Dalal: ${D.skd}`;
+}
+function onAct(act, el) {
+  const id = el.dataset.id, c = byId[id], b = el.querySelector(`[data-act=${act}]`);
+  if (act === 'save') {
+    if (saved.has(id)) saved.delete(id); else saved.add(id);
+    store.set('saved', [...saved]);
+    const on = saved.has(id);
+    b.setAttribute('aria-pressed', on); b.innerHTML = (on ? ICON.saved : ICON.save) + `<span>${on ? 'Saved' : 'Save'}</span>`;
+    toast(on ? 'Saved. Find it under Saved.' : 'Removed from Saved');
+  } else if (act === 'listen') {
+    if (playingId === id) { stopAudio(); if (autoplay) setAutoplay(false); } else play(id, el);
+  } else if (act === 'share') {
+    const txt = cardText(c);
+    (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => toast('Copied. Paste it in WhatsApp.'), () => toast('Copy did not work here'));
+  } else if (act === 'hide') {
+    hidden.add(id); less[c.type] = (less[c.type] || 0) + 1;
+    store.set('hidden', [...hidden]); store.set('less', less);
+    const nxt = el.nextElementSibling;
+    el.style.transition = 'opacity .25s'; el.style.opacity = '0';
+    setTimeout(() => { if (nxt) nxt.scrollIntoView(); el.remove(); feedCards = feedCards.filter((x) => x.id !== id); reindex(); }, 250);
+    toast(`Fewer ${c.label.toLowerCase()} cards`, () => { hidden.delete(id); less[c.type] = Math.max(0, less[c.type] - 1); store.set('hidden', [...hidden]); store.set('less', less); feedCards = rank(); render(true); });
+  }
+}
+function reindex() { document.querySelectorAll('#feed .reel[data-i]').forEach((r, i) => { r.dataset.i = i; }); updateCount(); }
+
+$('#feed').addEventListener('click', (e) => {
+  const t = e.target.closest('button,a');
+  if (!t) return;
+  const reel = t.closest('.reel');
+  if (t.dataset.act) return onAct(t.dataset.act, reel);
+  if (t.dataset.sym) return openStock(t.dataset.sym);
+  if (t.classList.contains('more')) { const p = reel.querySelector('.body'); p.classList.toggle('open'); t.textContent = p.classList.contains('open') ? 'Show less' : 'Read more'; if (p.classList.contains('open')) reel.querySelector('.card').style.overflowY = 'auto'; return; }
+  if (t.dataset.q != null) {
+    const c = byId[reel.dataset.id], q = t.closest('.quiz');
+    if (q.dataset.done) return;
+    q.dataset.done = 1;
+    q.querySelectorAll('button').forEach((b, j) => { if (j === c.quiz.a) b.classList.add('ok'); });
+    if (+t.dataset.q !== c.quiz.a) t.classList.add('no');
+    toast(+t.dataset.q === c.quiz.a ? 'Correct' : 'Not quite. The right answer is marked.');
+    return;
+  }
+  if (t.dataset.end === 'more') { shown += 24; const pos = $('#feed').scrollTop; render(true); $('#feed').scrollTop = pos; return; }
+  if (t.dataset.end === 'interests') return openSettings();
+  if (t.dataset.end === 'saved') return setView('saved');
+});
+document.addEventListener('scroll', (e) => {
+  const p = e.target;
+  if (!p.classList || !p.classList.contains('pics')) return;
+  const j = Math.round(p.scrollLeft / p.clientWidth);
+  p.nextElementSibling.querySelectorAll('i').forEach((d, k) => d.classList.toggle('on', k === j));
+  p.querySelectorAll('img[data-src]').forEach((img) => blobUrl(img.dataset.src).then((u) => { img.src = u; img.removeAttribute('data-src'); }).catch(() => {}));
+}, { capture: true, passive: true });
+document.addEventListener('keydown', (e) => {
+  if ($('#sheet').classList.contains('on') || $('#onb').classList.contains('on') || /INPUT/.test(e.target.tagName)) { if (e.key === 'Escape') closeSheet(); return; }
+  const reels = document.querySelectorAll('#feed .reel');
+  if (e.key === 'ArrowDown' || e.key === 'j') { e.preventDefault(); const r = reels[Math.min(current + 1, reels.length - 1)]; if (r) r.scrollIntoView({ behavior: 'smooth' }); }
+  if (e.key === 'ArrowUp' || e.key === 'k') { e.preventDefault(); const r = reels[Math.max(current - 1, 0)]; if (r) r.scrollIntoView({ behavior: 'smooth' }); }
+  if (e.key === ' ') { e.preventDefault(); const r = reels[current]; if (r && r.dataset.id) onAct('listen', r); }
+});
+
+/* ---------- sheets */
+function openSheet(html) {
+  const s = $('#sheet');
+  s.innerHTML = '<div class="grab"></div>' + html;
+  s.classList.add('on'); $('#scrim').classList.add('on');
+  s.scrollTop = 0;
+}
+function closeSheet() { $('#sheet').classList.remove('on'); $('#scrim').classList.remove('on'); }
+$('#scrim').onclick = closeSheet;
+
+function openStock(sym) {
+  const s = D.stocks[sym];
+  const name = s ? s.n : (D.all.find((x) => x[0] === sym) || [sym, sym])[1];
+  const mine = (prefs.mine || []).includes(sym);
+  const tv = 'https://in.tradingview.com/chart/?symbol=' + encodeURIComponent('NSE:' + sym.replace(/-/g, '_'));
+  const more = D.cards.filter((c) => c.sym === sym || (c.list || []).some((x) => x.sym === sym));
+  const r = s && s.r ? s.r : null, L = ['Today', '1 week', '1 month', '3 months', '6 months', '1 year'];
+  openSheet(`<h3>${esc(name)}</h3>
+    <div class="sub"><span class="num">${esc(sym)}</span>${s ? ` . ${esc(s.sec || '')}${s.ind ? ' . ' + esc(s.ind) : ''}` : ''}</div>
+    ${s ? `<p class="sub">${CAPN[s.cap] || ''}${s.mc ? `, market value Rs ${inr(s.mc)} cr` : ''}</p>
+    ${s.p != null ? `<p style="margin:8px 0"><b class="num" style="font-size:24px">Rs ${inr(s.p)}</b> <span class="num ${tone(r && r[0])}">${pct(r && r[0], 2)}</span> <span class="sub">NSE close, ${when(D.price_day)}</span></p>` : ''}
+    ${s.sp ? `<div class="fig in" style="height:120px">${lineSvg(s.sp, 420, 120)}<span class="lab" style="left:8px;top:6px">Last ${s.sp.length} sessions</span></div>` : ''}
+    ${r ? `<h4>Returns</h4><div class="rets">${r.map((x, i) => `<div><span>${L[i]}</span><b class="num ${tone(x)}">${pct(x)}</b></div>`).join('')}</div>` : ''}
+    <h4>Quick facts</h4><div class="rets" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+      <div><span>From 52-week high</span><b class="num">${s.hi != null ? pct(s.hi) : 'n/a'}</b></div>
+      <div><span>RS rating</span><b class="num">${s.rs != null ? Math.round(s.rs) : 'n/a'}</b></div>
+      <div><span>P/E</span><b class="num">${s.pe != null ? s.pe.toFixed(1) : 'n/a'}</b></div>
+      <div><span>ROE</span><b class="num">${s.roe != null ? s.roe.toFixed(1) + '%' : 'n/a'}</b></div></div>` : '<p class="sub">No card about this stock today. Follow it and its news will come first.</p>'}
+    ${more.length ? `<h4>In today's feed</h4><div class="list">${more.slice(0, 6).map((c) => `<button data-jump="${esc(c.id)}"><span>${esc(c.title)}</span><span class="v">${esc(c.label)}</span></button>`).join('')}</div>` : ''}
+    <div class="links">
+      <button id="follow" aria-pressed="${mine}">${mine ? 'Following' : 'Follow this stock'}</button>
+      <a href="${D.skd}/#/stock/${encodeURIComponent(sym)}" target="_blank" rel="noopener">Street ka Dalal</a>
+      <a href="${tv}" target="_blank" rel="noopener">TradingView</a>
+      <a href="https://www.screener.in/company/${encodeURIComponent(sym)}/" target="_blank" rel="noopener">Screener</a>
+    </div>
+    <p class="sub" style="margin-top:14px">Facts from NSE data. Not investment advice.</p>`);
+  $('#follow').onclick = () => { toggleMine(sym); openStock(sym); };
+  $('#sheet').querySelectorAll('[data-jump]').forEach((b) => b.onclick = () => jumpTo(b.dataset.jump));
+}
+function jumpTo(id) {
+  closeSheet();
+  if (view !== 'feed') setView('feed');
+  let el = document.querySelector(`.reel[data-id="${CSS.escape(id)}"]`);
+  if (!el) {
+    const i = feedCards.findIndex((c) => c.id === id);
+    if (i >= 0) { shown = Math.max(shown, i + 1); render(true); el = document.querySelector(`.reel[data-id="${CSS.escape(id)}"]`); }
+  }
+  if (el) el.scrollIntoView(); else toast('That card is outside your current interests');
+}
+function toggleMine(sym) {
+  const m = new Set(prefs.mine || []);
+  if (m.has(sym)) m.delete(sym); else m.add(sym);
+  prefs.mine = [...m]; store.set('prefs', prefs);
+  feedCards = rank();
+  toast(m.has(sym) ? `${sym} added. Its cards come first.` : `${sym} removed`);
+}
+
+function chipsHtml(items, sel, key) {
+  return `<div class="chips" data-key="${key}">${items.map((x) => `<button data-v="${esc(x.id)}" aria-pressed="${sel.includes(x.id)}">${esc(x.n)}${x.d ? `<small>${esc(x.d)}</small>` : ''}</button>`).join('')}</div>`;
+}
+function bindChips(root, onChange) {
+  root.querySelectorAll('.chips').forEach((g) => g.addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    const on = b.getAttribute('aria-pressed') !== 'true';
+    b.setAttribute('aria-pressed', on);
+    onChange(g.dataset.key, [...g.querySelectorAll('button[aria-pressed=true]')].map((x) => x.dataset.v));
+  }));
+}
+function searchBox(root, onPick) {
+  const inp = root.querySelector('.q'), out = root.querySelector('.sugg');
+  inp.addEventListener('input', () => {
+    const q = inp.value.trim().toUpperCase();
+    if (q.length < 2) { out.innerHTML = ''; return; }
+    const hits = D.all.filter((x) => x[0].startsWith(q) || x[1].toUpperCase().includes(q)).slice(0, 6);
+    out.innerHTML = hits.map((x) => `<button data-s="${esc(x[0])}"><span><b class="num">${esc(x[0])}</b> <span class="sub">${esc(x[1])}</span></span><span class="sub">${CAPN[x[2]]}</span></button>`).join('') || '<p class="sub">No match</p>';
+  });
+  out.addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; onPick(b.dataset.s); inp.value = ''; out.innerHTML = ''; });
+}
+function mineHtml() { return `<div class="mine">${(prefs.mine || []).map((s) => `<button data-rm="${esc(s)}" aria-label="Remove ${esc(s)}">${esc(s)} x</button>`).join('')}</div>`; }
+
+function openSettings() {
+  const secs = D.sectors.map((s) => ({ id: s, n: s }));
+  openSheet(`<h3>My interests</h3><p class="sub">The feed re-sorts as you change these. Saved on this phone.</p>
+    <h4>Company size</h4>${chipsHtml(CAPS, prefs.caps, 'caps')}
+    <h4>What I like to see</h4>${chipsHtml(TOPICS, prefs.topics, 'topics')}
+    <h4>Sectors I follow (optional)</h4>${chipsHtml(secs, prefs.sectors || [], 'sectors')}
+    <h4>My stocks (their cards come first)</h4><input class="q" placeholder="Search a company or symbol" autocomplete="off"><div class="sugg"></div><div id="mineBox">${mineHtml()}</div>
+    <div class="links"><button id="done" class="btn main" style="flex:1">Show my feed</button><button id="reset">Start over</button></div>`);
+  const sh = $('#sheet');
+  bindChips(sh, (k, v) => { prefs[k] = v; store.set('prefs', prefs); });
+  searchBox(sh, (s) => { toggleMine(s); $('#mineBox').innerHTML = mineHtml(); });
+  sh.addEventListener('click', (e) => { const b = e.target.closest('[data-rm]'); if (b) { toggleMine(b.dataset.rm); $('#mineBox').innerHTML = mineHtml(); } });
+  $('#done').onclick = () => { closeSheet(); if (!prefs.caps.length) prefs.caps = ['L', 'M', 'S']; if (!prefs.topics.length) prefs.topics = TOPICS.map((t) => t.id); store.set('prefs', prefs); feedCards = rank(); shown = DAILY; setView('feed'); };
+  $('#reset').onclick = () => { closeSheet(); seen.clear(); hidden.clear(); less = {}; store.set('seen', []); store.set('hidden', []); store.set('less', {}); startOnboarding(); };
+}
+
+/* ---------- onboarding: three taps */
+function startOnboarding() {
+  const o = $('#onb');
+  let step = 0;
+  const p = prefs ? JSON.parse(JSON.stringify(prefs)) : { caps: ['L', 'M', 'S'], topics: TOPICS.map((t) => t.id), sectors: [], mine: [] };
+  const mini = (t, v, col) => `<div><b>${t}</b><span>${v}</span><svg viewBox="0 0 60 40"><polyline points="0,32 10,28 20,30 30,18 40,22 50,10 60,6" fill="none" stroke="${col}" stroke-width="2"/></svg></div>`;
+  function draw() {
+    const secs = D.sectors.map((s) => ({ id: s, n: s }));
+    const steps = [
+      `<div class="step">1 of 3</div><h2>The market in two minutes, made for you</h2>
+       <p class="sub">Swipe through short cards: charts, news, results and discoveries from NSE data. Every card is a fact, never a tip.</p>
+       <div class="hero">${mini('Chart', 'New 52-week high', 'var(--pos)')}${mini('Filing', 'With NSE audio', 'var(--sand)')}${mini('Result', 'How it reacted', 'var(--sky)')}</div>
+       <h4 class="sub" style="margin:4px 0 8px">Which companies interest you?</h4>${chipsHtml(CAPS, p.caps, 'caps')}`,
+      `<div class="step">2 of 3</div><h2>What do you like to see?</h2><p class="sub">Pick as many as you like. You can change this any time.</p>${chipsHtml(TOPICS, p.topics, 'topics')}`,
+      `<div class="step">3 of 3</div><h2>Any sectors or stocks you follow?</h2><p class="sub">Optional. Their cards will come first.</p>
+       ${chipsHtml(secs, p.sectors, 'sectors')}
+       <h4 class="sub" style="margin:18px 0 8px">Add your stocks</h4><input class="q" placeholder="Search a company or symbol" autocomplete="off"><div class="sugg"></div><div class="mine" id="onbMine"></div>`,
+    ];
+    o.innerHTML = steps[step] + `<div class="foot">${step ? '<button class="btn" id="back">Back</button>' : ''}<button class="btn main" id="next">${step === 2 ? 'Start my feed' : 'Next'}</button></div>`;
+    bindChips(o, (k, v) => { p[k] = v; });
+    if (step === 2) {
+      const mm = () => { $('#onbMine').innerHTML = p.mine.map((s) => `<button data-rm="${esc(s)}">${esc(s)} x</button>`).join(''); };
+      mm();
+      searchBox(o, (s) => { if (!p.mine.includes(s)) p.mine.push(s); mm(); });
+      $('#onbMine').onclick = (e) => { const b = e.target.closest('[data-rm]'); if (b) { p.mine = p.mine.filter((x) => x !== b.dataset.rm); mm(); } };
+    }
+    const back = $('#back'); if (back) back.onclick = () => { step--; draw(); };
+    $('#next').onclick = () => {
+      if (step === 0 && !p.caps.length) return toast('Pick at least one size');
+      if (step === 1 && !p.topics.length) return toast('Pick at least one topic');
+      if (step < 2) { step++; draw(); o.scrollTop = 0; return; }
+      prefs = p; store.set('prefs', prefs);
+      o.classList.remove('on');
+      feedCards = rank(); shown = DAILY; setView('feed');
+    };
+  }
+  o.classList.add('on');
+  draw();
+}
+
+function setView(v) {
+  view = v;
+  $('#tabFeed').setAttribute('aria-pressed', v === 'feed');
+  $('#tabSaved').setAttribute('aria-pressed', v === 'saved');
+  if (autoplay) setAutoplay(false);
+  render();
+}
+$('#tabFeed').onclick = () => setView('feed');
+$('#tabSaved').onclick = () => setView('saved');
+$('#btnSet').onclick = openSettings;
+$('#btnPlay').onclick = () => setAutoplay(!autoplay);
+let rt = null;
+addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (D && view) { const pos = $('#feed').scrollTop; render(true); $('#feed').scrollTop = pos; } }, 300); });
+if (window.speechSynthesis) speechSynthesis.getVoices();
+
+fetch('reels.json').then((r) => r.json()).then((d) => {
+  D = d;
+  D.cards.forEach((c) => { byId[c.id] = c; });
+  if (!prefs) startOnboarding();
+  else { feedCards = rank(); render(); }
+}).catch(() => { $('#feed').innerHTML = '<div class="empty">Could not load today\'s cards. Pull down to try again.</div>'; });
+}
+</script>
+</body>
+</html>
