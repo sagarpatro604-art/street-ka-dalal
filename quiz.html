@@ -905,5 +905,6 @@ fetch('data/market.json').then((r) => (r.ok ? r.json() : Promise.reject(new Erro
 intro();
 })();
 </script>
+<script type="module">/* usage count for Admin > Analytics (js/track.js) */ import('/js/track.js').then((m) => m.startTracking({ section: () => 'quiz' })).catch(() => {});</script>
 </body>
 </html>

@@ -22,6 +22,13 @@ Local preview without Firebase: leave `projectId` empty in `js/config.js` (demo 
 - Questions are logged to Firestore `asks` (admin tab "Dalal questions"); logins and asks older than 90 days are cleaned when the admin opens the terminal.
 - Health check: Admin → Data status → "Check Dalal". Social links in `js/config.js` → `SOCIAL`.
 
+## Admin > Analytics (usage dashboard, 2026-11-24)
+- Sagar: "a analytical tab in admin where week by week, m by m, we can check everything to track the performance of our terminal". First tab of `#/admin`, code `js/analytics.js`.
+- Day by day / week by week / month by month: new members, total members, active members (returning vs new), visitors not signed in, hours on the site and minutes per active member, visits and average visit, Dalal questions, persona tests, meet sign-ups. Breakdowns for today / 7 / 30 / 90 days / 1 year: weekday x hour heatmap (IST), hours of the day, visit lengths, sections used most, Discover / Results Plus sub-pages, stocks opened most, how many days members come, member-to-premium funnel, devices, weekly comeback groups, top members by time, members not seen for 30+ days, the full table + CSV.
+- Time counter: `js/track.js` (main site, Reels, quiz, meet page) counts 5-second steps only while the page is on screen and used in the last 2 min (5 on Reels), sends to `functions/api/track.js` every 2 min and on leaving; only on street-ka-dalal.pages.dev; the admin's own use is never stored. D1 tables `ux_day`, `ux_hour`, `ux_sess`, `ux_who`, `ux_cid`, `ux_ip` (see the function's header). No cookies, no outside analytics service.
+- Members, logins and Dalal questions come from Firestore; logins / questions are copied into the admin's browser (localStorage `skd.an.*`) so only new rows are read and the history outlives the 90-day clean-up there.
+- Test: `node tests/test_track.mjs` (20 checks on a real SQLite). Watch: `~/.claude/tools/dalal_watch.py` (hourly) reads `/api/track?health=1` and sends one private note when nothing has been counted for 24 h.
+
 ## Plagiarism checker + Humanizer: REMOVED 2026-11-24
 - Sagar: it was an experiment; the Claude key is for Dalal only. Page, functions and Admin tab removed (code in git history before this commit). D1 tables humanize_log / plag_log / humanize_spend / humanize_ip / hz_user / hz_people left as they were (not dropped). `lib/hz_common.js` stays because `functions/api/premium.js` uses its sign-in helpers.
 

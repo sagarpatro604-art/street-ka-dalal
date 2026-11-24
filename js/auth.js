@@ -231,6 +231,19 @@ export async function listLogins(n = 300) {
   return out;
 }
 
+// Admin > Analytics: rows of 'logins' or 'asks' newer than afterIso, oldest first (the tab keeps its own copy in the
+// admin's browser and asks only for what is new, so an open costs a handful of reads, not thousands)
+export async function listSince(col, afterIso, n = 5000) {
+  if (!['logins', 'asks'].includes(col)) return [];
+  if (state.demo) return (col === 'logins' ? demo.logins() : LS('skd.demo.asks') || []).filter((x) => !afterIso || x.at > afterIso).reverse();
+  const { fs, db } = fb;
+  const after = fs.Timestamp.fromDate(afterIso ? new Date(afterIso) : new Date(Date.now() - 400 * 86400000));
+  const s = await fs.getDocs(fs.query(fs.collection(db, col), fs.where('at', '>', after), fs.orderBy('at', 'asc'), fs.limit(n)));
+  const out = [];
+  s.forEach((d) => { const x = d.data(); out.push({ uid: x.uid, at: ts(x.at), device: x.device || '', web: !!x.web }); });
+  return out;
+}
+
 /* ---------- my watchlist (stock-watch screen): saved on the member's own users/{uid} record ---------- */
 // The users rule lets a member update only their own record and keeps its email, so a merge with email is enough.
 const WL_MAX = 200;

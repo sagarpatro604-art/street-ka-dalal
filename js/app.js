@@ -9,6 +9,8 @@ import * as SC from './scan.js';
 import * as DC from './discover.js';
 import * as RP from './resplus.js';
 import * as LP from './landing.js';
+import * as AN from './analytics.js';
+import { startTracking, sectionOf } from './track.js';
 
 /* ---------------- helpers ---------------- */
 const $ = (s, r = document) => r.querySelector(s);
@@ -123,7 +125,7 @@ const ui = {
   mf: { grp: 'sectors', sel: null, tab: 'streaks', q: '', sector: 'all', stock: '' },
   news: { type: 'all', q: '', view: 'heads', cat: 'all', src: 'all', limit: 60, sec: 'all', tagged: false, sym: '' },
   ins: { kind: 'all' },
-  admin: { tab: 'publisher', q: '', clq: '', cla: 'all', cln: 40 },
+  admin: { tab: 'analytics', q: '', clq: '', cla: 'all', cln: 40 },
   sort: {},
   edit: null,
 };
@@ -1478,10 +1480,12 @@ async function adminUpdates() {
 async function viewAdmin() {
   if (!A.isAdmin()) return '<div class="empty card">This area is for the admin.</div>';
   const t = ui.admin.tab;
-  const tabs = [['publisher', 'Publisher'], ['updates', 'Updates & change log'], ['members', 'Members'], ['logins', 'Login log'], ['asks', 'Dalal questions'], ['regs', 'Registrations'], ['quiz', 'Persona test'], ['premium', 'Premium'], ['status', 'Data status']];
+  const tabs = [['analytics', 'Analytics'], ['publisher', 'Publisher'], ['updates', 'Updates & change log'], ['members', 'Members'], ['logins', 'Login log'], ['asks', 'Dalal questions'], ['regs', 'Registrations'], ['quiz', 'Persona test'], ['premium', 'Premium'], ['status', 'Data status']];
   if (!ui.purged) { ui.purged = true; A.purgeOld(90).then((n) => n && toast(`Cleaned ${n} records older than 90 days`)).catch(() => {}); }
   let body = '';
-  if (t === 'publisher') {
+  if (t === 'analytics') {
+    body = await AN.viewAnalytics({ A, esc, num, fDate, fDT, ago, chip, table, toast, premAdmin, REG_EVENTS });
+  } else if (t === 'publisher') {
     if (ui.edit) body = editorHTML();
     else {
       const posts = await A.listPosts({ all: true });
@@ -1885,6 +1889,7 @@ const ACTS = {
       box.innerHTML = `<dl class="kv wide"><dt>Gemini key</dt><dd>${h.key ? chip('set', 'good') : chip('missing', 'warn')}</dd><dt>Daily-limit store</dt><dd>${h.kv ? chip(`connected${h.store ? ' · ' + h.store : ''}`, 'good') : chip('missing', 'warn')}</dd><dt>Gemini</dt><dd>${esc(h.gemini || '-')}</dd><dt>Models</dt><dd>${esc(h.models || '-')}</dd><dt>Backup 1: Groq</dt><dd>${esc(h.groq || '-')}</dd><dt>Backup 2: Claude</dt><dd>${esc(h.claude || '-')}</dd><dt>Your questions left</dt><dd>${d.left ?? '-'} / ${d.limit ?? '-'}</dd></dl>`;
     } catch (e) { box.textContent = 'Could not reach Dalal: ' + e.message; }
   },
+  ...AN.anActs({ A, esc, num, toast, premAdmin, REG_EVENTS }, () => render()),
   adminTab: (el) => { ui.admin.tab = el.dataset.v; ui.edit = null; render(); },
   newPost: async () => { await data('sectors').catch(() => {}); ui.edit = { title: '', kind: 'blog', sector: '', cover: '', summary: '', body: '', status: 'draft' }; render(); },
   editPost: async (el) => { await data('sectors').catch(() => {}); const p = await A.getPost(el.dataset.id); if (p) { ui.edit = { ...p }; render(); } },
@@ -2008,3 +2013,5 @@ setInterval(checkFresh, 10 * 60 * 1000);
 A.onChange(render);
 render();
 A.init();
+// usage tracking for Admin > Analytics (js/track.js; live site only, the admin's own use is not counted)
+startTracking({ section: () => (A.state.user ? sectionOf(location.hash) : 'landing'), token: () => A.idToken() });

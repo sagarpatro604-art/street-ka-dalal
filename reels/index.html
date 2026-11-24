@@ -795,5 +795,6 @@ Promise.all([
 }).catch(() => { $('#feed').innerHTML = '<div class="empty">Could not load today\'s cards. Pull down to try again.</div>'; });
 }
 </script>
+<script type="module">/* usage count for Admin > Analytics (js/track.js) */ import('/js/track.js').then((m) => m.startTracking({ section: () => 'reels', idleMs: 300000 })).catch(() => {});</script>
 </body>
 </html>
