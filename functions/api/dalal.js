@@ -10,7 +10,8 @@
 //   GEMINI_API_KEY  (secret, second choice since 24-Nov-2026)  DALAL_DAILY_LIMIT  (default 10)
 //   GROQ_API_KEY    (secret, last backup, free)  GROQ_MODELS (optional), GROQ_CONTEXT_CHARS (default 10000)
 //   ANTHROPIC_API_KEY (secret, FIRST choice since 24-Nov-2026, paid: Haiku then Sonnet only)  CLAUDE_MODELS (optional, haiku/sonnet only),
-//                   CLAUDE_DAILY_MAX (default 200 answers a day), CLAUDE_CONTEXT_CHARS (default 60000)
+//                   CLAUDE_DAILY_MAX (default 200 answers a day), CLAUDE_CONTEXT_CHARS (default 60000),
+//                   ANTHROPIC_WORKSPACE_ID (the Default workspace; the 24-Nov-2026 key is not tied to a workspace, so every call names it)
 //   GEMINI_MODELS   (optional preferred models, tried first; otherwise Dalal picks the newest available "flash" models)
 //   FIREBASE_PROJECT_ID (default street-ka-dalal)
 
@@ -580,7 +581,7 @@ async function askClaude(env, sys, history, userText) {
       let r;
       try {
         r = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', ...(env.ANTHROPIC_WORKSPACE_ID ? { 'anthropic-workspace-id': env.ANTHROPIC_WORKSPACE_ID } : {}) },
           body: JSON.stringify({ model, max_tokens: 2000, system: sys, messages, output_config: { effort: 'low' }, ...(think ? { thinking: think } : {}) }),
           signal: AbortSignal.timeout(40000),
         });
@@ -683,7 +684,7 @@ export async function onRequestGet({ request, env }) {
     // the backups, one short test each (a Claude test costs a fraction of a paisa and is not counted in the cap)
     const ping = async (fn) => { const t0 = Date.now(); try { const r = await fn(env, 'Reply with the single word OK.', [], 'ping'); return `${r.model}: ok ${((Date.now() - t0) / 1000).toFixed(1)}s`; } catch (e) { return clip(e.message, 200); } };
     out.health.groq = env.GROQ_API_KEY ? await ping(askGroq) : 'no key';
-    out.health.claude = env.ANTHROPIC_API_KEY ? `${await ping(askClaude)} · used today ${await getUsed(env, '_claude')} of ${+(env.CLAUDE_DAILY_MAX || 100)}` : 'no key';
+    out.health.claude = env.ANTHROPIC_API_KEY ? `${await ping(askClaude)} · used today ${await getUsed(env, '_claude')} of ${+(env.CLAUDE_DAILY_MAX || 200)}` : 'no key';
   }
   return json(out, 200, origin);
 }
