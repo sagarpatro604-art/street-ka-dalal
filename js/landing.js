@@ -94,7 +94,6 @@ export function landingHtml({ member = false, inApp = false, error = '', logo = 
       <a href="session"><b>Sunday sessions</b><span>Free and live on Google Meet with Sagar and Bhuvan.</span></a>
       <a href="${LINKS.tg}" target="_blank" rel="noopener"><b>Telegram group</b><span>Quant and factor investing talk.</span></a>
       <a href="quiz"><b>Investor persona test</b><span>What kind of investor are you? About three minutes.</span></a>
-      <a href="humanize"><b>Plagiarism checker</b><span>Check your text against the web, rewrite it in one click.</span></a>
     </div></section>
 
   <section class="lx-thanks"><div class="lx-tin"><h2>Thank you for learning with us</h2><p>Here is to sharper decisions and calmer conviction. Let us read the market together.</p>
