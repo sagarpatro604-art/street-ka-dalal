@@ -15,13 +15,14 @@ const TABS = [['calls', 'All calls'], ['brokers', 'Brokers'], ['sectors', 'Secto
 const TONE = { 1: ['Positive', 'ar-pos'], '-1': ['Negative', 'ar-neg'], 0: ['Neutral', ''] };
 const SRC = { r: 'Report', w: 'News' };
 const st = { mode: 'all', tone: 'all', src: 'all', q: '', show: 200 };
+const counted = (r) => !r.u;
 const p = (v, d = 1) => (v == null ? '<span class="sub inline">-</span>' : `<span class="${H.tone(v)}">${H.pct(v, d)}</span>`);
 const n = (v) => (v == null ? '-' : Number(v).toLocaleString('en-IN'));
 const px = (v) => (v == null ? '-' : Number(v).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
 const pc = (v) => (v == null ? '-' : `${Math.round(v)}%`);
 const tone = (t) => { const [l, c] = TONE[t] || TONE[0]; return `<span class="chip ${c}">${l}</span>`; };
 const load = (f) => H.hist('archive/' + f);
-const note = `<p class="sub legend">How to read this: a <b>positive</b> report is one where the broker saw the price going higher, a <b>negative</b> report one where it saw it going lower. Each move starts at the first NSE close after the report reached us (we could not have acted earlier) and ends at the latest NSE close; price only, dividends not added. "vs Nifty 500" takes off what Nifty 500 did over the same days. The reports themselves, their targets and ratings are not shown: they belong to the brokers. Facts, not advice: please do your own research.</p>`;
+const note = `<p class="sub legend">How to read this: a <b>positive</b> report is one where the broker saw the price going higher, a <b>negative</b> report one where it saw it going lower. Each move starts at the NSE close on the broker's own report date (the last trading day on or before it) and ends at the latest NSE close; price only, dividends not added. Every report date is checked against the price the report prints; where we had read a wrong date it is corrected, and a report that prints no date and fits no price near the day we got it is listed but not counted. "vs Nifty 500" takes off what Nifty 500 did over the same days. The reports themselves, their targets and ratings are not shown: they belong to the brokers. Facts, not advice: please do your own research.</p>`;
 
 export async function viewArchive(helpers, route) {
   H = helpers;
@@ -50,14 +51,14 @@ function dash(s) {
     return `<tr><td>${k} trading days</td><td class="r">${n(x.pos.known)}</td><td class="r">${n(x.pos.up)} <span class="sub inline">(${pc(x.pos.right_pct)})</span></td><td class="r">${p(x.pos.median)}</td><td class="r">${n(x.neg.known)}</td><td class="r">${n(x.neg.down)} <span class="sub inline">(${pc(x.neg.right_pct)})</span></td><td class="r">${p(x.neg.median)}</td></tr>`;
   }).join('');
   const au = s.audit || {};
-  const audit = au.prices_pass != null ? `<span class="chip ${au.prices_pass && au.look_ahead_pass ? 'ar-pos' : 'ar-neg'}" title="Every price checked against NSE's own closing price (${n(au.prices_compared)} compared); no call starts on or before the day it reached us">Price check ${au.prices_pass && au.look_ahead_pass ? 'passed' : 'FAILED'}</span>` : '';
+  const audit = au.prices_pass != null ? `<span class="chip ${au.prices_pass && au.look_ahead_pass ? 'ar-pos' : 'ar-neg'}" title="Every price checked against NSE's own closing price (${n(au.prices_compared)} compared)">Price check ${au.prices_pass && au.look_ahead_pass ? 'passed' : 'FAILED'}</span>` : '';
   return `<div class="ar-tiles">
     <div class="card"><span class="sub">Reports in our archive</span><b>${n(s.reports)}</b><span class="sub">${n(s.calls)} company calls tracked, ${n(s.stocks)} stocks, ${n(s.brokers)} brokers, since ${H.fShort(s.first)}</span></div>
     <div class="card"><span class="sub">Positive reports that went up</span><b class="up">${n(P.up)} <small>of ${n(P.known)}</small></b>${bar(P.up, P.down)} <span class="sub inline">${pc(P.right_pct)}</span><span class="sub">Middle move ${p(P.median)}${P.median_vs_nifty != null ? `, vs Nifty 500 ${p(P.median_vs_nifty)}` : ''}</span></div>
     <div class="card"><span class="sub">Negative reports that went down</span><b class="down">${n(N.down)} <small>of ${n(N.known)}</small></b>${bar(N.down, N.up)} <span class="sub inline">${pc(N.right_pct)}</span><span class="sub">Middle move ${p(N.median)}${N.median_vs_nifty != null ? `, vs Nifty 500 ${p(N.median_vs_nifty)}` : ''}</span></div>
     <div class="card"><span class="sub">New calls in the last 7 days</span><b>${n(s.this_week)}</b><span class="sub">All calls since ${H.fShort(s.first)}: ${n(s.from_reports)} from broker reports, ${n(s.from_news)} from news; ${n(T.neutral)} neutral</span></div>
   </div>
-  <div class="ar-row">${modes}${audit}<span class="sub inline">Updated every evening on NSE closing prices.</span></div>
+  <div class="ar-row">${modes}${audit}<span class="sub inline">Moves from each report's own date. Updated every evening on NSE closing prices.${s.dates_fixed ? ` ${n(s.dates_fixed)} report dates corrected after checking the printed price.` : ''}</span></div>
   <section class="card"><h2>After a fixed number of days</h2><p class="sub">Only calls old enough for that many trading days count. "Middle move" is the median: half the calls did better, half worse.</p>
   <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Held for</th><th class="r">Positive calls</th><th class="r">Went up</th><th class="r">Middle move</th><th class="r">Negative calls</th><th class="r">Went down</th><th class="r">Middle move</th></tr></thead><tbody>${aft}</tbody></table></div></section>`;
 }
@@ -72,7 +73,7 @@ async function calls(sym) {
   rows = rows.slice(0, st.show).map((r) => ({ ...r, sym: r.s }));
   const ch = (k, v, t) => `<a href="#" class="chip ${st[k] === v ? 'on' : ''}" data-ark="${k}" data-arv="${v}">${t}</a>`;
   const cols = [
-    { k: 'd', label: 'Report date', fmt: (r) => `${H.fShort(r.d)}${r.a && r.a !== r.d ? `<span class="sub">reached us ${H.fShort(r.a)}</span>` : ''}` },
+    { k: 'd', label: 'Report date', fmt: (r) => `${H.fShort(r.d)}${r.u ? '<span class="sub">date not confirmed, not counted</span>' : r.df ? `<span class="sub" title="Checked against the price printed in the report">date corrected (was ${H.fShort(r.df)})</span>` : ''}` },
     { k: 'sym', label: 'Company', fmt: (r) => `${H.symLink(r.s)}<span class="sub">${H.esc(r.n || '')}</span>` },
     { k: 'b', label: 'Broker', fmt: (r) => `${H.esc(r.b)}<span class="sub">${SRC[r.k] || ''}</span>` },
     { k: 't', label: 'Report', fmt: (r) => tone(r.t) },
@@ -105,7 +106,7 @@ function groups(list, what, keepOrder = false) {
     { k: 'nr', label: 'Went down', cls: 'r', fmt: (r) => (r.nc ? `${pc(r.nr)} ${bar(r.neg.down, r.neg.up)}` : '-') },
     { k: 'nm', label: 'Middle move', cls: 'r', fmt: (r) => (r.nc ? p(r.nm) : '-') },
   ];
-  return `<section class="card"><p class="sub">${what}s with at least 5 calls. All calls since the report reached us${keepOrder ? ', newest month first' : ''}; scores move as the calls age.</p>${H.table('ar_' + what, rows, cols, 'Nothing yet.')}</section>`;
+  return `<section class="card"><p class="sub">${what}s with at least 5 calls. Moves from each report's own date${keepOrder ? ', newest month first' : ''}; scores move as the calls age.</p>${H.table('ar_' + what, rows, cols, 'Nothing yet.')}</section>`;
 }
 
 function wire() {
@@ -124,10 +125,10 @@ export async function stockBlock(helpers, sym) {
   const d = await load('calls').catch(() => null);
   const rows = (d?.rows || []).filter((r) => r.s === sym);
   if (!rows.length) return '';
-  const up = rows.filter((r) => r.t === 1), dn = rows.filter((r) => r.t === -1);
+  const up = rows.filter((r) => r.t === 1 && counted(r)), dn = rows.filter((r) => r.t === -1 && counted(r));
   return `<section class="card"><div class="card-head"><h2>Broker reports and the price after</h2><a href="#/archive/calls/${encodeURIComponent(sym)}">Reports tracker</a></div>
     <p class="sub">${rows.length} calls: ${up.length} positive (${up.filter((r) => r.r > 0).length} went up since), ${dn.length} negative (${dn.filter((r) => r.r < 0).length} went down since).</p>
     <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Report date</th><th>Broker</th><th>Report</th><th class="r">Close on report day</th><th class="r">Latest close</th><th class="r">Move since</th><th class="r">vs Nifty 500</th></tr></thead>
     <tbody>${rows.slice(0, 15).map((r) => `<tr><td>${H.fShort(r.d)}</td><td>${H.esc(r.b)}<span class="sub">${SRC[r.k] || ''}</span></td><td>${tone(r.t)}</td><td class="r">${px(r.p0)}</td><td class="r">${px(r.p1)}</td><td class="r">${p(r.r)}<span class="sub">${r.ss} days</span></td><td class="r">${p(r.x)}</td></tr>`).join('')}</tbody></table></div>
-    <p class="sub">Move from the first NSE close after the report reached us. Facts, not advice.</p></section>`;
+    <p class="sub">Move from the NSE close on the report's own date. Facts, not advice.</p></section>`;
 }
