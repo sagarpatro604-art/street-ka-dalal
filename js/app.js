@@ -8,6 +8,7 @@ import * as T from './terminal.js';
 import * as SC from './scan.js';
 import * as DC from './discover.js';
 import * as RP from './resplus.js';
+import * as AR from './archive.js';
 import * as LP from './landing.js';
 import * as AN from './analytics.js';
 import { startTracking, sectionOf } from './track.js';
@@ -565,6 +566,7 @@ async function viewStock(sym, embed = false) {
   const [resRows, tvd] = await Promise.all([resHistory(sym), tvData(), SC.scanData().catch(() => null)]);
   const tvS = (tvd.summaries || {})[sym];
   const rpBlock = await RP.stockBlock(termHelp(), sym).catch(() => '');
+  const arBlock = await AR.stockBlock(termHelp(), sym).catch(() => '');
   const inNews = [...((feed.movers || {})[sym] || []), ...(feed.items || []).filter((i) => (i.sy || []).includes(sym))].filter((i, k, a) => a.findIndex((j) => j.t === i.t) === k).slice(0, 8);
   const x = one.info, d = one.d || {};
   if (!x) return `${pageHead('Stocks', esc(sym))}<div class="empty card">This symbol is not in our NSE list. <a href="#/stocks">Search all stocks</a></div>`;
@@ -603,6 +605,7 @@ async function viewStock(sym, embed = false) {
   </div>
   ${resHistoryCard(resRows, sym)}
   ${rpBlock}
+  ${arBlock}
   ${tvS ? `<section class="card">${tvBlock(tvS, true)}</section>` : ''}
   ${fundCard(fo?.f, fo?.updated)}
   <div class="grid2">
@@ -1729,13 +1732,13 @@ const termHelp = () => ({ T, A, data, hist, stkAll, esc, num, pct, tone, pd, fDa
 const NAV_G = [
   ['#', 'Watch'], ['', 'Stock watch', 'watch'], ['screeners', 'Screeners', 'screen'], ['sectors', 'Groups', 'sector'], ['heatmap', 'Heatmap', 'heat'], ['discover', 'Discover', 'compass'], ['discover/triggers', 'Board of all triggers', '', 1], ['discover/investors', 'Big investors', '', 1], ['discover/valuation', 'Market valuation', '', 1], ['discover/management', 'What management said', '', 1], ['discover/mystocks', 'My stocks this week', '', 1],
   ['#', 'Market'], ['reels', 'Reels', 'play'], ['premarket', 'Pre-market', 'sun'], ['market', 'Market', 'market'], ['funds', 'Mutual funds', 'funds'],
-  ['#', 'Research'], ['equity', 'Research', 'search'], ['results', 'Results', 'file'], ['resplus', 'Reactions after results', '', 1], ['resplus/sectors', 'Sectors after results', '', 1], ['resplus/pool', 'Profit pool', '', 1], ['resplus/guidance', 'Guidance changes', '', 1], ['resplus/season', 'Season report', '', 1], ['news', 'News', 'news'], ['research', 'Prop. Research', 'lab'],
+  ['#', 'Research'], ['equity', 'Research', 'search'], ['results', 'Results', 'file'], ['resplus', 'Reactions after results', '', 1], ['resplus/sectors', 'Sectors after results', '', 1], ['resplus/pool', 'Profit pool', '', 1], ['resplus/guidance', 'Guidance changes', '', 1], ['resplus/season', 'Season report', '', 1], ['archive', 'Broker reports tracker', 'brief'], ['archive/brokers', 'Brokers scorecard', '', 1], ['news', 'News', 'news'], ['research', 'Prop. Research', 'lab'],
   ['#', 'Learn'], ['library', 'Library', 'book'], ['insights', 'Insights', 'pen'], ['about', 'About us', 'link'],
   ['#', 'My portfolio'], ['portfolio', 'Portfolio X-ray', 'brief'],
 ];
 const NAV = NAV_G.filter(([r, , , sub]) => r !== '#' && !sub);
 const route = () => location.hash.replace(/^#\/?/, '');
-const VIEWS = { '': () => T.viewTerminal(termHelp()), reels: () => { location.href = '/reels/'; return ''; }, heatmap: () => T.viewHeatmap(termHelp()), discover: () => DC.viewDiscover(termHelp(), ''), rrg: () => { location.replace('#/sectors/rrg'); return ''; }, portfolio: () => DC.viewPortfolio(termHelp()), premarket: viewPremarket, market: viewMarket, screeners: () => T.viewTerminal(termHelp(), 'scan'), sectors: () => (route().split('/')[1] === 'rrg' ? viewGroupsRRG() : T.viewTerminal(termHelp(), 'groups')), funds: viewFunds, equity: viewEquity, stocks: () => { ui.eq.tab = 'companies'; return viewEquity(); }, results: viewResults, about: () => { after.push(() => LP.wireLanding()); return LP.landingHtml({ member: true, logo: LOGO, ic, google: GOOGLE }); }, resplus: () => RP.viewResPlus(termHelp(), route()), news: viewNews, insights: viewInsights, admin: viewAdmin, research: viewResearch, library: viewLibrary };
+const VIEWS = { '': () => T.viewTerminal(termHelp()), reels: () => { location.href = '/reels/'; return ''; }, heatmap: () => T.viewHeatmap(termHelp()), discover: () => DC.viewDiscover(termHelp(), ''), rrg: () => { location.replace('#/sectors/rrg'); return ''; }, portfolio: () => DC.viewPortfolio(termHelp()), premarket: viewPremarket, market: viewMarket, screeners: () => T.viewTerminal(termHelp(), 'scan'), sectors: () => (route().split('/')[1] === 'rrg' ? viewGroupsRRG() : T.viewTerminal(termHelp(), 'groups')), funds: viewFunds, equity: viewEquity, stocks: () => { ui.eq.tab = 'companies'; return viewEquity(); }, results: viewResults, about: () => { after.push(() => LP.wireLanding()); return LP.landingHtml({ member: true, logo: LOGO, ic, google: GOOGLE }); }, resplus: () => RP.viewResPlus(termHelp(), route()), archive: () => AR.viewArchive(termHelp(), route()), news: viewNews, insights: viewInsights, admin: viewAdmin, research: viewResearch, library: viewLibrary };
 
 function shell() {
   const u = A.state.user;
@@ -1764,7 +1767,7 @@ async function render() {
   if (r !== '' && r !== 'about') entered(true);
   else if (r === '' && !entered()) { location.replace('#/about'); return; }
   const top = r.split('/')[0];
-  document.querySelectorAll('#topnav a').forEach((a) => { const n = a.dataset.nav; a.classList.toggle('on', n.includes('/') ? (r === n || r.startsWith(n + '/')) : n === (['stock', 'stocks'].includes(top) ? 'equity' : top) && !(top === 'discover' && r.split('/')[1]) && !(top === 'resplus' && r.split('/')[1] && r.split('/')[1] !== 'list')); });
+  document.querySelectorAll('#topnav a').forEach((a) => { const n = a.dataset.nav; a.classList.toggle('on', n.includes('/') ? (r === n || r.startsWith(n + '/')) : n === (['stock', 'stocks'].includes(top) ? 'equity' : top) && !(top === 'discover' && r.split('/')[1]) && !(top === 'resplus' && r.split('/')[1] && r.split('/')[1] !== 'list') && !(top === 'archive' && ['brokers'].includes(r.split('/')[1]))); });
   T.setHelpers(termHelp());
   document.body.classList.toggle('term', top === '' || r === 'discover' || top === 'screeners' || r === 'sectors');
   setDalalContext(null);
@@ -1982,7 +1985,7 @@ window.addEventListener('beforeunload', (e) => { if (ui.edit?.dirty) { e.prevent
 // A tab left open for days (common on phones) never reloads on its own. When the reader comes back to
 // the tab, and every 10 minutes while it is open: new site code -> reload (unless they are typing);
 // new evening data -> redraw the page with it.
-const CODE = ['./', 'js/app.js', 'js/auth.js', 'js/dalal.js', 'js/charts.js', 'js/config.js', 'js/library.js', 'js/terminal.js', 'js/discover.js', 'js/resplus.js', 'js/landing.js', 'js/scan.js', 'css/scan.css', 'css/resplus.css', 'css/landing.css', 'css/style.css', 'css/terminal.css', 'css/look_kit.css'];
+const CODE = ['./', 'js/app.js', 'js/auth.js', 'js/dalal.js', 'js/charts.js', 'js/config.js', 'js/library.js', 'js/terminal.js', 'js/discover.js', 'js/resplus.js', 'js/archive.js', 'js/landing.js', 'js/scan.js', 'css/scan.css', 'css/resplus.css', 'css/archive.css', 'css/landing.css', 'css/style.css', 'css/terminal.css', 'css/look_kit.css'];
 let codeSig = null;
 async function codeVersion() {
   // Cloudflare answers HEAD with 503. A GET with cache 'no-cache' asks "changed since my copy?" (If-None-Match):

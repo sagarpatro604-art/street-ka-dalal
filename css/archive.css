@@ -1,0 +1,16 @@
+/* Broker reports tracker (js/archive.js). Look kit tokens only. */
+.ar-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; margin: 6px 0 12px; }
+.ar-tiles .card { margin: 0; padding: 12px 14px; }
+.ar-tiles .card > .sub { display: block; }
+.ar-tiles .card b { display: block; font: 400 30px/1.15 var(--serif); margin: 4px 0 6px; }
+.ar-tiles .card b small { font: 400 14px var(--sans); color: var(--muted); }
+.ar-mix { display: inline-flex; width: 120px; height: 8px; border-radius: 4px; overflow: hidden; background: var(--surface-2); vertical-align: middle; }
+.ar-mix i { display: block; height: 100%; }
+.ar-mix i.u { background: var(--accent); } .ar-mix i.d { background: var(--coral); }
+.ar-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 0 0 14px; }
+.ar-row .rp-chips { margin: 0; }
+.ar-seg a { cursor: pointer; }
+.ar-q { height: 34px; min-width: 220px; padding: 0 10px; border-radius: 9px; margin-left: auto; }
+.chip.ar-pos { background: var(--accent-soft); color: var(--accent); }
+.chip.ar-neg { background: var(--coral-soft); color: var(--coral); }
+@media (max-width: 760px) { .ar-q { margin-left: 0; width: 100%; } }
