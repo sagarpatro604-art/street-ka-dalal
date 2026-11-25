@@ -12,7 +12,7 @@ const SOCIAL_META = {
   linkedin: ['LinkedIn', '#0A66C2', '<path fill="currentColor" d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9.5h4v11H3v-11Zm7 0h3.8v1.6h.1a4.2 4.2 0 0 1 3.8-2c4 0 4.8 2.6 4.8 6.1v5.3h-4v-4.7c0-1.1 0-2.6-1.6-2.6s-1.9 1.2-1.9 2.5v4.8h-4v-11Z"/>'],
   telegram: ['Telegram', '#229ED9', '<path fill="currentColor" d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.8.8l-4.8-3.6-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2L6.4 13.1 1.7 11.6c-1-.3-1-1 .2-1.5L20.6 3c.9-.3 1.6.2 1.3 1.3Z"/>'],
 };
-const SUGGEST = ['Aaj market kaisa raha?', 'Which sectors are leading this month?', "Today's flag & pole breakouts?", 'Where are mutual funds buying?', 'Any big order wins in filings today?'];
+const SUGGEST = ['How did the market do today?', 'Which sectors are leading this month?', "Today's flag & pole breakouts?", 'Where are mutual funds buying?', 'Any big order wins in filings today?'];
 
 let H = null; // { md, esc }
 let open = false, busy = false, left = null;
@@ -36,7 +36,7 @@ function greeting() {
   }).join('');
   return `<div class="dmsg bot greet">${DALAL_FACE}<div class="bubble">
     <p><b>Namaste ${H.esc(firstName())}!</b> Main hoon <b>Dalal</b>, Street ka Dalal ka AI buddy.</p>
-    <p>Market, sectors, screeners, mutual-fund activity, company filings, kuch bhi poocho. I answer from our site's data first, and check trusted news when needed.</p>
+    <p>Market, sectors, screeners, mutual-fund activity, company filings, ask anything. I answer from our site's data first, and check trusted news when needed.</p>
     <p class="join">Join our community:</p>
     <div class="socs">${links}</div>
     ${CTX ? `<p class="dctx">Looking at <b>${H.esc(CTX.sym)}</b>${CTX.name ? ` (${H.esc(CTX.name)})` : ''}. Ask about it, or anything else.</p>` : ''}<div class="sugs">${ctxSug().map((s) => `<button class="sug" data-dalal-ask="${H.esc(s)}">${H.esc(s)}</button>`).join('')}</div>
@@ -54,7 +54,7 @@ function msgHTML(m) {
 function paint(scroll = true) {
   const box = $('#dalalMsgs');
   if (!box) return;
-  box.innerHTML = greeting() + msgs.map(msgHTML).join('') + (busy ? `<div class="dmsg bot">${DALAL_FACE}<div class="bubble typing"><i></i><i></i><i></i><span>Dalal soch raha hai…</span></div></div>` : '');
+  box.innerHTML = greeting() + msgs.map(msgHTML).join('') + (busy ? `<div class="dmsg bot">${DALAL_FACE}<div class="bubble typing"><i></i><i></i><i></i><span>Dalal is thinking...</span></div></div>` : '');
   const l = $('#dalalLeft');
   if (l) l.textContent = left == null ? '' : `${left} question${left === 1 ? '' : 's'} left today`;
   if (scroll) box.scrollTop = box.scrollHeight;
@@ -128,7 +128,7 @@ export function mountDalal(helpers) {
   msgs = load();
   const wrap = document.createElement('div');
   wrap.innerHTML = `
-    <button id="dalalBtn" class="dalal-peek" aria-label="Ask Dalal, the AI buddy"><span class="peek-say">Kuch poochna hai?<b>Ask Dalal</b></span><img src="icons/dalal-peek.webp" alt="" width="265" height="720"></button>
+    <button id="dalalBtn" class="dalal-peek" aria-label="Ask Dalal, the AI buddy"><span class="peek-say">Have a question?<b>Ask Dalal</b></span><img src="icons/dalal-peek.webp" alt="" width="265" height="720"></button>
     <section id="dalalPanel" class="dalal-panel" hidden aria-label="Dalal chat">
       <header>${DALAL_FACE}<div><b>Dalal</b><span>AI market buddy · Street ka Dalal</span></div><button class="dclose" data-dalal-close aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></header>
       <div id="dalalMsgs" class="dmsgs" aria-live="polite"></div>

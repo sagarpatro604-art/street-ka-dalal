@@ -335,7 +335,7 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
       </div>
 
       <div class="form-zone" id="register">
-        <div class="bubble" id="bubble">Gold ya Nifty? Dono!</div>
+        <div class="bubble" id="bubble">Gold or Nifty? Both!</div>
         <img class="peek" src="icons/dalal-peek.webp" alt="" width="263" height="720" decoding="async">
         <div class="card form" id="formCard">
           <form id="regForm" novalidate>
@@ -539,7 +539,7 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
   tick();
 
   /* Dalal's speech bubble */
-  const lines = ['Gold ya Nifty? Dono!', 'Sunday, 9 baje. System samjhenge.', 'Free indicator aur PDF bhi milega.', 'Seat free hai, bas naam likho.', 'Calendar mein daal denge, tension mat lo.'];
+  const lines = ['Gold or Nifty? Both!', 'Sunday, 9 PM. We learn the system.', 'Free indicator and PDF included.', 'Seats are free, just add your name.', 'We will add it to your calendar.'];
   let li = 0;
   setInterval(() => { const b = $('#bubble'); if (!b || b.dataset.fixed) return; li = (li + 1) % lines.length; b.classList.remove('swap'); void b.offsetWidth; b.textContent = lines[li]; b.classList.add('swap'); }, 4200);
 
@@ -607,7 +607,7 @@ footer{padding:26px 0 96px;color:var(--muted);font-size:13px;text-align:center}
       <p class="sub" style="color:var(--muted);margin:6px 0 0">${again ? 'Your registration is saved.' : 'See you on Sunday, 15 November at 9:00 PM.'} We cover the week, the stories and the Gold + Nifty system live, and everyone who joins gets our TradingView indicator and the research PDF.</p>
       ${MEET ? `<a class="meet" href="${MEET}" target="_blank" rel="noopener">Meet link: ${MEET.replace('https://', '')}</a>` : '<p class="meet">The Meet link comes with your calendar invite and on our WhatsApp community.</p>'}
       <div class="btns"><a class="btn primary" href="${gcal()}" target="_blank" rel="noopener">Add to my Google Calendar</a><a class="btn light" href="${WA}" target="_blank" rel="noopener">Join the WhatsApp community</a></div></div>`;
-    const b = $('#bubble'); b.dataset.fixed = '1'; b.textContent = 'Done! Sunday ko milte hain, indicator aur PDF ready hai.';
+    const b = $('#bubble'); b.dataset.fixed = '1'; b.textContent = 'Done! See you on Sunday, the indicator and PDF are ready.';
     const f = $('#floatCta'); if (f) f.remove();
   }
   const saved = store.get('skd-reg-' + EVENT);

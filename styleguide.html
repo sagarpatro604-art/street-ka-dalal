@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Design system · Street ka Dalal</title>
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap">
+<link rel="stylesheet" href="css/look_kit.css">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/terminal.css">
+<link rel="stylesheet" href="css/groww.css">
+<link rel="stylesheet" href="css/neon.css">
+<link rel="stylesheet" href="css/ds.css">
+<style>
+  .page-head { display: block !important; }
+  main#view { max-width: 1100px; margin: 0 auto; padding: 32px 28px 60px; }
+  .sg-row { display: grid; grid-template-columns: 120px 90px 1fr; gap: 16px; align-items: baseline; padding: 10px 0; border-top: 1px solid var(--line); }
+  .sg-row code { color: var(--muted); font-size: var(--fs-xs); }
+  .sg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--s-3); }
+  .sg-sw { border-radius: var(--r-md); border: 1px solid var(--line); padding: var(--s-3); font-size: var(--fs-xs); }
+  .sg-sw i { display: block; height: 44px; border-radius: var(--r-sm); margin-bottom: var(--s-2); }
+  .sg-sp { display: flex; align-items: center; gap: var(--s-3); padding: 6px 0; font-size: var(--fs-xs); color: var(--muted); }
+  .sg-sp i { display: block; height: 12px; background: var(--accent); border-radius: 3px; }
+  .sg-r { display: flex; gap: var(--s-4); flex-wrap: wrap; }
+  .sg-r div { width: 120px; height: 72px; border: 1px solid var(--line-2); background: var(--surface-2); display: grid; place-items: center; font-size: var(--fs-xs); color: var(--muted); }
+  section.card { margin-top: var(--s-6) !important; }
+</style>
+</head>
+<body>
+<main id="view">
+  <div class="page-head"><p class="eyebrow">Street ka Dalal</p><h1>Design system</h1><p class="sub">Every page uses only these sizes, weights, colours, gaps and corners. Rules in docs/DESIGN_SYSTEM.md (sandbox).</p></div>
+
+  <section class="card"><div class="card-head"><h2>Text</h2><span class="sub">8 sizes, 3 weights</span></div>
+    <div class="sg-row"><code>--fs-3xl 32</code><code>bold</code><b style="font-size:var(--fs-3xl)">25,819.25</b></div>
+    <div class="sg-row"><code>--fs-2xl 24</code><code>bold</code><b style="font-size:var(--fs-2xl)">Page title</b></div>
+    <div class="sg-row"><code>--fs-xl 20</code><code>bold</code><b style="font-size:var(--fs-xl)">Section title / KPI number</b></div>
+    <div class="sg-row"><code>--fs-lg 16</code><code>bold</code><b style="font-size:var(--fs-lg)">Card title, symbol, price</b></div>
+    <div class="sg-row"><code>--fs-md 14</code><code>regular</code><span style="font-size:var(--fs-md)">Body text that people read, in plain words.</span></div>
+    <div class="sg-row"><code>--fs-sm 13</code><code>regular</code><span style="font-size:var(--fs-sm);color:var(--ink-2)">Secondary text, table cells, company names.</span></div>
+    <div class="sg-row"><code>--fs-xs 12</code><code>medium</code><span style="font-size:var(--fs-xs);font-weight:500;color:var(--muted)">Labels, captions, table headers, badges</span></div>
+    <div class="sg-row"><code>--fs-2xs 11</code><code>medium</code><span style="font-size:var(--fs-2xs);font-weight:500;color:var(--muted)">Tiny tags only (S / TV)</span></div>
+  </section>
+
+  <section class="card"><div class="card-head"><h2>Colours</h2><span class="sub">one accent, three text levels, up / down</span></div>
+    <div class="sg-grid">
+      <div class="sg-sw"><i style="background:var(--bg)"></i>Page</div><div class="sg-sw"><i style="background:var(--surface)"></i>Card</div>
+      <div class="sg-sw"><i style="background:var(--accent)"></i>Accent</div><div class="sg-sw"><i style="background:var(--ink)"></i>Text</div>
+      <div class="sg-sw"><i style="background:var(--ink-2)"></i>Text 2</div><div class="sg-sw"><i style="background:var(--muted)"></i>Muted</div>
+      <div class="sg-sw"><i style="background:var(--pos)"></i>Up</div><div class="sg-sw"><i style="background:var(--neg)"></i>Down</div>
+    </div></section>
+
+  <section class="card"><div class="card-head"><h2>Spacing and corners</h2></div>
+    <div class="sg-sp"><i style="width:4px"></i>--s-1 4</div><div class="sg-sp"><i style="width:8px"></i>--s-2 8</div><div class="sg-sp"><i style="width:12px"></i>--s-3 12</div>
+    <div class="sg-sp"><i style="width:16px"></i>--s-4 16</div><div class="sg-sp"><i style="width:20px"></i>--s-5 20 (card padding)</div><div class="sg-sp"><i style="width:24px"></i>--s-6 24</div><div class="sg-sp"><i style="width:32px"></i>--s-8 32</div>
+    <div class="sg-r" style="margin-top:var(--s-4)"><div style="border-radius:var(--r-sm)">--r-sm 8</div><div style="border-radius:var(--r-md)">--r-md 12</div><div style="border-radius:var(--r-lg)">--r-lg 20</div><div style="border-radius:var(--r-pill)">--r-pill</div></div>
+  </section>
+
+  <section class="card"><div class="card-head"><h2>KPI tiles</h2></div>
+    <div class="dc-kpis"><div><b>6</b><span>stocks</span></div><div><b>2</b><span>results in the next 14 days</span></div><div><b>1</b><span>filings this week</span></div><div><b class="k-pos">+1.85%</b><span>Nifty 50 today</span></div></div>
+  </section>
+
+  <section class="card dc-my" style="max-width:520px"><div class="card-head"><div><a class="sym" style="font-size:var(--fs-lg);font-weight:700">LOTUSDEV</a> <a class="k-link">S</a><a class="k-link">TV</a><span class="sub">Sri Lotus Developers and Realty Limited</span></div>
+    <div class="dc-px"><b>226.48</b> <span class="k-neg">-1.50%</span> <span class="sub inline">1W <span class="k-neg">-4.4%</span></span></div></div>
+    <ul class="dc-items">
+      <li><span class="chip bad">Promoter selling (open market)</span><span class="dc-txt">20 Nov 2026: Anand Kamalnayan Pandit sold 23858955 shares (about Rs 561.83 Cr), holds 65.14% after</span></li>
+      <li><span class="chip info">Management spoke</span><span class="dc-txt">19 Oct 2026: Management remains confident of its FY27 pre-sales and growth guidance and plans four launches in H2. <a href="#">read</a></span></li>
+    </ul></section>
+
+  <section class="card"><div class="card-head"><h2>Badges and buttons</h2></div>
+    <p style="display:flex;gap:8px;flex-wrap:wrap"><span class="chip good">Results out</span><span class="chip warn">Results coming</span><span class="chip bad">Promoter selling</span><span class="chip info">Management spoke</span><span class="chip">Filing</span></p>
+    <p style="display:flex;gap:8px;margin-top:12px"><button class="k-btn primary">Primary</button><button class="k-btn">Secondary</button><span class="k-seg"><button class="on">1M</button><button>3M</button><button>1Y</button></span></p>
+  </section>
+</main>
+</body>
+</html>

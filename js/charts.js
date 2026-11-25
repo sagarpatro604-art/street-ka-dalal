@@ -25,14 +25,14 @@ export function untrack(ch) { if (!ch) return; live.delete(ch); try { ch.remove(
 // the look kit's colours (Concall Studio look, Sagar 2026-11-16: "like our own apps like confluence desk"); dark is the
 // default, light = the kit's paper theme (Sagar 2026-11-17: "add a light theme option")
 const DARK = {
-  green: '#67E8A5', green2: '#67E8A5', gold: '#E2C88F', up: '#67E8A5', down: '#EFA28C', blue: '#9EC9E6',
-  muted: '#9AA49B', line: 'rgba(154, 164, 155, 0.13)', sage: '#8FBF9A', plum: '#C3A3D6', orange: '#E0A86A', teal: '#7FC4C4',
-  ink: '#F4F1E8', panel: '#0E110F', grid: 'rgba(154, 164, 155, 0.08)',
+  green: '#D7F23A', green2: '#D7F23A', gold: '#FFB547', up: '#9BE15D', down: '#FF6B57', blue: '#7DB4FF',
+  muted: '#8C8C86', line: '#1F1F1F', sage: '#9BE15D', plum: '#C9A8FF', orange: '#FF8A3D', teal: '#5FD3C8',
+  ink: '#F2F2EE', panel: '#0F0F0F', grid: 'rgba(255, 255, 255, 0.05)',
 };
 const LIGHT = {
-  green: '#17794C', green2: '#17794C', gold: '#8A6418', up: '#17794C', down: '#A9452C', blue: '#2D6A93',
-  muted: '#5D685F', line: 'rgba(40, 52, 43, 0.12)', sage: '#4E8A5E', plum: '#7A4F96', orange: '#B0651E', teal: '#2E8585',
-  ink: '#1C1F1D', panel: '#FBF8F0', grid: 'rgba(40, 52, 43, 0.08)',
+  green: '#5E7A00', green2: '#5E7A00', gold: '#B36B00', up: '#2E8B1E', down: '#D6402B', blue: '#2F6FDB',
+  muted: '#6E6E66', line: '#E4E4DB', sage: '#4E8A3E', plum: '#7A55B8', orange: '#D2682E', teal: '#25888A',
+  ink: '#141412', panel: '#FFFFFF', grid: 'rgba(20, 20, 18, 0.06)',
 };
 export const C = {};
 export const PALETTE = [];
@@ -61,7 +61,7 @@ export async function timeChart(el, series, opts = {}) {
   const fmtAxis = opts.percent ? (v) => `${v.toFixed(Math.abs(v) < 10 ? 1 : 0)}%` : (v) => inr(v, Math.abs(v) < 100 ? 1 : 0);
   const ch = L.createChart(el, {
     autoSize: true,
-    layout: { background: { type: 'solid', color: 'transparent' }, textColor: C.muted, fontFamily: '"IBM Plex Mono", Consolas, monospace', fontSize: 11 },
+    layout: { background: { type: 'solid', color: 'transparent' }, textColor: C.muted, fontFamily: '"Satoshi", "Segoe UI", system-ui, sans-serif', fontSize: 11 },
     grid: { vertLines: { visible: false }, horzLines: { color: C.line } },
     rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.12, bottom: 0.08 } },
     leftPriceScale: { visible: series.some((s) => s.scale === 'left'), borderVisible: false, scaleMargins: { top: 0.12, bottom: 0.08 } },
@@ -130,7 +130,7 @@ export function barChart({ labels, series, stacked = true, height = 220, fmt = c
       const v = s.values[i] || 0, h = sc(v);
       const x = stacked ? x0 + (colW - bw) / 2 : x0 + colW * 0.11 + k * bw;
       const yy = stacked ? y - h : H - bottom - h;
-      g += `<rect x="${x.toFixed(1)}" y="${yy.toFixed(1)}" width="${(bw - (stacked ? 0 : 2)).toFixed(1)}" height="${Math.max(0, h).toFixed(1)}" rx="3" fill="${s.color}" opacity="${highlight < 0 || highlight === i ? 1 : 0.45}"><title>${xe(lab)} · ${xe(s.name)}: ${xe(fmt(v))}</title></rect>`;
+      g += `<rect x="${x.toFixed(1)}" y="${yy.toFixed(1)}" width="${(bw - (stacked ? 0 : 2)).toFixed(1)}" height="${Math.max(0, h).toFixed(1)}" rx="3" fill="${highlight < 0 || highlight === i ? s.color : 'var(--line-2)'}"><title>${xe(lab)} · ${xe(s.name)}: ${xe(fmt(v))}</title></rect>`;
       if (stacked) y -= h;
     });
     if (stacked) g += `<text x="${(x0 + colW / 2).toFixed(1)}" y="${(y - 6).toFixed(1)}" text-anchor="middle" class="bc-tot">${xe(fmt(sums[i]))}</text>`;

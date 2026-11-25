@@ -26,5 +26,5 @@ export const DALAL_API = 'https://street-ka-dalal.pages.dev/api/dalal';
 
 export const SITE = {
   name: 'Street ka Dalal',
-  tagline: 'Screeners, sector views and market intelligence for our community.',
+  tagline: 'Screeners, results and sector views on NSE data, free for our community.',
 };

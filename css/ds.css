@@ -1,0 +1,101 @@
+/* STREET KA DALAL DESIGN SYSTEM (Sagar 2026-11-26: "make a system for header, texts, number and all other like how
+   Groww does ... the alignments are not good, unprofessional"). Loaded LAST. Rules in docs/DESIGN_SYSTEM.md.
+   Every stylesheet's sizes, weights and corners were snapped to these tokens by tools/ds_snap.py, so a page can only
+   use these values. Measured before: up to 14 text sizes, 27 text styles and 12 corner shapes on one page. */
+
+:root {
+  /* type scale: 8 sizes, nothing in between */
+  --fs-2xs: 11px;   /* tags: S / TV buttons, tiny pills */
+  --fs-xs: 12px;    /* captions, table headers, labels, badges */
+  --fs-sm: 13px;    /* secondary text, table cells, company names */
+  --fs-md: 14px;    /* body text */
+  --fs-lg: 16px;    /* card titles, stock symbols, prices in lists */
+  --fs-xl: 20px;    /* section titles, KPI numbers */
+  --fs-2xl: 24px;   /* page titles */
+  --fs-3xl: 32px;   /* one hero number per page */
+  /* weights: 3 */
+  --fw-reg: 400; --fw-med: 500; --fw-bold: 700;
+  /* line heights */
+  --lh-tight: 1.2; --lh-body: 1.5;
+  /* spacing: 4-point steps */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 20px; --s-6: 24px; --s-8: 32px;
+  /* corners: 4 shapes */
+  --r-sm: 8px;    /* chips, tags, small buttons */
+  --r-md: 12px;   /* inputs, tiles, buttons */
+  --r-lg: 20px;   /* cards */
+  --r-pill: 999px;
+}
+
+/* ---------- base ---------- */
+html { font-synthesis: none; }
+body { font-size: var(--fs-md); line-height: var(--lh-body); font-variant-numeric: tabular-nums; }
+h1 { font-size: var(--fs-2xl) !important; font-weight: var(--fw-bold) !important; line-height: var(--lh-tight) !important; }
+h2 { font-size: var(--fs-xl); font-weight: var(--fw-bold); line-height: var(--lh-tight); }
+h3 { font-size: var(--fs-lg); font-weight: var(--fw-med); line-height: var(--lh-tight); }
+h4 { font-size: var(--fs-md); font-weight: var(--fw-med); }
+small, .sub, .muted { font-size: var(--fs-sm); }
+.lx h1 { font-size: inherit !important; }
+
+/* ---------- page head: label, title, one meta line ---------- */
+.page-head { margin-bottom: var(--s-6); }
+.page-head .eyebrow { font-size: var(--fs-sm) !important; margin-bottom: var(--s-1); }
+.page-head h1 { margin: 0 0 var(--s-2); }
+
+/* ---------- cards ---------- */
+.card { padding: var(--s-5); border-radius: var(--r-lg) !important; }
+#view > .card + .card, #view > section.card + section.card { margin-top: var(--s-4); }
+.card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--s-4); margin-bottom: var(--s-4); }
+.card-head h2, .card-head h3 { font-size: var(--fs-lg); font-weight: var(--fw-bold); margin: 0; }
+.card-head .sub { display: block; margin-top: var(--s-1); color: var(--muted); }
+.card-head a { font-size: var(--fs-sm); font-weight: var(--fw-med); white-space: nowrap; }
+
+/* ---------- numbers ---------- */
+.num, td.r, .r { font-variant-numeric: tabular-nums; }
+.up, .pos, .k-pos { color: var(--pos); }
+.down, .neg, .k-neg { color: var(--neg); }
+
+/* KPI tiles: number on top, one-line label under it, all tiles the same height */
+.dc-kpis, .kpis, .stats, .rp-tiles, .ar-tiles { gap: var(--s-3) !important; align-items: stretch; }
+.dc-kpis > div, .kpis > div, .stats > div { border-radius: var(--r-md) !important; padding: var(--s-4) !important; display: flex; flex-direction: column; justify-content: center; min-height: 84px; }
+.dc-kpis b, .kpis b, .stats b, .rp-tiles .card b, .ar-tiles .card b { font-size: var(--fs-xl) !important; font-weight: var(--fw-bold) !important; line-height: var(--lh-tight); margin: 0 0 var(--s-1) !important; }
+.dc-kpis span, .kpis span, .stats span { font-size: var(--fs-xs) !important; color: var(--muted); line-height: 1.35; }
+
+/* ---------- badges: one size everywhere ---------- */
+.chip, .k-pill, .k-chip.tiny { font-size: var(--fs-xs) !important; font-weight: var(--fw-med) !important; line-height: 22px !important; height: 22px; padding: 0 var(--s-2) !important;
+  border-radius: var(--r-sm) !important; white-space: nowrap; display: inline-flex; align-items: center; vertical-align: middle; letter-spacing: 0 !important; }
+
+/* small link buttons next to a symbol (S / TV / SC) */
+.k-link, .tvb, .scb, a.sym-l { font-size: var(--fs-2xs) !important; font-weight: var(--fw-med) !important; height: 20px; line-height: 18px !important; padding: 0 6px !important;
+  border-radius: var(--r-sm) !important; vertical-align: middle; }
+
+/* ---------- tables ---------- */
+table { font-size: var(--fs-sm); }
+th, .tbl th, .tbl th button { font-size: var(--fs-xs) !important; font-weight: var(--fw-med) !important; letter-spacing: 0 !important; }
+.tbl td { padding-top: var(--s-2); padding-bottom: var(--s-2); vertical-align: middle; }
+.tbl td.r, .tbl th.r { text-align: right; }
+
+/* ---------- Discover: My stocks this week (the screenshot of 26-Nov) ---------- */
+.dc-mygrid { display: grid !important; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)) !important; gap: var(--s-4) !important; align-items: start; }
+.dc-mygrid > .card { margin: 0 !important; min-width: 0; }
+.dc-my .card-head { align-items: flex-start; padding-bottom: var(--s-3); margin-bottom: var(--s-3); border-bottom: 1px solid var(--line); }
+.dc-my .card-head > div:first-child { min-width: 0; }
+.dc-my .card-head .sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; font-size: var(--fs-sm); }
+.dc-px { text-align: right; white-space: nowrap; line-height: var(--lh-tight); }
+.dc-px b { display: block; font-size: var(--fs-lg); font-weight: var(--fw-bold); }
+.dc-px > span { font-size: var(--fs-sm); font-weight: var(--fw-med); }
+.dc-px .sub.inline { display: block; margin-top: var(--s-1); font-size: var(--fs-xs); }
+/* each event row: badge on its own line, the text under it, links stay in the text (same as Groww's activity rows) */
+.dc-items { gap: 0 !important; font-size: var(--fs-sm) !important; line-height: var(--lh-body); }
+.dc-items > li { display: flex; flex-direction: column; align-items: flex-start; gap: var(--s-1); padding: var(--s-3) 0; border-top: 1px solid var(--line); }
+.dc-items > li:first-child { border-top: 0; padding-top: 0; }
+.dc-items > li:last-child { padding-bottom: 0; }
+.dc-items > li > .chip:first-child { max-width: 100%; }
+.dc-txt { color: var(--ink-2); }
+.dc-txt a { font-weight: var(--fw-med); margin-left: var(--s-1); }
+@media (max-width: 600px) { .dc-mygrid { grid-template-columns: 1fr !important; } }
+
+/* ---------- forms and buttons: one height ---------- */
+.k-btn, .btn { height: 36px; font-size: var(--fs-sm) !important; font-weight: var(--fw-med) !important; border-radius: var(--r-md); }
+.k-seg button { height: 30px; font-size: var(--fs-xs) !important; font-weight: var(--fw-med) !important; }
+input, select { height: 36px; font-size: var(--fs-sm) !important; border-radius: var(--r-md) !important; }
+textarea { font-size: var(--fs-sm) !important; border-radius: var(--r-md) !important; }
