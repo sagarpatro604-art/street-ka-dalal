@@ -1752,7 +1752,8 @@ function shell() {
   document.body.classList.toggle('signed-out', !u);
 }
 
-const navMini = () => { try { return localStorage.getItem('skd.navmini') === '1'; } catch { return false; } };
+// neon look: the thin icon rail is the default (it opens on hover); the old full menu only if the member chose it
+const navMini = () => { try { return localStorage.getItem('skd.navmini') !== '0'; } catch { return true; } };
 const entered = (set) => { try { if (set) sessionStorage.setItem('skd.entered', '1'); return sessionStorage.getItem('skd.entered') === '1'; } catch { return true; } };
 let renderSeq = 0;
 async function render() {
@@ -1807,8 +1808,8 @@ const ACTS = {
   theme: () => {
     const light = !CH.isLight();
     if (light) document.documentElement.dataset.theme = 'light'; else document.documentElement.dataset.theme = 'dark';
-    try { localStorage.setItem('skd_look', light ? 'light' : 'dark'); } catch {}
-    const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = light ? '#FFFFFF' : '#121314';
+    try { localStorage.setItem('skd_neon', light ? 'light' : 'dark'); } catch {}
+    const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = light ? '#F6F6F1' : '#050505';
     CH.setChartTheme(); paintThemeBtn(); render();
   },
   dcCoupon: async (el) => {

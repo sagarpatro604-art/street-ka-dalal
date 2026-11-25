@@ -210,7 +210,7 @@ async function drawPE(v, cur) {
   const h = v.pe_history?.[cur];
   if (!el || !h || !Array.isArray(h.points) || !h.points.length) { if (el) el.innerHTML = '<p class="sub">No history to draw.</p>'; return; }
   const LW = await H.CH.lw();
-  const ch = LW.createChart(el, { autoSize: true, layout: { background: { type: 'solid', color: 'transparent' }, textColor: H.CH.C.muted, fontFamily: '"General Sans", "Segoe UI", system-ui, sans-serif', fontSize: 11 },
+  const ch = LW.createChart(el, { autoSize: true, layout: { background: { type: 'solid', color: 'transparent' }, textColor: H.CH.C.muted, fontFamily: '"Satoshi", "Segoe UI", system-ui, sans-serif', fontSize: 11 },
     grid: { vertLines: { visible: false }, horzLines: { color: H.CH.C.line } }, rightPriceScale: { borderVisible: false }, timeScale: { borderVisible: false } });
   const s = ch.addLineSeries({ color: H.CH.C.green2, lineWidth: 2, priceLineVisible: false });
   s.setData(h.points.map(([d, x]) => ({ time: d, value: x })));

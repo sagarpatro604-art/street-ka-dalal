@@ -1,0 +1,85 @@
+/* NEON LOOK (Sagar 2026-11-26: "f neon try sandbox, let see once the whole thing how it looks"), from demo F:
+   black page, one neon lime accent, Satoshi font, big round cards, a thin icon rail that opens on hover.
+   Loaded LAST, after groww.css. Dark is the default; the light look keeps the same layout with a dark olive accent
+   (lime cannot be read on white). Branch neon-look of street-ka-dalal, sandbox only. */
+
+:root {
+  --bg: #050505; --bg-2: #0A0A0A; --surface: #0F0F0F; --surface-2: #161616; --raise: #1C1C1C;
+  --ink: #F2F2EE; --ink-2: #D0D0C9; --muted: #8C8C86; --faint: #5E5E59;
+  --line: #1F1F1F; --line-2: #2C2C2C;
+  --accent: #D7F23A; --accent-ink: #141800; --accent-soft: rgba(215, 242, 58, .12); --accent-line: rgba(215, 242, 58, .45);
+  --sand: #FFB547; --sand-soft: rgba(255, 181, 71, .13);
+  --coral: #FF6B57; --coral-soft: rgba(255, 107, 87, .13);
+  --sky: #7DB4FF; --sky-soft: rgba(125, 180, 255, .12);
+  --pos: #9BE15D; --neg: #FF6B57;
+  --shadow: 0 16px 50px rgba(0, 0, 0, .55);
+  --glow: radial-gradient(1100px 520px at 50% -18%, rgba(215, 242, 58, .07), transparent 60%);
+  --serif: "Satoshi", "Segoe UI", system-ui, sans-serif;
+  --sans: "Satoshi", "Segoe UI", system-ui, sans-serif;
+  --mono: "Satoshi", "Segoe UI", system-ui, sans-serif;
+  color-scheme: dark;
+}
+[data-theme="light"] {
+  --bg: #F6F6F1; --bg-2: #EFEFE8; --surface: #FFFFFF; --surface-2: #F3F3EC; --raise: #FFFFFF;
+  --ink: #141412; --ink-2: #33332E; --muted: #6E6E66; --faint: #A3A39A;
+  --line: #E4E4DB; --line-2: #D6D6CC;
+  --accent: #5E7A00; --accent-ink: #FFFFFF; --accent-soft: rgba(94, 122, 0, .10); --accent-line: rgba(94, 122, 0, .40);
+  --sand: #B36B00; --sand-soft: rgba(179, 107, 0, .10);
+  --coral: #D6402B; --coral-soft: rgba(214, 64, 43, .09);
+  --sky: #2F6FDB; --sky-soft: rgba(47, 111, 219, .09);
+  --pos: #2E8B1E; --neg: #D6402B;
+  --shadow: 0 10px 30px rgba(20, 20, 18, .08);
+  --glow: none;
+  color-scheme: light;
+}
+
+body { background: var(--bg); background-image: var(--glow); background-attachment: fixed; font-family: var(--sans); font-size: 14px; }
+b, strong { font-weight: 700; }
+h1, h2, h3, h4 { font-weight: 700; letter-spacing: -0.01em; }
+
+/* cards: big round corners, flat panel, hairline border */
+.card, .k-card { border-radius: 20px !important; background: var(--surface); border: 1px solid var(--line); box-shadow: none; }
+
+/* buttons and chips: lime pills */
+.k-btn, .btn, button.k-btn { border-radius: 99px; }
+.k-btn.primary, .btn.primary, .btn-primary, .lx-cta { background: var(--accent) !important; color: var(--accent-ink) !important; border-color: transparent !important; font-weight: 700; }
+.k-chip, .chip { border-radius: 99px; }
+.k-chip.on, .k-seg button.on, .k-seg button[aria-pressed="true"] { background: var(--accent) !important; color: var(--accent-ink) !important; border-color: transparent !important; box-shadow: none !important; }
+.k-seg { border-radius: 99px; }
+.k-seg button { border-radius: 99px; }
+a { color: var(--accent); }
+[data-theme="light"] a { color: var(--accent); }
+
+/* top bar: plain black, lime round logo frame */
+header.top { background: var(--bg) !important; border-bottom: 1px solid var(--line); }
+.wordmark, .k-brand { font: 700 19px/1 var(--sans) !important; }
+.wordmark em, .k-brand em { color: var(--accent); }
+.top .brand .logo { border-radius: 50%; box-shadow: 0 0 0 2px var(--accent); }
+
+/* the side menu becomes a thin icon rail (lime square on the page you are on); hover opens it with names */
+@media (min-width: 901px) {
+  body.nav-mini { --nav-w: 64px; }
+  #topnav.topnav { background: var(--bg) !important; border-right: 1px solid var(--line); transition: width .18s ease, box-shadow .18s ease; }
+  #topnav.topnav a { border-radius: 12px !important; }
+  #topnav.topnav a.on { background: var(--accent) !important; color: var(--accent-ink) !important; box-shadow: none !important; border-radius: 12px !important; }
+  #topnav.topnav a.on svg { color: var(--accent-ink); }
+  body.nav-mini #topnav.topnav:hover { width: 230px; box-shadow: 12px 0 40px rgba(0, 0, 0, .45); }
+  body.nav-mini #topnav.topnav:hover a span, body.nav-mini #topnav.topnav:hover .nv-tog span { display: inline; }
+  body.nav-mini #topnav.topnav:hover a, body.nav-mini #topnav.topnav:hover .nv-tog { justify-content: flex-start; padding: 8px 10px; }
+  body.nav-mini #topnav.topnav:hover .nv-g { height: auto; margin: 12px 10px 4px; color: var(--faint); background: none; }
+  body.nav-mini #topnav.topnav:hover a.nv-sub { display: flex; }
+}
+
+/* numbers stand out: bold, tabular */
+.idx-last, .stk-price b, .kpis b, .flows b, .stats b, .rp-tiles .card b, .ar-tiles .card b, .dc-kpis b { font-weight: 700 !important; letter-spacing: -0.01em; }
+td, .num { font-variant-numeric: tabular-nums; }
+
+/* tables: quieter lines, lime hover edge */
+.tbl tbody tr:hover td { background: var(--surface-2); }
+th, .tbl th, .tbl th button { color: var(--muted) !important; }
+
+/* tooltips and toasts in white like the design */
+#toast { background: #F4F4EF; color: #111; border-radius: 12px; }
+
+/* the landing keeps its own look (it is already black with green) */
+.lx a { color: inherit; }

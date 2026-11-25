@@ -25,14 +25,14 @@ export function untrack(ch) { if (!ch) return; live.delete(ch); try { ch.remove(
 // the look kit's colours (Concall Studio look, Sagar 2026-11-16: "like our own apps like confluence desk"); dark is the
 // default, light = the kit's paper theme (Sagar 2026-11-17: "add a light theme option")
 const DARK = {
-  green: '#1FB47F', green2: '#1FB47F', gold: '#E3A63E', up: '#1FB47F', down: '#F0654D', blue: '#6FA3F7',
-  muted: '#9A9EA5', line: '#2A2C30', sage: '#7FB89A', plum: '#B79BE0', orange: '#E8955A', teal: '#5FC2C2',
-  ink: '#ECEDEF', panel: '#1B1C1E', grid: 'rgba(154, 158, 165, 0.10)',
+  green: '#D7F23A', green2: '#D7F23A', gold: '#FFB547', up: '#9BE15D', down: '#FF6B57', blue: '#7DB4FF',
+  muted: '#8C8C86', line: '#1F1F1F', sage: '#9BE15D', plum: '#C9A8FF', orange: '#FF8A3D', teal: '#5FD3C8',
+  ink: '#F2F2EE', panel: '#0F0F0F', grid: 'rgba(255, 255, 255, 0.05)',
 };
 const LIGHT = {
-  green: '#0A9B6B', green2: '#0A9B6B', gold: '#B7791F', up: '#0A9B6B', down: '#E0533D', blue: '#2F6FDB',
-  muted: '#7A7F87', line: '#E9EAED', sage: '#4E8A6A', plum: '#7A55B8', orange: '#D2782E', teal: '#25888A',
-  ink: '#30343A', panel: '#FFFFFF', grid: 'rgba(48, 52, 58, 0.07)',
+  green: '#5E7A00', green2: '#5E7A00', gold: '#B36B00', up: '#2E8B1E', down: '#D6402B', blue: '#2F6FDB',
+  muted: '#6E6E66', line: '#E4E4DB', sage: '#4E8A3E', plum: '#7A55B8', orange: '#D2682E', teal: '#25888A',
+  ink: '#141412', panel: '#FFFFFF', grid: 'rgba(20, 20, 18, 0.06)',
 };
 export const C = {};
 export const PALETTE = [];
@@ -61,7 +61,7 @@ export async function timeChart(el, series, opts = {}) {
   const fmtAxis = opts.percent ? (v) => `${v.toFixed(Math.abs(v) < 10 ? 1 : 0)}%` : (v) => inr(v, Math.abs(v) < 100 ? 1 : 0);
   const ch = L.createChart(el, {
     autoSize: true,
-    layout: { background: { type: 'solid', color: 'transparent' }, textColor: C.muted, fontFamily: '"General Sans", "Segoe UI", system-ui, sans-serif', fontSize: 11 },
+    layout: { background: { type: 'solid', color: 'transparent' }, textColor: C.muted, fontFamily: '"Satoshi", "Segoe UI", system-ui, sans-serif', fontSize: 11 },
     grid: { vertLines: { visible: false }, horzLines: { color: C.line } },
     rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.12, bottom: 0.08 } },
     leftPriceScale: { visible: series.some((s) => s.scale === 'left'), borderVisible: false, scaleMargins: { top: 0.12, bottom: 0.08 } },
