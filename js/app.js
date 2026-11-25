@@ -432,7 +432,7 @@ async function viewMarket() {
   await SC.scanData().catch(() => null);
   after.push(drawIdxChart, SC.drawInternals, drawFlows);
   const delta = (o) => (o && o.now != null && o['1m_ago'] != null ? o.now - o['1m_ago'] : null);
-  return `${pageHead('Market intelligence', 'Market today')}
+  return `${pageHead('Market', 'Market today')}
   ${dataNote(m)}
   <section class="idx-grid">${(m.indices || []).map((i) => `<button class="card idx" data-act="pickIdx" data-v="${esc(i.name === 'NIFTY 50' ? 'Nifty 50' : i.name === 'NIFTY 500' ? 'Nifty 500' : i.name === 'NIFTY MIDCAP 150' ? 'Nifty Midcap 150' : i.name === 'NIFTY SMALLCAP 250' ? 'Nifty Smallcap 250' : i.name)}">
     <p class="idx-name">${esc(i.name)}</p>
@@ -950,7 +950,7 @@ function resHistoryCard(rows, sym) {
   const bank = rows.some((r) => r.nii != null);
   const last = rows.slice(-8);
   return `<section class="card"><div class="card-head"><h2>Quarterly results</h2><a href="#/results/co/${encodeURIComponent(sym)}">Full results, commentary and documents →</a></div>
-    ${CH.barChart({ labels: last.map((r) => qLabel(r.q).replace(' FY', "'")), series: [{ name: bank ? 'Net profit (₹ cr)' : 'Net profit (₹ cr)', values: last.map((r) => Math.max(0, r.pat || 0)), color: CH.C.green2 }], height: 170, fmt: (v) => `${num(v)} cr` })}
+    ${CH.barChart({ labels: last.map((r) => qLabel(r.q).replace(' FY', "'")), series: [{ name: bank ? 'Net profit (₹ cr)' : 'Net profit (₹ cr)', values: last.map((r) => Math.max(0, r.pat || 0)), color: CH.C.green2 }], highlight: last.length - 1, height: 170, fmt: (v) => `${num(v)} cr` })}
     <div class="tbl-wrap"><table class="tbl compact"><thead><tr><th><button>Quarter</button></th><th class="r"><button>${bank ? 'NII' : 'Revenue'}</button></th><th class="r"><button>YoY</button></th><th class="r"><button>Profit</button></th><th class="r"><button>YoY</button></th><th class="r"><button>${bank ? 'Gross NPA' : 'EBITDA margin'}</button></th><th><button>Result</button></th></tr></thead>
     <tbody>${rows.slice().reverse().map((r) => `<tr><td>${esc(qLabel(r.q))}${r.check ? ' ' + chip('check', 'warn') : ''}</td><td class="r">${crs(bank ? r.nii : r.rev)}</td><td class="r">${bank ? '' : yy(r.rev_y)}</td><td class="r">${crs(r.pat)}</td><td class="r">${yy(r.pat_y)}</td><td class="r">${bank ? (r.gnpa == null ? '-' : num(r.gnpa, 2) + '%') : r.m == null ? '-' : num(r.m, 1) + '%'}</td><td>${labelChip(r.label)}</td></tr>`).join('')}</tbody></table></div>
   </section>`;
@@ -1347,7 +1347,7 @@ function postCard(p) {
 async function viewInsights() {
   const all = await A.listPosts();
   const posts = all.filter((p) => ui.ins.kind === 'all' || p.kind === ui.ins.kind);
-  return `${pageHead('Market intelligence', 'Insights & sectoral views')}
+  return `${pageHead('Insights', 'Notes and sector views')}
   <div class="tabs">${[['all', 'All'], ...KINDS].map(([k, l]) => `<button class="tab ${ui.ins.kind === k ? 'on' : ''}" data-act="insKind" data-v="${k}">${l}</button>`).join('')}</div>
   ${posts.length ? `<div class="post-grid">${posts.map(postCard).join('')}</div>` : '<div class="empty card">No posts yet. Insights and sectoral views will appear here.</div>'}`;
 }
@@ -1795,7 +1795,7 @@ async function render() {
 let toastT;
 function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2400); }
 
-// light / dark look (Sagar 2026-11-17: "add a light theme option"): dark is the default, the choice is kept in this browser
+// light / dark look: since the Groww-style look (Sagar 2026-11-26) light is the default; the choice is kept in this browser (key skd_look)
 function paintThemeBtn() {
   const b = $('#themeBtn'); if (!b) return;
   const light = CH.isLight();
@@ -1807,8 +1807,8 @@ const ACTS = {
   theme: () => {
     const light = !CH.isLight();
     if (light) document.documentElement.dataset.theme = 'light'; else document.documentElement.dataset.theme = 'dark';
-    try { localStorage.setItem('skd_theme', light ? 'light' : 'dark'); } catch {}
-    const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = light ? '#F4F0E5' : '#0B0D0C';
+    try { localStorage.setItem('skd_look', light ? 'light' : 'dark'); } catch {}
+    const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = light ? '#FFFFFF' : '#121314';
     CH.setChartTheme(); paintThemeBtn(); render();
   },
   dcCoupon: async (el) => {

@@ -153,7 +153,7 @@ export async function drawStock(id, sym, tf = 'D') {
   const vs = volumeSignals(bars);
   const ch = CH.track(L.createChart(el, {
     autoSize: true,
-    layout: { background: { type: 'solid', color: 'transparent' }, textColor: C.muted, fontFamily: '"IBM Plex Mono", Consolas, monospace', fontSize: 11 },
+    layout: { background: { type: 'solid', color: 'transparent' }, textColor: C.muted, fontFamily: '"General Sans", "Segoe UI", system-ui, sans-serif', fontSize: 11 },
     grid: { vertLines: { visible: false }, horzLines: { color: C.grid } },
     rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.06, bottom: 0.27 } },
     timeScale: { borderVisible: false, rightOffset: 6, barSpacing: tf === 'D' ? 6 : 9 },
@@ -306,7 +306,7 @@ export async function miniChart(id, sym) {
   const from = Math.max(0, all.length - 130);
   const bars = all.slice(from);
   const C = CH.C;
-  const ch = CH.track(L.createChart(el, { autoSize: true, layout: { background: { type: 'solid', color: 'transparent' }, textColor: C.muted, fontSize: 10, fontFamily: '"IBM Plex Mono", Consolas, monospace' },
+  const ch = CH.track(L.createChart(el, { autoSize: true, layout: { background: { type: 'solid', color: 'transparent' }, textColor: C.muted, fontSize: 10, fontFamily: '"General Sans", "Segoe UI", system-ui, sans-serif' },
     grid: { vertLines: { visible: false }, horzLines: { visible: false } }, rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.08, bottom: 0.22 } },
     timeScale: { borderVisible: false, visible: false }, crosshair: { mode: 0 }, handleScroll: false, handleScale: false }));
   MINI.push(ch);

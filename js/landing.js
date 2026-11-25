@@ -1,8 +1,6 @@
-// Landing page (Sagar 2026-11-21: "make it similar to sector scope ... attracting and organised, this is the first thing a
-// user will see"). A full-screen dark page over everything, built like SectorScope's landing: a giant two-line headline
-// over a candle chart that lights up under the cursor, a pill menu, glass cards for the terminal, one green panel per
-// co-founder (Sagar and Bhuvan are EQUAL co-founders: same panel, same size, same title), the mission, the community and
-// a thank-you band. Shown to signed-out visitors, and to members on every new visit and at #/about.
+// Landing page. Since 2026-11-26 (Sagar: "grow one feel better") a calm Groww-style page in the site light / dark
+// look: plain headline, today real Nifty card from data/market.json, the tools, both founders side by side (EQUAL:
+// same card, same size), why us, the community. Shown to signed-out visitors, and to members on every new visit and at #/about.
 // No emoji, no em dash, no tilde. Facts only, no buy / sell words (SEBI).
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -38,137 +36,121 @@ const VALUES = [
 ];
 
 export function landingHtml({ member = false, inApp = false, error = '', logo = '', ic = () => '', google = '' } = {}) {
-  const launch = member
-    ? '<button class="lx-signup" data-act="enterTerminal" type="button">Launch terminal</button>'
-    : '<button class="lx-signup" data-act="signIn" type="button">Sign in</button>';
+  const go = member ? 'enterTerminal' : 'signIn';
+  const top = member
+    ? '<button class="lx-btn" data-act="enterTerminal" type="button">Open terminal</button>'
+    : '<button class="lx-btn" data-act="signIn" type="button">Sign in</button>';
   const main = member
-    ? '<button class="lx-cta" data-act="enterTerminal" type="button">Explore the terminal</button>'
+    ? '<button class="lx-cta" data-act="enterTerminal" type="button">Open the terminal</button>'
     : `<button class="lx-cta lx-google" data-act="signIn" type="button">${google}<span>Continue with Google</span></button>`;
-  const card = ([r, t, d, i, green]) => `<button class="lx-card${green ? ' green' : ''}" type="button" data-act="${member ? 'enterTerminal' : 'signIn'}" data-v="${r}">
+  const card = ([r, t, d, i]) => `<button class="lx-card" type="button" data-act="${go}" data-v="${r}">
       <span class="lx-ico">${ic(i, 20)}</span><b>${t}</b><span class="lx-d">${d}</span><i>${member ? 'Open' : 'Sign in to open'}</i></button>`;
+  const light = document.documentElement.dataset.theme === 'light';
   return `<div class="lx" id="lx">
-  <section class="lx-hero" id="lxHero">
-    <div class="lx-layer lx-base" id="lxBase"></div>
-    <div class="lx-layer lx-lit" id="lxLit"></div>
-    <div class="lx-vignette"></div>
-    <nav class="lx-nav">
-      <a class="lx-brand" href="#/" data-go="top">${logo}<span>Street <em>ka</em> Dalal</span></a>
-      <div class="lx-pill"><a class="on" data-go="top">Overview</a><a data-go="lxTerminal">Terminal</a><a data-go="lxFounders">Founders</a><a data-go="lxMission">Mission</a><a data-go="lxCommunity">Community</a></div>
-      ${launch}
-    </nav>
-    <div class="lx-head"><h1><span class="lx-l1">Read the market</span><span class="lx-l2">like an institution.</span></h1></div>
-    <div class="lx-bl"><p>Screeners, results, sector rotation, mutual fund flows, pre-market and Dalal, your AI buddy. Built on NSE data, explained in plain words, free for our community.</p></div>
-    <div class="lx-br">
-      <p>Move your cursor across the chart: Nifty 50, day by day. Behind it, every scan, result and flow we track for you.</p>
-      ${inApp && !member ? '<p class="lx-warn">Open this page in Chrome or Safari to sign in: Google does not allow it inside Instagram or Facebook. <button class="lx-copy" data-act="copyLink" type="button">Copy link</button></p>' : ''}
-      ${main}${error ? `<p class="lx-err">${esc(error)}</p>` : ''}
-      <div class="lx-rating"><span class="lx-dot"></span>Free for our 500+ member community</div>
+  <header class="lx-nav"><div class="lx-in">
+    <a class="lx-brand" href="#/" data-go="top">${logo}<span>Street <em>ka</em> Dalal</span></a>
+    <nav class="lx-menu"><a data-go="lxTerminal">Tools</a><a data-go="lxFounders">Founders</a><a data-go="lxMission">Why us</a><a data-go="lxCommunity">Community</a></nav>
+    <button class="k-theme lx-theme" data-act="theme" type="button" title="${light ? 'Dark look' : 'Light look'}" aria-label="Switch light or dark look">${ic(light ? 'moon' : 'sun', 18)}</button>
+    ${top}
+  </div></header>
+
+  <section class="lx-hero" id="lxHero"><div class="lx-in lx-hgrid">
+    <div class="lx-copy">
+      <p class="lx-kick">Free for our 500+ member community</p>
+      <h1>Stock market research for Indian investors, free and in plain words</h1>
+      <p class="lx-sub">Screeners, quarterly results and what the price did after them, sector strength, mutual fund flows and pre-market, all built on NSE's own data.</p>
+      ${inApp && !member ? '<p class="lx-warn">Open this page in Chrome or Safari to sign in: Google does not allow it inside Instagram or Facebook. <button class="lx-copy-btn" data-act="copyLink" type="button">Copy link</button></p>' : ''}
+      <div class="lx-actions">${main}${error ? `<p class="lx-err">${esc(error)}</p>` : ''}</div>
+      <p class="lx-note">No buy or sell calls. No paid tips. Just the data and how to read it.</p>
     </div>
-    <div class="lx-hint">move your cursor across the chart</div>
-  </section>
+    <div class="lx-show" id="lxShow" aria-label="Today's market from our data">
+      <div class="lx-sc"><div class="lx-sc-h"><span>Nifty 50</span><span id="lxAsof"></span></div>
+        <div class="lx-sc-v" id="lxN50">&nbsp;</div><div class="lx-sc-c" id="lxN50c">&nbsp;</div>
+        <div class="lx-sc-ch" id="lxChart"></div>
+        <div class="lx-sc-row" id="lxIdx"></div></div>
+      <div class="lx-sc lx-sc2"><div class="lx-sc-h"><span>Market breadth</span><span>all NSE stocks</span></div>
+        <div class="lx-bar"><i id="lxAdv"></i></div><div class="lx-bl2" id="lxBreadth">&nbsp;</div></div>
+    </div>
+  </div></section>
 
-  <section class="lx-cards" id="lxTerminal">${CARDS.map(card).join('')}</section>
-  <p class="lx-more">And more inside: Market, Results, News and filings, Prop. Research, the Library and Insights.</p>
+  <section class="lx-sec" id="lxTerminal"><div class="lx-in">
+    <h2>What you get inside</h2><p class="lx-lead">Everything on one site, updated after every NSE close.</p>
+    <div class="lx-cards">${CARDS.map(card).join('')}</div>
+    <p class="lx-more">Also inside: Market, Results, News and filings, Prop. Research, the Library and Insights.</p>
+  </div></section>
 
-  <div id="lxFounders" class="lx-founders">
-    <p class="lx-eyebrow center">Meet the founders</p>
-    ${FOUNDERS.map((f, k) => `<section class="lx-founder${k % 2 ? ' flip' : ''}">
+  <section class="lx-sec lx-alt" id="lxFounders"><div class="lx-in">
+    <h2>The people behind it</h2><p class="lx-lead">Two investors who built the tools they wanted for themselves.</p>
+    <div class="lx-founders">${FOUNDERS.map((f) => `<article class="lx-founder">
       <div class="lx-photo"><img src="${f.img}" alt="${esc(f.name)}" loading="lazy" width="600" height="800"></div>
-      <div class="lx-ftext">
-        <div class="lx-feyebrow"><span class="lx-dot"></span>${esc(f.role)}</div>
-        <h2>${esc(f.name)}</h2>
+      <div class="lx-ftext"><h3>${esc(f.name)}</h3><p class="lx-role">${esc(f.role)}</p>
         <p>${f.bio}</p>
         <div class="lx-tags">${f.tags.map((t) => `<span>${esc(t)}</span>`).join('')}</div>
         <div class="lx-links"><a href="${f.ig}" target="_blank" rel="noopener">Instagram ${esc(f.igH)}</a><a href="${f.li}" target="_blank" rel="noopener">LinkedIn</a></div>
-      </div></section>`).join('')}
-  </div>
+      </div></article>`).join('')}</div>
+  </div></section>
 
-  <section class="lx-moto" id="lxMission"><div class="lx-eyebrow center">Our mission</div>
-    <h2>"Read the market like an institution.<br>Decide like an owner."</h2>
-    <p>Street ka Dalal puts the research a desk would use into the hands of every learning investor: free, in plain words, and with the source of every number on the page.</p></section>
-  <section class="lx-values">${VALUES.map(([t, d, i]) => `<div class="lx-v"><span class="lx-ico">${ic(i, 22)}</span><h3>${t}</h3><p>${d}</p></div>`).join('')}</section>
+  <section class="lx-sec" id="lxMission"><div class="lx-in">
+    <h2>Why Street ka Dalal</h2><p class="lx-lead">The research a fund desk uses, free for every learning investor, with the source of every number on the page.</p>
+    <div class="lx-values">${VALUES.map(([t, d, i]) => `<div class="lx-v"><span class="lx-ico">${ic(i, 20)}</span><h3>${t}</h3><p>${d}</p></div>`).join('')}</div>
+  </div></section>
 
-  <section class="lx-comm" id="lxCommunity"><div class="lx-eyebrow center">The community</div><h2>Learn with us</h2>
+  <section class="lx-sec lx-alt" id="lxCommunity"><div class="lx-in">
+    <h2>Learn with us</h2><p class="lx-lead">Free sessions, a daily note and people who ask good questions.</p>
     <div class="lx-commgrid">
       <a href="${LINKS.wa}" target="_blank" rel="noopener"><b>WhatsApp community</b><span>500+ members. The morning note, market stories and session invites.</span></a>
       <a href="session"><b>Sunday sessions</b><span>Free and live on Google Meet with Sagar and Bhuvan.</span></a>
       <a href="${LINKS.tg}" target="_blank" rel="noopener"><b>Telegram group</b><span>Quant and factor investing talk.</span></a>
       <a href="quiz"><b>Investor persona test</b><span>What kind of investor are you? About three minutes.</span></a>
-    </div></section>
+    </div>
+  </div></section>
 
-  <section class="lx-thanks"><div class="lx-tin"><h2>Thank you for learning with us</h2><p>Here is to sharper decisions and calmer conviction. Let us read the market together.</p>
-    ${member ? '<button class="lx-cta lg" data-act="enterTerminal" type="button">Launch terminal</button>' : `<button class="lx-cta lx-google lg" data-act="signIn" type="button">${google}<span>Continue with Google</span></button>`}</div></section>
-  <div class="lx-disc">For learning only. Nothing here is investment advice or a recommendation to buy or sell any security. We are not SEBI-registered advisers. Street ka Dalal by K. Sagar Patro and Bhuvan Pasari.</div>
+  <section class="lx-end"><div class="lx-in"><h2>Start reading the market with us</h2><p>Free with a Google account.</p>
+    ${member ? '<button class="lx-cta" data-act="enterTerminal" type="button">Open the terminal</button>' : `<button class="lx-cta lx-google" data-act="signIn" type="button">${google}<span>Continue with Google</span></button>`}</div></section>
+  <div class="lx-disc"><div class="lx-in">For learning only. Nothing here is investment advice or a recommendation to buy or sell any security. We are not SEBI-registered advisers. Data is end of day from public NSE sources. Street ka Dalal by K. Sagar Patro and Bhuvan Pasari.</div></div>
 </div>`;
 }
 
-/* ---------------- the hero: Nifty 50 closes, a light that follows the cursor ---------------- */
-function chartSvg(pts, bright) {
-  const W = 1680, H = 950, n = pts.length, lo = Math.min(...pts), hi = Math.max(...pts), pad = H * 0.16;
-  const y = (v) => H - pad - ((v - lo) / (hi - lo || 1)) * (H - 2 * pad);
-  const cw = W / n, up = bright ? '#18d68a' : '#25352f', dn = bright ? '#ff5470' : '#3a2a30';
-  let grid = '';
-  for (let g = 0; g <= 6; g++) { const yy = (g * H) / 6; grid += `<line x1="0" y1="${yy}" x2="${W}" y2="${yy}" stroke="${bright ? 'rgba(24,214,138,0.10)' : 'rgba(255,255,255,0.035)'}" stroke-width="1"/>`; }
-  let body = '';
-  const f = bright ? ' filter="url(#gl)"' : '';
-  for (let i = 1; i < n; i++) {
-    const o = pts[i - 1], c = pts[i], col = c >= o ? up : dn, x = (i + 0.5) * cw, bw = Math.max(3, cw * 0.62);
-    const wick = Math.abs(c - o) * 0.6 + (hi - lo) * 0.005;
-    body += `<line x1="${x.toFixed(1)}" y1="${y(Math.max(o, c) + wick).toFixed(1)}" x2="${x.toFixed(1)}" y2="${y(Math.min(o, c) - wick).toFixed(1)}" stroke="${col}" stroke-width="1.6"${f}/>`;
-    body += `<rect x="${(x - bw / 2).toFixed(1)}" y="${y(Math.max(o, c)).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(2, y(Math.min(o, c)) - y(Math.max(o, c))).toFixed(1)}" rx="1.5" fill="${col}"${f}/>`;
-  }
-  let extra = '', defs = '';
-  if (bright) {
-    const line = pts.map((v, i) => `${((i + 0.5) * cw).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
-    extra = `<path d="M ${(0.5 * cw).toFixed(1)},${H} L ${line.split(' ').join(' L ')} L ${((n - 0.5) * cw).toFixed(1)},${H} Z" fill="url(#ag)"/><polyline points="${line}" fill="none" stroke="#8ef5c4" stroke-width="2.4" filter="url(#gl)"/>`;
-    defs = '<defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#18d68a" stop-opacity="0.28"/><stop offset="1" stop-color="#18d68a" stop-opacity="0"/></linearGradient><filter id="gl" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>';
-  }
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice"><rect width="${W}" height="${H}" fill="${bright ? '#050a08' : '#080d0b'}"/>${defs}${grid}${extra}${body}</svg>`;
-  return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+/* ---------------- the hero card: today's real numbers from data/market.json ---------------- */
+const fmt = (v, d = 2) => (v == null ? '-' : Number(v).toLocaleString('en-IN', { minimumFractionDigits: d, maximumFractionDigits: d }));
+const pct = (v) => (v == null ? '' : (v > 0 ? '+' : '') + Number(v).toFixed(2) + '%');
+function spark(arr) {
+  if (!arr || arr.length < 2) return '';
+  const w = 520, h = 120, lo = Math.min(...arr), hi = Math.max(...arr), sp = hi - lo || 1;
+  const pts = arr.map((v, i) => `${((i * w) / (arr.length - 1)).toFixed(1)},${(h - 4 - ((v - lo) / sp) * (h - 8)).toFixed(1)}`);
+  const up = arr[arr.length - 1] >= arr[0];
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" width="100%" height="${h}"><path d="M${pts.join(' L')} L${w},${h} L0,${h} Z" fill="var(${up ? '--accent-soft' : '--coral-soft'})"/><polyline points="${pts.join(' ')}" fill="none" stroke="var(${up ? '--pos' : '--neg'})" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>`;
 }
+const idxName = (s) => String(s || '').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()).replace('Nifty ', 'Nifty ');
 
-let raf = 0;
 export async function wireLanding() {
-  const root = document.getElementById('lx'), hero = document.getElementById('lxHero');
-  if (!root || !hero) return;
+  const root = document.getElementById('lx');
+  if (!root) return;
   document.body.classList.add('lx-open');
-  // the pill menu scrolls inside the page; the brand goes back to the top
   root.querySelectorAll('[data-go]').forEach((a) => {
     a.addEventListener('click', (e) => {
       e.preventDefault();
       const t = a.dataset.go === 'top' ? null : document.getElementById(a.dataset.go);
-      root.scrollTo({ top: t ? t.offsetTop - 20 : 0, behavior: 'smooth' });
+      root.scrollTo({ top: t ? t.offsetTop - 70 : 0, behavior: 'smooth' });
     });
   });
-  const pills = [...root.querySelectorAll('.lx-pill a')];
-  root.addEventListener('scroll', () => {
-    const yy = root.scrollTop + 120; let cur = 'top';
-    for (const id of ['lxTerminal', 'lxFounders', 'lxMission', 'lxCommunity']) { const el = document.getElementById(id); if (el && el.offsetTop <= yy) cur = id; }
-    pills.forEach((p) => p.classList.toggle('on', p.dataset.go === cur));
-  }, { passive: true });
-  let pts = [];
   try {
-    const d = await fetch('data/hist/idx_recent.json', { cache: 'force-cache' }).then((r) => r.json());
-    pts = (d.s?.['Nifty 50'] || []).filter((v) => v != null).slice(-130);
-  } catch { /* the page works without the chart */ }
-  if (pts.length > 10 && document.getElementById('lxBase')) { document.getElementById('lxBase').style.backgroundImage = chartSvg(pts, false); document.getElementById('lxLit').style.backgroundImage = chartSvg(pts, true); }
-  const touch = window.matchMedia('(pointer: coarse)').matches, reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let mx = -999, my = -999, sx = -999, sy = -999, t0 = 0, moved = false;
-  hero.addEventListener('pointermove', (e) => { const r = hero.getBoundingClientRect(); mx = e.clientX - r.left; my = e.clientY - r.top; moved = true; if (sx < -900) { sx = mx; sy = my; } hero.classList.add('lx-active'); });
-  cancelAnimationFrame(raf);
-  const step = (t) => {
-    if (!document.getElementById('lxHero')) return;          // left the page
-    if ((touch || !moved) && !reduce) {                         // phones, or no cursor yet: the light sweeps by itself
-      if (!t0) t0 = t; const p = ((t - t0) / 6000) % 1;
-      mx = p * hero.clientWidth; my = hero.clientHeight * (0.55 + 0.12 * Math.sin(t / 1400));
-      if (sx < -900) { sx = mx; sy = my; }
+    const m = await fetch('data/market.json', { cache: 'no-cache' }).then((r) => r.json());
+    const n = (m.indices || [])[0], b = m.breadth || {};
+    const $ = (id) => document.getElementById(id);
+    if (n && $('lxN50')) {
+      $('lxN50').textContent = fmt(n.last);
+      const c = n.returns?.['1D'];
+      $('lxN50c').innerHTML = `<span class="${c >= 0 ? 'k-pos' : 'k-neg'}">${pct(c)}</span> today`;
+      $('lxChart').innerHTML = spark((n.spark || []).slice(-90));
+      $('lxAsof').textContent = 'NSE close, ' + new Date((m.as_of || '') + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+      $('lxIdx').innerHTML = (m.indices || []).slice(1, 4).map((i) => `<div><span>${esc(idxName(i.name))}</span><b class="${(i.returns?.['1D'] ?? 0) >= 0 ? 'k-pos' : 'k-neg'}">${pct(i.returns?.['1D'])}</b></div>`).join('');
     }
-    sx += (mx - sx) * 0.1; sy += (my - sy) * 0.1;
-    hero.style.setProperty('--mx', sx.toFixed(1) + 'px'); hero.style.setProperty('--my', sy.toFixed(1) + 'px');
-    raf = requestAnimationFrame(step);
-  };
-  raf = requestAnimationFrame(step);
-  const io = 'IntersectionObserver' in window ? new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { root, threshold: 0.12 }) : null;
-  root.querySelectorAll('.lx-card, .lx-founder, .lx-moto, .lx-v, .lx-comm, .lx-thanks').forEach((el) => { el.classList.add('lx-rv'); if (io) io.observe(el); else el.classList.add('in'); });
+    if (b.advances != null && $('lxBreadth')) {
+      const tot = (b.advances || 0) + (b.declines || 0) || 1;
+      $('lxAdv').style.width = ((100 * b.advances) / tot).toFixed(1) + '%';
+      $('lxBreadth').innerHTML = `<span class="k-pos">${fmt(b.advances, 0)} rose</span><span class="k-neg">${fmt(b.declines, 0)} fell</span>`;
+    }
+  } catch { /* the page works without the card */ }
 }
 export const closeLanding = () => document.body.classList.remove('lx-open');

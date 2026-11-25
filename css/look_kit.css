@@ -5,34 +5,35 @@
 /* fonts: linked in index.html */
 
 :root {
-  --bg: #0B0D0C; --bg-2: #0E110F; --surface: #121613; --surface-2: #161B17; --raise: #1B211C;
-  --ink: #F4F1E8; --ink-2: #D8D4C8; --muted: #9AA49B; --faint: #6C766E;
-  --line: rgba(154, 164, 155, .13); --line-2: rgba(154, 164, 155, .24);
-  --accent: #67E8A5; --accent-ink: #062014; --accent-soft: rgba(103, 232, 165, .11); --accent-line: rgba(103, 232, 165, .38);
-  --sand: #E2C88F; --sand-soft: rgba(226, 200, 143, .10);
-  --coral: #EFA28C; --coral-soft: rgba(239, 162, 140, .12);
-  --sky: #9EC9E6; --sky-soft: rgba(158, 201, 230, .10);
-  --shadow: 0 18px 60px rgba(0, 0, 0, .45), 0 2px 8px rgba(0, 0, 0, .35);
-  --glow: radial-gradient(1100px 520px at 12% -12%, rgba(103, 232, 165, .07), transparent 60%),
-          radial-gradient(900px 480px at 100% 0%, rgba(226, 200, 143, .035), transparent 55%);
-  --serif: "Newsreader", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
-  --sans: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
-  --mono: "IBM Plex Mono", "Cascadia Mono", Consolas, ui-monospace, monospace;
+  /* GROWW-STYLE LOOK (Sagar 2026-11-26: "grow one feel better ... create a dark and light with grow theme").
+     Neutral greys, one brand green that is also the "up" colour, one font in two weights, no glow. Dark tokens here,
+     light tokens below; light is the default (index.html). */
+  --bg: #121314; --bg-2: #17181A; --surface: #1B1C1E; --surface-2: #222326; --raise: #26282B;
+  --ink: #ECEDEF; --ink-2: #D2D4D8; --muted: #9A9EA5; --faint: #6E727A;
+  --line: #2A2C30; --line-2: #36393E;
+  --accent: #1FB47F; --accent-ink: #05150F; --accent-soft: rgba(31, 180, 127, .12); --accent-line: rgba(31, 180, 127, .42);
+  --sand: #E3A63E; --sand-soft: rgba(227, 166, 62, .12);
+  --coral: #F0654D; --coral-soft: rgba(240, 101, 77, .12);
+  --sky: #6FA3F7; --sky-soft: rgba(111, 163, 247, .12);
+  --shadow: 0 8px 28px rgba(0, 0, 0, .35);
+  --glow: none;
+  --serif: "General Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --sans: "General Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono: "General Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
   --ease: cubic-bezier(.2, .7, .2, 1);
-  /* meaning names, so an app maps its old colours by what they MEAN */
   --pos: var(--accent); --neg: var(--coral); --warn: var(--sand); --info: var(--sky);
   color-scheme: dark;
 }
 [data-theme="light"] {
-  --bg: #F4F0E5; --bg-2: #EFEADD; --surface: #FBF8F0; --surface-2: #F7F3E8; --raise: #FFFDF7;
-  --ink: #1C1F1D; --ink-2: #33382F; --muted: #5D685F; --faint: #879088;
-  --line: rgba(40, 52, 43, .12); --line-2: rgba(40, 52, 43, .22);
-  --accent: #17794C; --accent-ink: #F4FFF8; --accent-soft: rgba(23, 121, 76, .09); --accent-line: rgba(23, 121, 76, .35);
-  --sand: #8A6418; --sand-soft: rgba(138, 100, 24, .08);
-  --coral: #A9452C; --coral-soft: rgba(169, 69, 44, .08);
-  --sky: #2D6A93; --sky-soft: rgba(45, 106, 147, .08);
-  --shadow: 0 18px 50px rgba(46, 40, 20, .14), 0 2px 6px rgba(46, 40, 20, .08);
-  --glow: radial-gradient(1100px 520px at 12% -12%, rgba(23, 121, 76, .05), transparent 60%);
+  --bg: #FFFFFF; --bg-2: #F7F8FA; --surface: #FFFFFF; --surface-2: #F4F5F7; --raise: #FFFFFF;
+  --ink: #30343A; --ink-2: #474C53; --muted: #7A7F87; --faint: #A8ADB4;
+  --line: #E9EAED; --line-2: #DADDE1;
+  --accent: #0A9B6B; --accent-ink: #FFFFFF; --accent-soft: rgba(10, 155, 107, .08); --accent-line: rgba(10, 155, 107, .35);
+  --sand: #B7791F; --sand-soft: rgba(183, 121, 31, .09);
+  --coral: #E0533D; --coral-soft: rgba(224, 83, 61, .08);
+  --sky: #2F6FDB; --sky-soft: rgba(47, 111, 219, .08);
+  --shadow: 0 4px 18px rgba(16, 24, 40, .08);
+  --glow: none;
   color-scheme: light;
 }
 

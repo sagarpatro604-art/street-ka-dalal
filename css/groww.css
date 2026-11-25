@@ -1,0 +1,59 @@
+/* GROWW-STYLE LAYER (Sagar 2026-11-26: "grow one feel better ... create a dark and light with grow theme").
+   Loaded LAST. The colours live in look_kit.css tokens; this file only removes the old "AI look":
+   no serif, no small uppercase mono labels, no italics, no glow, two font weights (400 / 500, 600 for numbers),
+   calmer title sizes. Measured targets (Groww stock page): body 14px, titles 18-22px, text #30343A on white. */
+
+html { font-synthesis: none; }
+body { font: 400 14px/1.55 var(--sans); background-image: none; letter-spacing: normal; }
+h1, h2, h3, h4 { font-family: var(--sans); font-weight: 500; letter-spacing: -0.005em; }
+h1 { font-size: 22px; line-height: 1.25; }
+h2 { font-size: 18px; line-height: 1.3; }
+h3 { font-size: 15px; }
+b, strong { font-weight: 600; }
+em, cite, blockquote, .wordmark em, h1 em, .k-display em, .k-h1 em, .k-brand em { font-style: normal; }
+td, .num, [class*="price"], [class*="last"], [class*="chg"] { font-variant-numeric: tabular-nums; }
+
+/* labels: plain sentence case in the muted colour, never tiny spaced capitals */
+*, *::before, *::after { text-transform: none !important; }
+.eyebrow, .k-kicker, .k-label, .tm-door, .tw-head, .nv-g, #topnav .nv-g, .head-day, .lib-k, .post-kind, .idx-name,
+.chart-stats span, .filing-ns .lbl, .movers h3, .dc-rrg .dc-q, .rp-grp span, .nv-tag {
+  font-family: var(--sans) !important; letter-spacing: 0 !important; font-weight: 500 !important;
+}
+.eyebrow, .k-kicker, .tm-door { font-size: 13px !important; color: var(--muted) !important; }
+.k-label, .tw-head, .idx-name, .chart-stats span, .filing-ns .lbl, .movers h3, .head-day, .lib-k, .post-kind { font-size: 12.5px !important; color: var(--muted) !important; }
+#topnav .nv-g { font-size: 12px !important; color: var(--faint) !important; }
+.nv-tag { font-size: 10.5px !important; }
+th, .tbl th, .tbl th button, .tbl th:not(:has(button)), .tw-lhd th, [class*="tbl"] th {
+  font: 400 12.5px/1.4 var(--sans) !important; letter-spacing: 0 !important; color: var(--muted) !important;
+}
+
+/* brand + top bar: flat, no blur glass */
+.wordmark, .k-brand { font: 600 19px/1 var(--sans) !important; letter-spacing: -0.01em !important; }
+.wordmark em, .k-brand em { color: var(--accent); font-weight: 600; }
+header.top, .k-top { background: var(--bg) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; border-bottom: 1px solid var(--line); }
+
+/* big serif numbers become calm sans numbers */
+.idx-last { font: 500 22px/1.2 var(--sans) !important; }
+.stk-price b { font: 500 28px/1.15 var(--sans) !important; }
+.flows b, .kpis b, .stats b, .chart-stats b, .heat-cell span, .upd-hero b, .week-strip b, .dc-kpis b, .rp-tiles .card b, .ar-tiles .card b { font-family: var(--sans) !important; font-weight: 500 !important; }
+.flows b, .kpis b, .stats b, .dc-kpis b, .rp-tiles .card b, .ar-tiles .card b { font-size: 20px !important; }
+.rs-g-v b { font: 500 32px var(--sans) !important; }
+.dc-big { font: 500 24px/1.15 var(--sans) !important; }
+.dc-huge { font: 500 38px/1.05 var(--sans) !important; }
+.tw-hd .nm { font: 500 20px/1.25 var(--sans) !important; }
+.tw-hd .tk { font: 500 12.5px/1 var(--sans) !important; letter-spacing: 0 !important; color: var(--muted) !important; }
+.dc-tile h3, .dc-grp-h b, .tw-lhd .lh-n, .tg-bar b, .rp-card h3, .dc-person-h, .dalal-panel header b { font-family: var(--sans) !important; font-weight: 500 !important; font-size: 17px !important; }
+.dc-out, .k-lede, .prose blockquote, .dc-items blockquote, .rp-it blockquote { font-family: var(--sans) !important; font-style: normal !important; }
+.k-display { font: 500 clamp(26px, 3.2vw, 36px)/1.15 var(--sans) !important; letter-spacing: -0.01em !important; }
+.k-h1 { font: 500 clamp(22px, 2.6vw, 28px)/1.2 var(--sans) !important; letter-spacing: -0.005em !important; }
+.k-pill { font: 500 11.5px/1 var(--sans) !important; letter-spacing: 0 !important; }
+.mood, .idx-chg, .adlbl, .kv dd, .theme span, .stk-price span, .join, .lg-date, .me i, .member i { font-weight: 600 !important; }
+
+/* cards: white with a hairline border, 12-14px corners, no heavy shadow */
+.card, .k-card { background: var(--surface); box-shadow: none; }
+[data-theme="light"] .card, [data-theme="light"] .k-card { border-color: var(--line); }
+
+/* page titles: Groww keeps the stock name at 20px; ours stay calm too */
+h1, .page-head h1, .lib-rhead h1 { font-size: 24px !important; line-height: 1.25 !important; letter-spacing: -0.01em !important; }
+.welcome-card h1, .post h1 { font-size: 28px !important; }
+@media (max-width: 720px) { h1, .page-head h1 { font-size: 21px !important; } .welcome-card h1, .post h1 { font-size: 24px !important; } }

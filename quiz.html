@@ -350,9 +350,9 @@ const MOMENTS = [
 ];
 const TGBOT = [['yes', 'Yes, I would use it'], ['maybe', 'Maybe, show me first'], ['no', 'No, thanks']];
 const ROUNDS = [
-  { name: 'Round 1 · About you', title: 'Tell us about you', sub: 'Five quick taps. There are no right or wrong answers here.', say: 'Pehle thoda introduction ho jaaye!' },
-  { name: 'Round 2 · Your toolkit', title: 'What you know and use', sub: 'Words, tools and habits. Be honest, nobody is checking.', say: 'Jo sach hai wahi tap karna!' },
-  { name: 'Round 3 · Market moments', title: 'Your ₹1,00,000 game', sub: 'Five real-life market moments. Each choice moves a virtual ₹1,00,000. The profit or loss shows only at the end.', say: 'Paisa virtual hai, par dil se khelna!' },
+  { name: 'Round 1 · About you', title: 'Tell us about you', sub: 'Five quick taps. There are no right or wrong answers here.', say: 'Let us start with you!' },
+  { name: 'Round 2 · Your toolkit', title: 'What you know and use', sub: 'Words, tools and habits. Be honest, nobody is checking.', say: 'Tap what is true for you!' },
+  { name: 'Round 3 · Market moments', title: 'Your ₹1,00,000 game', sub: 'Five real-life market moments. Each choice moves a virtual ₹1,00,000. The profit or loss shows only at the end.', say: 'The money is virtual, play it like it is real!' },
 ];
 const QS = [
   { r: 0, id: 'years', type: 'pick', label: 'Experience', q: 'How long have you been in the market?', opts: YEARS },
@@ -368,13 +368,13 @@ const QS = [
   { r: 2, id: 'tgbot', type: 'pick', label: 'One last question', q: 'Would you like a free Telegram bot that sends you market news updates?', opts: TGBOT },
 ];
 const LEVELS = {
-  beginner: { key: 'beginner', label: 'Beginner', name: 'Rising Rookie', hin: 'Naya khiladi, bada potential', line: 'You are at the start of your journey, the best time to build good habits. Our community and free tools will help you learn fast.', color: '#3aa7b8' },
-  intermediate: { key: 'intermediate', label: 'Intermediate', name: 'Street Smart Investor', hin: 'Market ki bhasha samajhne lage ho', line: 'You know your way around the market. A few more tools and habits and you are in the pro zone.', color: '#3ecf7e' },
-  advanced: { key: 'advanced', label: 'Advanced', name: 'Dalal Street Pro', hin: 'Experience, knowledge aur discipline: sab set', line: 'Experienced, well read and disciplined. Come and share what you know with the community.', color: '#d9b878' },
+  beginner: { key: 'beginner', label: 'Beginner', name: 'Rising Rookie', hin: 'New player, big potential', line: 'You are at the start of your journey, the best time to build good habits. Our community and free tools will help you learn fast.', color: '#3aa7b8' },
+  intermediate: { key: 'intermediate', label: 'Intermediate', name: 'Street Smart Investor', hin: 'You have started to speak the market's language', line: 'You know your way around the market. A few more tools and habits and you are in the pro zone.', color: '#3ecf7e' },
+  advanced: { key: 'advanced', label: 'Advanced', name: 'Dalal Street Pro', hin: 'Experience, knowledge and discipline: all set', line: 'Experienced, well read and disciplined. Come and share what you know with the community.', color: '#d9b878' },
 };
 const DIMS = { exp: 'Experience', words: 'Market words', habits: 'Habits', tools: 'Tools', disc: 'Discipline' };
 const DIM_LINK = { exp: ['./#/library', 'the Library'], words: ['./#/library', 'the Library'], habits: ['./#/results', 'Results'], tools: ['./#/screeners', 'Screeners'], disc: ['./#/research', 'Prop. Research'] };
-const RATING_SAY = ['', 'Bilkul naya', 'Thoda thoda', 'Basics pata hai', 'Basics pata hai', 'Theek-thaak', 'Theek-thaak', 'Achha khaasa', 'Achha khaasa', 'Kaafi zyada', 'Pro level'];
+const RATING_SAY = ['', 'Brand new', 'A little', 'I know the basics', 'I know the basics', 'Fairly well', 'Fairly well', 'Quite well', 'Quite well', 'Very well', 'Pro level'];
 
 function scoreOf(a) {
   const find = (list, id) => list.find((x) => x[0] === id);
@@ -493,7 +493,7 @@ function intro() {
       </div>
     </div>
     <div class="panel start">
-      <span class="bubble">Ready ho? Bell bajne wali hai!</span>
+      <span class="bubble">Ready? The bell is about to ring!</span>
       <img class="peek" src="icons/dalal-peek.webp" alt="" width="263" height="720">
       ${prev ? `<div class="again">You took this on ${esc(new Date(prev.at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }))} and became a <b>${esc(LEVELS[prev.level]?.name || '')}</b>. <a href="#" id="seeOld" style="color:var(--green-2);font-weight:700">See my result and certificate</a>, or play again below.</div>` : ''}
       <form id="startForm" novalidate>
