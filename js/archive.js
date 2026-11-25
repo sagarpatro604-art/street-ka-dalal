@@ -60,7 +60,24 @@ function dash(s) {
   </div>
   <div class="ar-row">${modes}${audit}<span class="sub inline">Moves from each report's own date. Updated every evening on NSE closing prices.${s.dates_fixed ? ` ${n(s.dates_fixed)} report dates corrected after checking the printed price.` : ''}</span></div>
   <section class="card"><h2>After a fixed number of days</h2><p class="sub">Only calls old enough for that many trading days count. "Middle move" is the median: half the calls did better, half worse.</p>
-  <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Held for</th><th class="r">Positive calls</th><th class="r">Went up</th><th class="r">Middle move</th><th class="r">Negative calls</th><th class="r">Went down</th><th class="r">Middle move</th></tr></thead><tbody>${aft}</tbody></table></div></section>`;
+  <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Held for</th><th class="r">Positive calls</th><th class="r">Went up</th><th class="r">Middle move</th><th class="r">Negative calls</th><th class="r">Went down</th><th class="r">Middle move</th></tr></thead><tbody>${aft}</tbody></table></div></section>
+  ${brokerAcc(s)}`;
+}
+
+/* ---------------- broker accuracy on the dashboard (Sagar 2026-11-25) ---------------- */
+function brokerAcc(s) {
+  const list = ((s.brokers_dash || {})[st.mode === 'old' ? 'old' : 'all'] || []).map((g) => ({ ...g, pr: g.pos.right_pct, nr: g.neg.right_pct, nk: g.neg.known, pm: g.pos.median }));
+  if (!list.length) return '';
+  const cols = [
+    { k: 'name', label: 'Broker', fmt: (r) => `<a href="#" data-arq="${H.esc(r.name)}">${H.esc(r.name)}</a>` },
+    { k: 'known', label: 'Calls', cls: 'r', fmt: (r) => `${n(r.known)}<span class="sub">${n(r.stocks)} stocks</span>` },
+    { k: 'right_pct', label: 'Accuracy', cls: 'r', fmt: (r) => `<span title="${n(r.right)} of ${n(r.known)} went the broker's way"><b>${pc(r.right_pct)}</b> ${bar(r.right, r.known - r.right)}</span>` },
+    { k: 'pr', label: 'Positive went up', cls: 'r', fmt: (r) => `${pc(r.pr)}<span class="sub">${n(r.pos.right)} of ${n(r.pos.known)}</span>` },
+    { k: 'nr', label: 'Negative went down', cls: 'r', fmt: (r) => (r.nk ? `${pc(r.nr)}<span class="sub">${n(r.neg.right)} of ${n(r.nk)}</span>` : '-') },
+    { k: 'pm', label: 'Middle move, positive', cls: 'r', fmt: (r) => p(r.pm) },
+  ];
+  return `<section class="card"><h2>Broker accuracy</h2><p class="sub">Brokers with at least 10 calls${st.mode === 'old' ? ' a month old or more' : ''}. Accuracy = positive reports that went up plus negative reports that went down, out of all their calls with a price since the report date. Few calls means luck matters a lot; click a column to sort, a broker to see every call.</p>
+  ${H.table('ar_bdash_' + st.mode, list, cols, 'Not enough calls yet.')}</section>`;
 }
 
 /* ---------------- every call ---------------- */
@@ -98,6 +115,7 @@ function groups(list, what, keepOrder = false) {
   const cols = [
     { k: 'name', label: what, fmt: (r) => (what === 'Broker' ? `<a href="#" data-arq="${H.esc(r.name)}">${H.esc(r.name)}</a>` : what === 'Month' ? H.esc(r.name) : H.esc(r.name)) },
     { k: 'calls', label: 'Calls', cls: 'r', fmt: (r) => `${n(r.calls)}<span class="sub">${n(r.stocks)} stocks</span>` },
+    { k: 'right_pct', label: 'Accuracy', cls: 'r', fmt: (r) => `${pc(r.right_pct)} ${bar(r.right || 0, (r.known || 0) - (r.right || 0))}` },
     { k: 'pc', label: 'Positive', cls: 'r', fmt: (r) => n(r.pc) },
     { k: 'pr', label: 'Went up', cls: 'r', fmt: (r) => `${pc(r.pr)} ${bar(r.pos.up, r.pos.down)}` },
     { k: 'pm', label: 'Middle move', cls: 'r', fmt: (r) => p(r.pm) },
@@ -113,7 +131,7 @@ function wire() {
   document.querySelectorAll('[data-armode]').forEach((a) => { a.onclick = (e) => { e.preventDefault(); st.mode = a.dataset.armode; rerender(); }; });
   document.querySelectorAll('[data-ark]').forEach((a) => { a.onclick = (e) => { e.preventDefault(); st[a.dataset.ark] = a.dataset.arv; st.show = 200; rerender(); }; });
   document.querySelectorAll('[data-armore]').forEach((a) => { a.onclick = (e) => { e.preventDefault(); st.show += 200; rerender(); }; });
-  document.querySelectorAll('[data-arq]').forEach((a) => { a.onclick = (e) => { e.preventDefault(); st.q = a.dataset.arq; st.show = 200; location.hash = '#/archive/calls'; }; });
+  document.querySelectorAll('[data-arq]').forEach((a) => { a.onclick = (e) => { e.preventDefault(); st.q = a.dataset.arq; st.show = 200; if (location.hash === '#/archive/calls') rerender(); else location.hash = '#/archive/calls'; H.after(() => document.querySelector('.ar-q')?.scrollIntoView({ block: 'center' })); }; });
   const q = document.querySelector('.ar-q');
   if (q) q.onkeydown = (e) => { if (e.key === 'Enter') { st.q = q.value; st.show = 200; if (location.hash.split('/').length > 3) location.hash = '#/archive/calls'; else rerender(); } };
 }
