@@ -33,26 +33,26 @@
   color-scheme: light;
 }
 
-body { background: var(--bg); background-image: var(--glow); background-attachment: fixed; font-family: var(--sans); font-size: 14px; }
-b, strong { font-weight: 700; }
-h1, h2, h3, h4 { font-weight: 700; letter-spacing: -0.01em; }
+body { background: var(--bg); background-image: var(--glow); background-attachment: fixed; font-family: var(--sans); font-size: var(--fs-md); }
+b, strong { font-weight: var(--fw-bold); }
+h1, h2, h3, h4 { font-weight: var(--fw-bold); letter-spacing: -0.01em; }
 
 /* cards: big round corners, flat panel, hairline border */
-.card, .k-card { border-radius: 20px !important; background: var(--surface); border: 1px solid var(--line); box-shadow: none; }
+.card, .k-card { border-radius: var(--r-lg) !important; background: var(--surface); border: 1px solid var(--line); box-shadow: none; }
 
 /* buttons and chips: lime pills */
-.k-btn, .btn, button.k-btn { border-radius: 99px; }
-.k-btn.primary, .btn.primary, .btn-primary, .lx-cta { background: var(--accent) !important; color: var(--accent-ink) !important; border-color: transparent !important; font-weight: 700; }
-.k-chip, .chip { border-radius: 99px; }
+.k-btn, .btn, button.k-btn { border-radius: var(--r-lg); }
+.k-btn.primary, .btn.primary, .btn-primary, .lx-cta { background: var(--accent) !important; color: var(--accent-ink) !important; border-color: transparent !important; font-weight: var(--fw-bold); }
+.k-chip, .chip { border-radius: var(--r-lg); }
 .k-chip.on, .k-seg button.on, .k-seg button[aria-pressed="true"] { background: var(--accent) !important; color: var(--accent-ink) !important; border-color: transparent !important; box-shadow: none !important; }
-.k-seg { border-radius: 99px; }
-.k-seg button { border-radius: 99px; }
+.k-seg { border-radius: var(--r-lg); }
+.k-seg button { border-radius: var(--r-lg); }
 a { color: var(--accent); }
 [data-theme="light"] a { color: var(--accent); }
 
 /* top bar: plain black, lime round logo frame */
 header.top { background: var(--bg) !important; border-bottom: 1px solid var(--line); }
-.wordmark, .k-brand { font: 700 19px/1 var(--sans) !important; }
+.wordmark, .k-brand { font: var(--fw-bold) var(--fs-xl)/1 var(--sans) !important; }
 .wordmark em, .k-brand em { color: var(--accent); }
 .top .brand .logo { border-radius: 50%; box-shadow: 0 0 0 2px var(--accent); }
 
@@ -60,8 +60,8 @@ header.top { background: var(--bg) !important; border-bottom: 1px solid var(--li
 @media (min-width: 901px) {
   body.nav-mini { --nav-w: 64px; }
   #topnav.topnav { background: var(--bg) !important; border-right: 1px solid var(--line); transition: width .18s ease, box-shadow .18s ease; }
-  #topnav.topnav a { border-radius: 12px !important; }
-  #topnav.topnav a.on { background: var(--accent) !important; color: var(--accent-ink) !important; box-shadow: none !important; border-radius: 12px !important; }
+  #topnav.topnav a { border-radius: var(--r-md) !important; }
+  #topnav.topnav a.on { background: var(--accent) !important; color: var(--accent-ink) !important; box-shadow: none !important; border-radius: var(--r-md) !important; }
   #topnav.topnav a.on svg { color: var(--accent-ink); }
   body.nav-mini #topnav.topnav:hover { width: 230px; box-shadow: 12px 0 40px rgba(0, 0, 0, .45); }
   body.nav-mini #topnav.topnav:hover a span, body.nav-mini #topnav.topnav:hover .nv-tog span { display: inline; }
@@ -71,7 +71,7 @@ header.top { background: var(--bg) !important; border-bottom: 1px solid var(--li
 }
 
 /* numbers stand out: bold, tabular */
-.idx-last, .stk-price b, .kpis b, .flows b, .stats b, .rp-tiles .card b, .ar-tiles .card b, .dc-kpis b { font-weight: 700 !important; letter-spacing: -0.01em; }
+.idx-last, .stk-price b, .kpis b, .flows b, .stats b, .rp-tiles .card b, .ar-tiles .card b, .dc-kpis b { font-weight: var(--fw-bold) !important; letter-spacing: -0.01em; }
 td, .num { font-variant-numeric: tabular-nums; }
 
 /* tables: quieter lines, lime hover edge */
@@ -79,7 +79,7 @@ td, .num { font-variant-numeric: tabular-nums; }
 th, .tbl th, .tbl th button { color: var(--muted) !important; }
 
 /* tooltips and toasts in white like the design */
-#toast { background: #F4F4EF; color: #111; border-radius: 12px; }
+#toast { background: #F4F4EF; color: #111; border-radius: var(--r-md); }
 
 /* the landing keeps its own look (it is already black with green) */
 .lx a { color: inherit; }

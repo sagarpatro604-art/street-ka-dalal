@@ -299,14 +299,14 @@ async function mystocks() {
   const cards = syms.filter((x) => info[x]).map((x) => {
     const d = daily[x] || {}, r = d.r || [];
     const bits = [];
-    (cal[x] || []).forEach((c) => bits.push(`<li>${H.chip('Results coming', 'warn')} ${H.fDay(c.date)}${c.status === 'confirmed' ? '' : ' (estimated)'}${c.call ? `, call ${H.fDT(c.call)}` : ''}</li>`));
-    (ann[x] || []).forEach((a) => bits.push(`<li>${H.chip('Results out', a.label === 'Weak' ? 'bad' : 'good')} ${H.fDate(String(a.ts).slice(0, 10))}${a.label && a.label !== '-' ? `: ${H.esc(a.label)}` : ''}${a.rev_y != null ? `, sales ${H.pct(a.rev_y, 1)}` : ''}${a.pat_y != null ? `, profit ${H.pct(a.pat_y, 1)}` : ''} <a href="#/results/co/${encodeURIComponent(x)}">details</a></li>`));
-    (ev[x] || []).forEach((e) => bits.push(`<li>${H.chip(e.label, signCls(e.sign))} ${H.fDate(e.day)}: ${H.esc(e.title || '')}</li>`));
-    (cp[x] || []).forEach((c) => bits.push(`<li>${H.chip(c.type || 'Corporate action', '')} ex-date ${H.fDate(c.ex)}${c.amount ? `, Rs ${H.esc(c.amount)}` : ''}</li>`));
-    if (gl[x]) bits.push(`<li>${H.chip('Management spoke', 'info')} ${H.fDate(gl[x].day)}: ${H.esc((gl[x].outlook || '').slice(0, 160))} <a href="#/discover/management" data-act="dcSet" data-k="gd.q" data-v="${H.esc(x)}">read</a></li>`);
-    (fl[x] || []).slice(0, 4).forEach((f) => bits.push(`<li>${H.chip(f.label || f.type || 'Filing', '')} ${H.fDT(f.ts)}: ${H.esc((f.subject || '').slice(0, 140))}${f.pdf ? ` <a href="${H.esc(f.pdf)}" target="_blank" rel="noopener">PDF</a>` : ''}</li>`));
+    (cal[x] || []).forEach((c) => bits.push(`<li>${H.chip('Results coming', 'warn')}<span class="dc-txt">${H.fDay(c.date)}${c.status === 'confirmed' ? '' : ' (estimated)'}${c.call ? `, call ${H.fDT(c.call)}` : ''}</span></li>`));
+    (ann[x] || []).forEach((a) => bits.push(`<li>${H.chip('Results out', a.label === 'Weak' ? 'bad' : 'good')}<span class="dc-txt">${H.fDate(String(a.ts).slice(0, 10))}${a.label && a.label !== '-' ? `: ${H.esc(a.label)}` : ''}${a.rev_y != null ? `, sales ${H.pct(a.rev_y, 1)}` : ''}${a.pat_y != null ? `, profit ${H.pct(a.pat_y, 1)}` : ''} <a href="#/results/co/${encodeURIComponent(x)}">details</a></span></li>`));
+    (ev[x] || []).forEach((e) => bits.push(`<li>${H.chip(e.label, signCls(e.sign))}<span class="dc-txt">${H.fDate(e.day)}: ${H.esc(e.title || '')}</span></li>`));
+    (cp[x] || []).forEach((c) => bits.push(`<li>${H.chip(c.type || 'Corporate action', '')}<span class="dc-txt">ex-date ${H.fDate(c.ex)}${c.amount ? `, Rs ${H.esc(c.amount)}` : ''}</span></li>`));
+    if (gl[x]) bits.push(`<li>${H.chip('Management spoke', 'info')}<span class="dc-txt">${H.fDate(gl[x].day)}: ${H.esc((gl[x].outlook || '').slice(0, 160))} <a href="#/discover/management" data-act="dcSet" data-k="gd.q" data-v="${H.esc(x)}">read</a></span></li>`);
+    (fl[x] || []).slice(0, 4).forEach((f) => bits.push(`<li>${H.chip(f.label || f.type || 'Filing', '')}<span class="dc-txt">${H.fDT(f.ts)}: ${H.esc((f.subject || '').slice(0, 140))}${f.pdf ? ` <a href="${H.esc(f.pdf)}" target="_blank" rel="noopener">PDF</a>` : ''}</span></li>`));
     const big = Math.abs(r[0] || 0) >= 4 || Math.abs(r[1] || 0) >= 7;
-    if (big) bits.push(`<li>${H.chip('Big move', (r[1] || r[0]) > 0 ? 'good' : 'bad')} ${H.pct(r[0], 1)} on the day, ${H.pct(r[1], 1)} on the week</li>`);
+    if (big) bits.push(`<li>${H.chip('Big move', (r[1] || r[0]) > 0 ? 'good' : 'bad')}<span class="dc-txt">${H.pct(r[0], 1)} on the day, ${H.pct(r[1], 1)} on the week</span></li>`);
     return { x, n: bits.length, html: `<section class="card dc-my"><div class="card-head"><div>${sym(x)}<span class="sub">${H.esc(info[x].n || '')}</span></div><div class="dc-px"><b>${H.num(d.p, 2)}</b> <span class="${H.tone(r[0])}">${H.pct(r[0], 2)}</span> <span class="sub inline">1W <span class="${H.tone(r[1])}">${H.pct(r[1], 1)}</span></span></div></div>
       ${bits.length ? `<ul class="dc-items">${bits.join('')}</ul>` : '<p class="sub">Nothing new this week.</p>'}</section>` };
   }).sort((a, b) => b.n - a.n);
