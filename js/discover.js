@@ -10,7 +10,7 @@
 
 let H = null;
 const $ = (s, r = document) => r.querySelector(s);
-const ST = { tr: { g: '', k: '', days: 30, mine: false, n: 200 }, pf: { lot: null }, inv: { view: 'moves', kind: 'all', mine: false, n: 150, open: '' }, rrg: { iv: 'weekly', broad: false }, gd: { q: '', mine: false, n: 30 }, val: { idx: 'Nifty 50' }, my: { list: 'all' } };
+const ST = { tr: { g: '', k: '', days: 30, mine: false, n: 200 }, pf: { lot: null }, inv: { view: 'moves', kind: 'all', mine: false, n: 150, open: '' }, rrg: { iv: 'weekly', broad: false }, gd: { q: '', mine: false, n: 30 }, val: { idx: 'Nifty 50', cat: 'Sectoral', met: 'pe', win: '5y', sort: 'gap', q: '' }, my: { list: 'all' } };
 export const dSet = (path, v) => { const [a, b] = path.split('.'); ST[a][b] = v; };
 export const dGet = (path) => { const [a, b] = path.split('.'); return ST[a][b]; };
 
@@ -195,6 +195,7 @@ async function valuation() {
     ${(v.caps || []).map((c) => `<tr><td><b>${H.esc(c.label)}</b><span class="sub">${H.esc(c.bucket || '')} · history from ${H.esc(String(c.pe_from || '').slice(0, 4))}</span></td><td class="r">${H.num(c.pe, 1)}</td><td class="r">${H.num(c.pe_med, 1)}</td>
       <td>${meter(c.pe_pct)} <span class="sub inline">dearer than ${H.num(c.pe_pct, 0)}% of past days</span></td><td class="r">${H.num(c.pb, 2)}</td><td class="r">${H.num(c.dy, 2)}%</td><td><span class="k-pill ${ZCLS(c.zone, z)}">${H.esc(c.zone || '-')}</span></td></tr>`).join('')}
     </tbody></table></div></section>
+  ${everyIndex(v)}
   ${(v.relative || []).length ? `<section class="card"><h2>Smaller companies against large ones</h2><p class="sub">P/E of each group divided by the Nifty 100's, against its own history</p>
     <div class="dc-rel">${v.relative.map((r) => `<div><b>${H.esc(r.label)}</b><span>${H.num(r.pe, 2)}x the Nifty 100 P/E (usual ${H.num(r.pe_med, 2)}x)</span>${meter(r.pe_pct)}<span class="k-pill ${ZCLS(r.zone, z)}">${H.esc(r.zone || '')}</span></div>`).join('')}</div></section>` : ''}
   <section class="card"><div class="card-head"><h2>P/E over the years</h2><div class="k-seg">${idxNames.map((n) => `<button data-act="dcSet" data-k="val.idx" data-v="${H.esc(n)}" class="${n === cur ? 'on' : ''}">${H.esc(n)}</button>`).join('')}</div></div>
@@ -204,6 +205,52 @@ async function valuation() {
     <section class="card"><h2>Dearest sector indices now</h2><p class="sub">Against their own history</p><ul class="plain">${(v.dearest || []).map((r) => `<li>${H.esc(r.name)} <span class="k-pill ${ZCLS(r.zone, z)}">${H.esc(r.zone || '')}</span> <span class="sub inline">P/E ${H.num(r.pe, 1)}</span></li>`).join('')}</ul></section>
   </div>
   <p class="sub legend">${H.esc(v.note || '')} Not a recommendation to buy or sell.</p>`;
+}
+// every NSE index (146: broad, sectoral, thematic, strategy) against the median of its last N years
+const VCATS = ['Broad market', 'Sectoral', 'Thematic', 'Strategy', 'All'];
+const VMETS = [['pe', 'P/E'], ['pb', 'P/B'], ['dy', 'Div. yield']];
+const VWINS = ['1y', '3y', '5y', '7y', '10y', '15y'];
+function everyIndex(v) {
+  const rows0 = v.indices || [];
+  if (!rows0.length) return '';
+  const s = ST.val, m = s.met, w = s.win, ml = (VMETS.find((x) => x[0] === m) || VMETS[0])[1], wl = w.replace('y', ' yr');
+  const q = (s.q || '').trim().toLowerCase();
+  const cnt = (c) => (c === 'All' ? rows0.length : rows0.filter((r) => r.cat === c).length);
+  // cheaper than usual: P/E and P/B below the median, dividend yield above it
+  const cheapGap = (r) => { const x = r[m + '_win']?.[w]; return x ? (m === 'dy' ? -x[1] : x[1]) : null; };
+  let rows = rows0.filter((r) => (s.cat === 'All' || r.cat === s.cat) && (!q || String(r.name).toLowerCase().includes(q)));
+  rows = rows.slice().sort((a, b) => {
+    if (s.sort === 'name') return String(a.name).localeCompare(String(b.name));
+    const x = cheapGap(a), y = cheapGap(b);
+    if (x == null && y == null) return String(a.name).localeCompare(String(b.name));
+    if (x == null) return 1; if (y == null) return -1;
+    return s.sort === 'gap' ? x - y : y - x;
+  });
+  const d = m === 'pe' ? 1 : 2, unit = m === 'dy' ? '%' : '';
+  const cell = (r) => {
+    const x = r[m + '_win']?.[w];
+    if (!x) return '<td class="r sub">too young</td><td></td>';
+    const cheaper = m === 'dy' ? x[1] > 0 : x[1] < 0;
+    const mark = x[2] === 's' ? '' : x[2] === 'a' ? ' <span class="sub inline" title="Years before NSE changed its method, adjusted using the companies own filings">adj.</span>' : ' <span class="sub inline" title="Years before NSE changed its method, joined by one shift that could not be checked">joined</span>';
+    return `<td class="r">${H.num(x[0], d)}${unit}${mark}</td><td class="r"><span class="${H.tone(cheaper ? 1 : -1)}">${x[1] > 0 ? '+' : ''}${H.num(x[1], 1)}%</span></td>`;
+  };
+  const seg = (k, opts, cur) => `<div class="k-seg">${opts.map(([val, t]) => `<button data-act="dcSet" data-k="val.${k}" data-v="${H.esc(val)}" class="${cur === val ? 'on' : ''}">${H.esc(t)}</button>`).join('')}</div>`;
+  return `<section class="card flush"><div class="card-head pad"><h2>Every NSE index against its own past</h2><span class="sub">${rows0.length} indices: broad market, sectors, themes and strategies. Today's ${ml} against the median of the chosen years.</span></div>
+  <div class="toolbar pad">
+    ${seg('cat', VCATS.map((c) => [c, `${c} ${cnt(c)}`]), s.cat)}
+    ${seg('met', VMETS, m)}
+    <span class="sub inline">against the median of the last</span>${seg('win', VWINS.map((x) => [x, x.replace('y', ' yr')]), w)}
+    ${seg('sort', [['gap', 'Cheapest first'], ['-gap', 'Dearest first'], ['name', 'A to Z']], s.sort)}
+    <div class="search">${H.ic('search', 16)}<input data-input="dcVq" value="${H.esc(s.q || '')}" placeholder="Search an index (defence, bank, IT)"></div>
+  </div>
+  <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Index</th><th class="r">Today</th><th class="r">${ml} now</th><th class="r">${wl} median</th><th class="r">vs median</th><th>Where today sits</th><th>Reading</th></tr></thead><tbody>
+  ${rows.map((r) => `<tr><td><b>${H.esc(r.name)}</b><span class="sub">${H.esc(r.cat)} · history from ${H.esc(String(r.from || '').slice(0, 4))}</span></td>
+    <td class="r"><span class="${H.tone(r.chg)}">${r.chg == null ? '-' : H.pct(r.chg, 2)}</span></td>
+    <td class="r"><b>${H.num(r[m], d)}${r[m] == null ? '' : unit}</b></td>${cell(r)}
+    <td>${r[m + '_pct'] == null ? '<span class="sub inline">under 2 years on NSE present method</span>' : `${meter(r[m + '_pct'])} <span class="sub inline">higher than ${H.num(r[m + '_pct'], 0)}% of past days</span>`}</td>
+    <td>${r.zone ? `<span class="k-pill ${ZCLS(r.zone, v.zones)}">${H.esc(r.zone)}</span>` : '<span class="sub inline">-</span>'}</td></tr>`).join('') || '<tr><td colspan="7" class="sub">No index matches.</td></tr>'}
+  </tbody></table></div>
+  <p class="sub legend pad">NSE's own published P/E, P/B and dividend yield, ${rows0.some((r) => r.b === 'live') ? `NSE's last official values (${H.fDate(rows0[0]?.date)}) moved by today's index close (provisional until NSE publishes tonight's official figures)` : `official close of ${H.fDate(rows0[0]?.date)}`}. A median over a window that starts before NSE changed how it counts earnings (March 2021) or book value (September 2023) uses the older years adjusted: "adj." = measured year by year from the companies' own filings, "joined" = one shift that could not be checked, so read those with care. "too young" = the index has less history than the window. The reading and "where today sits" use only days on NSE's present method.</p></section>`;
 }
 async function drawPE(v, cur) {
   const el = $('#dcPE');

@@ -1934,6 +1934,7 @@ const ACTS = {
 };
 const INPUTS = {
   dcGd: (el) => { DC.dSet('gd.q', el.value); rerenderKeepingFocus(el); },
+  dcVq: (el) => { DC.dSet('val.q', el.value); rerenderKeepingFocus(el); },
   libQ: (el) => LB.libSearch(lbHelp(), el.value),
   newsQ: (el) => { ui.news.q = el.value; rerenderKeepingFocus(el); },
   resQ: (el) => { ui.res.q = el.value; rerenderKeepingFocus(el); },
