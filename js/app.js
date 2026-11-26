@@ -1730,21 +1730,40 @@ const termHelp = () => ({ T, A, data, hist, stkAll, esc, num, pct, tone, pd, fDa
 /* ---------------- shell, routing ---------------- */
 // the left side menu (Sagar 2026-11-16: "every tab should be in left hand side ... like sector scope"); '#' rows are group titles
 const NAV_G = [
-  ['#', 'Watch'], ['', 'Stock watch', 'watch'], ['screeners', 'Screeners', 'screen'], ['sectors', 'Groups', 'sector'], ['heatmap', 'Heatmap', 'heat'], ['discover', 'Discover', 'compass'], ['discover/triggers', 'Board of all triggers', '', 1], ['discover/investors', 'Big investors', '', 1], ['discover/valuation', 'Market valuation', '', 1], ['discover/management', 'What management said', '', 1], ['discover/mystocks', 'My stocks this week', '', 1],
+  ['#', 'Watch'], ['', 'Stock watch', 'watch'], ['screeners', 'Screeners', 'screen'], ['sectors', 'Groups', 'sector'], ['heatmap', 'Heatmap', 'heat'], ['discover', 'Discover', 'compass'],
   ['#', 'Market'], ['reels', 'Reels', 'play'], ['premarket', 'Pre-market', 'sun'], ['market', 'Market', 'market'], ['funds', 'Mutual funds', 'funds'],
-  ['#', 'Research'], ['equity', 'Research', 'search'], ['results', 'Results', 'file'], ['resplus', 'Reactions after results', '', 1], ['resplus/sectors', 'Sectors after results', '', 1], ['resplus/pool', 'Profit pool', '', 1], ['resplus/guidance', 'Guidance changes', '', 1], ['resplus/season', 'Season report', '', 1], ['archive', 'Broker reports tracker', 'brief'], ['archive/brokers', 'Brokers scorecard', '', 1], ['news', 'News', 'news'], ['research', 'Prop. Research', 'lab'],
+  ['#', 'Research'], ['equity', 'Research', 'search'], ['results', 'Results', 'file'], ['archive', 'Broker reports tracker', 'brief'], ['news', 'News', 'news'], ['research', 'Prop. Research', 'lab'],
   ['#', 'Learn'], ['library', 'Library', 'book'], ['insights', 'Insights', 'pen'], ['about', 'About us', 'link'],
   ['#', 'My portfolio'], ['portfolio', 'Portfolio X-ray', 'brief'],
 ];
-const NAV = NAV_G.filter(([r, , , sub]) => r !== '#' && !sub);
+// the pages inside a section are tabs in the top bar, not rows in the side menu (Sagar 2026-11-26: "one side tab, then
+// sub tabs on upper side so no need to scroll for everything"); key = the side menu row, routes as in the address bar
+const SUBTABS = {
+  sectors: [['sectors', 'Groups'], ['sectors/rrg', 'Rotation (RRG)']],
+  discover: [['discover', 'Stock lists'], ['discover/triggers', 'Board of all triggers'], ['discover/investors', 'Big investors'], ['discover/valuation', 'Market valuation'], ['discover/management', 'What management said'], ['discover/mystocks', 'My stocks this week']],
+  results: [['results', 'Results'], ['resplus/list', 'Reactions after results'], ['resplus/sectors', 'Sectors after results'], ['resplus/pool', 'Profit pool'], ['resplus/guidance', 'Guidance changes'], ['resplus/season', 'Season report']],
+  archive: [['archive', 'Overview'], ['archive/calls', 'All calls'], ['archive/brokers', 'Brokers'], ['archive/sectors', 'Sectors'], ['archive/months', 'Months']],
+};
+// which side menu row a page belongs to
+const navOf = (r) => { const t = r.split('/')[0]; return t === 'resplus' ? 'results' : ['stock', 'stocks'].includes(t) ? 'equity' : t; };
+function subTabs(r) {
+  const tabs = SUBTABS[navOf(r)];
+  if (!tabs) return '';
+  const rr = r === 'resplus' ? 'resplus/list' : r;
+  const on = tabs.map(([k]) => k).filter((k) => rr === k || rr.startsWith(k + '/')).sort((a, b) => b.length - a.length)[0];
+  return tabs.map(([k, l]) => `<a href="#/${k}" class="${k === on ? 'on' : ''}">${l}</a>`).join('');
+}
+const NAV = NAV_G.filter(([r]) => r !== '#');
 const route = () => location.hash.replace(/^#\/?/, '');
 const VIEWS = { '': () => T.viewTerminal(termHelp()), reels: () => { location.href = '/reels/'; return ''; }, heatmap: () => T.viewHeatmap(termHelp()), discover: () => DC.viewDiscover(termHelp(), ''), rrg: () => { location.replace('#/sectors/rrg'); return ''; }, portfolio: () => DC.viewPortfolio(termHelp()), premarket: viewPremarket, market: viewMarket, screeners: () => T.viewTerminal(termHelp(), 'scan'), sectors: () => (route().split('/')[1] === 'rrg' ? viewGroupsRRG() : T.viewTerminal(termHelp(), 'groups')), funds: viewFunds, equity: viewEquity, stocks: () => { ui.eq.tab = 'companies'; return viewEquity(); }, results: viewResults, about: () => { after.push(() => LP.wireLanding()); return LP.landingHtml({ member: true, logo: LOGO, ic, google: GOOGLE }); }, resplus: () => RP.viewResPlus(termHelp(), route()), archive: () => AR.viewArchive(termHelp(), route()), news: viewNews, insights: viewInsights, admin: viewAdmin, research: viewResearch, library: viewLibrary };
 
 function shell() {
   const u = A.state.user;
+  const st = $('#subtabs');
+  if (st) st.innerHTML = u ? subTabs(route()) : '';
   const topEl = document.querySelector('.top');
   if (topEl) document.documentElement.style.setProperty('--top-h', `${topEl.offsetHeight}px`);
-  $('#topnav').innerHTML = u ? [...NAV_G, ...(A.isAdmin() ? [['#', 'Admin'], ['admin', 'Admin', 'admin']] : [])].map(([r, l, i, sub]) => (r === '#' ? `<p class="nv-g">${l}</p>` : sub ? `<a href="#/${r}" data-nav="${r}" class="nv-sub" title="${l}"><span>${l}</span></a>` : `<a href="#/${r}" data-nav="${r}" title="${l}">${ic(i, 17)}<span>${l}</span>${r === 'discover' ? '<small class="nv-tag">Premium</small>' : ''}</a>`)).join('')
+  $('#topnav').innerHTML = u ? [...NAV_G, ...(A.isAdmin() ? [['#', 'Admin'], ['admin', 'Admin', 'admin']] : [])].map(([r, l, i]) => (r === '#' ? `<p class="nv-g">${l}</p>` : `<a href="#/${r}" data-nav="${r}" title="${l}">${ic(i, 17)}<span>${l}</span>${r === 'discover' ? '<small class="nv-tag">Premium</small>' : ''}</a>`)).join('')
     + `<button class="nv-tog" data-act="navTog" title="Narrow or wide menu" aria-label="Narrow or wide menu">${ic('side', 17)}<span>Narrow menu</span></button>` : '';
   document.body.classList.toggle('nav-mini', navMini());
   $('#me').innerHTML = u ? `<button class="me" data-act="menu" aria-label="Account">${u.photo ? `<img src="${esc(u.photo)}" alt="" referrerpolicy="no-referrer">` : `<i>${esc((u.name || '?')[0])}</i>`}</button>
@@ -1768,7 +1787,7 @@ async function render() {
   if (r !== '' && r !== 'about') entered(true);
   else if (r === '' && !entered()) { location.replace('#/about'); return; }
   const top = r.split('/')[0];
-  document.querySelectorAll('#topnav a').forEach((a) => { const n = a.dataset.nav; a.classList.toggle('on', n.includes('/') ? (r === n || r.startsWith(n + '/')) : n === (['stock', 'stocks'].includes(top) ? 'equity' : top) && !(top === 'discover' && r.split('/')[1]) && !(top === 'resplus' && r.split('/')[1] && r.split('/')[1] !== 'list') && !(top === 'archive' && ['brokers'].includes(r.split('/')[1]))); });
+  document.querySelectorAll('#topnav a').forEach((a) => a.classList.toggle('on', a.dataset.nav === navOf(r)));
   T.setHelpers(termHelp());
   document.body.classList.toggle('term', top === '' || r === 'discover' || top === 'screeners' || r === 'sectors');
   setDalalContext(null);
@@ -1788,7 +1807,7 @@ async function render() {
     if (seq !== renderSeq) return;
     view.innerHTML = `<div class="empty card">Couldn't load this page: ${esc(e.message)}</div>`;
   }
-  const label = (NAV.find(([k]) => k === top) || [, top === 'admin' ? 'Admin' : top === 'post' ? 'Insight' : top === 'stock' ? decodeURIComponent(r.split('/')[1] || 'Stock') : top === 'stocks' ? 'Research' : top === 'compare' ? 'Compare' : 'Market'])[1];
+  const label = (NAV.find(([k]) => k === (top === 'resplus' ? 'results' : top)) || [, top === 'admin' ? 'Admin' : top === 'post' ? 'Insight' : top === 'stock' ? decodeURIComponent(r.split('/')[1] || 'Stock') : top === 'stocks' ? 'Research' : top === 'compare' ? 'Compare' : 'Market'])[1];
   document.title = `${label} · ${SITE.name}`;
 }
 

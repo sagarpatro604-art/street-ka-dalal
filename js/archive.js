@@ -11,7 +11,7 @@
 // copyright; SKD shows no buy / sell / target, SEBI). No emoji, no em dash, no tilde.
 
 let H = null;
-const TABS = [['calls', 'All calls'], ['brokers', 'Brokers'], ['sectors', 'Sectors'], ['months', 'Months']];
+// tabs Overview / All calls / Brokers / Sectors / Months are in the top bar (app.js SUBTABS, Sagar 2026-11-26), one page each
 const TONE = { 1: ['Positive', 'ar-pos'], '-1': ['Negative', 'ar-neg'], 0: ['Neutral', ''] };
 const SRC = { r: 'Report', w: 'News' };
 const st = { mode: 'all', tone: 'all', src: 'all', q: '', show: 200 };
@@ -26,14 +26,13 @@ const note = `<p class="sub legend">How to read this: a <b>positive</b> report i
 
 export async function viewArchive(helpers, route) {
   H = helpers;
-  const [, tab = 'calls', a = ''] = route.split('/');
+  const [, tab = 'overview', a = ''] = route.split('/');
   const s = await load('summary').catch(() => null);
   if (!s) return `${H.pageHead('Research', 'Broker reports tracker')}<div class="empty card">Not published yet. Check back after this evening's update.</div>`;
   H.after(wire);
-  const body = tab === 'brokers' ? groups(s.brokers_t, 'Broker') : tab === 'sectors' ? groups(s.sectors_t, 'Sector') : tab === 'months' ? groups(s.months_t, 'Month', true) : await calls(a);
-  return `${H.pageHead('Research', 'Broker reports tracker', `<span class="k-pill plain" title="Prices used">NSE close of ${H.fShort(s.price_date)}</span>`)}
-  ${dash(s)}
-  <nav class="dc-nav">${TABS.map(([k, t]) => `<a href="#/archive/${k}" class="${k === tab ? 'on' : ''}">${t}</a>`).join('')}</nav>
+  const body = tab === 'brokers' ? groups(s.brokers_t, 'Broker') : tab === 'sectors' ? groups(s.sectors_t, 'Sector') : tab === 'months' ? groups(s.months_t, 'Month', true) : tab === 'calls' ? await calls(a, s) : dash(s);
+  const T = { overview: 'Broker reports tracker', calls: 'All broker calls', brokers: 'Brokers', sectors: 'Sectors', months: 'Months' };
+  return `${H.pageHead('Broker reports tracker', T[tab] || T.overview, `<span class="k-pill plain" title="Prices used">NSE close of ${H.fShort(s.price_date)}</span>`)}
   ${body}${note}`;
 }
 
@@ -42,10 +41,11 @@ function bar(up, down) {
   const t = up + down || 1;
   return `<span class="ar-mix" title="${up} up, ${down} down"><i class="u" style="width:${(100 * up) / t}%"></i><i class="d" style="width:${(100 * down) / t}%"></i></span>`;
 }
+const modeSeg = (s) => `<div class="seg ar-seg"><a href="#" data-armode="all" class="${st.mode === 'all' ? 'on' : ''}">All calls</a><a href="#" data-armode="old" class="${st.mode === 'old' ? 'on' : ''}" title="Only calls followed for at least 20 trading days">A month old or more${s ? ` (${n(s.month_old_n)})` : ''}</a></div>`;
 function dash(s) {
   const T = st.mode === 'old' ? s.month_old : s.all;
   const P = T.pos, N = T.neg;
-  const modes = `<div class="seg ar-seg"><a href="#" data-armode="all" class="${st.mode === 'all' ? 'on' : ''}">All calls</a><a href="#" data-armode="old" class="${st.mode === 'old' ? 'on' : ''}" title="Only calls followed for at least 20 trading days">A month old or more (${n(s.month_old_n)})</a></div>`;
+  const modes = modeSeg(s);
   const aft = ['5', '20', '60'].map((k) => {
     const x = s.after[k];
     return `<tr><td>${k} trading days</td><td class="r">${n(x.pos.known)}</td><td class="r">${n(x.pos.up)} <span class="sub inline">(${pc(x.pos.right_pct)})</span></td><td class="r">${p(x.pos.median)}</td><td class="r">${n(x.neg.known)}</td><td class="r">${n(x.neg.down)} <span class="sub inline">(${pc(x.neg.right_pct)})</span></td><td class="r">${p(x.neg.median)}</td></tr>`;
@@ -81,7 +81,7 @@ function brokerAcc(s) {
 }
 
 /* ---------------- every call ---------------- */
-async function calls(sym) {
+async function calls(sym, s) {
   const d = await load('calls');
   const q = (st.q || (sym ? decodeURIComponent(sym) : '')).trim().toUpperCase();
   let rows = d.rows.filter((r) => (st.mode !== 'old' || r.ss >= 20) && (st.tone === 'all' || String(r.t) === st.tone) && (st.src === 'all' || r.k === st.src));
@@ -101,7 +101,7 @@ async function calls(sym) {
     { k: 'hi', label: 'Best / worst', cls: 'r', fmt: (r) => `${p(r.hi)}<span class="sub">${r.lo == null ? '' : H.pct(r.lo, 1)}</span>` },
   ];
   return `<section class="card"><div class="ar-row">
-    <div class="rp-chips">${ch('tone', 'all', 'All')}${ch('tone', '1', 'Positive')}${ch('tone', '-1', 'Negative')}${ch('tone', '0', 'Neutral')}</div>
+    ${modeSeg(s)}<div class="rp-chips">${ch('tone', 'all', 'All')}${ch('tone', '1', 'Positive')}${ch('tone', '-1', 'Negative')}${ch('tone', '0', 'Neutral')}</div>
     <div class="rp-chips">${ch('src', 'all', 'Reports and news')}${ch('src', 'r', 'Broker reports')}${ch('src', 'w', 'News')}</div>
     <input class="ar-q" type="search" placeholder="Stock, company or broker" value="${H.esc(q)}"></div>
     <p class="sub">${n(total)} call${total === 1 ? '' : 's'}${q ? ` for "${H.esc(q)}"` : ''}, newest first. Click a column to sort.</p>

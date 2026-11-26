@@ -299,3 +299,17 @@ body.nav-mini { --nav-w: 60px; }
 .tw-lists a.k-chip { height: 24px; font-size: var(--fs-xs); text-decoration: none; }
 .tw-lists a.k-chip:hover { border-color: var(--accent-line); color: var(--ink); }
 .tw-about .k-pill { margin-left: 4px; }
+
+/* ---------------------------------------------------------------- section tabs in the top bar (Sagar 2026-11-26: "one side
+   tab, then sub tabs on upper side so no need to scroll for everything"); filled by app.js SUBTABS, empty = hidden */
+.subtabs { display: flex; flex: 1 1 auto; min-width: 0; align-self: stretch; gap: 4px; margin: -8px 0; overflow-x: auto; scrollbar-width: none; }
+.subtabs::-webkit-scrollbar { display: none; }
+.subtabs:empty { display: none; }
+.subtabs a { display: flex; align-items: center; padding: 0 12px; white-space: nowrap; color: var(--muted); font: var(--fw-med) var(--fs-md) var(--sans); text-decoration: none; }
+.subtabs a:hover { color: var(--ink); text-decoration: none; }
+.subtabs a.on { color: var(--ink); box-shadow: inset 0 -2px 0 var(--accent); }
+@media (max-width: 900px) {
+  .top-in { flex-wrap: wrap; }
+  .subtabs { order: 4; flex-basis: 100%; align-self: auto; margin: 0 -14px; padding: 0 6px; border-top: 1px solid var(--line); }
+  .subtabs a { padding: 10px; font-size: var(--fs-sm); }
+}

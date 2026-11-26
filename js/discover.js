@@ -21,7 +21,7 @@ const SECS = [
   ['management', 'What management said'], ['mystocks', 'My stocks this week'],
 ];
 const load = (n) => H.hist('discover/' + n).catch(() => null);
-const subnav = (cur) => `<nav class="dc-nav">${SECS.map(([k, t]) => `<a href="#/discover${k ? '/' + k : ''}" class="${k === cur ? 'on' : ''}">${t}</a>`).join('')}</nav>`;
+// the section tabs are in the top bar (app.js SUBTABS) since 2026-11-26
 let PREM = null;
 const banner = () => {
   const p = PREM;
@@ -30,7 +30,7 @@ const banner = () => {
   if (p.mode === 'trial' && p.days_left != null) return `<p class="dc-prem">Free for you for <b>${p.days_left} more day${p.days_left === 1 ? '' : 's'}</b> (until ${H.fDate(String(p.ends).slice(0, 10))}). After that Discover is a Premium service, unlocked with a coupon.</p>`;
   return '';
 };
-const head = (cur, title, extra = '') => `${H.pageHead('Discover', title, extra)}${subnav(cur)}${banner()}`;
+const head = (cur, title, extra = '') => `${H.pageHead('Discover', title, extra)}${banner()}`;
 const sym = (s) => H.symLink(s);
 const name = (s, info) => (info[s]?.n ? `<span class="sub">${H.esc(info[s].n)}</span>` : '');
 const signCls = (g) => (g === 'pos' ? 'good' : g === 'neg' ? 'bad' : '');
@@ -55,7 +55,7 @@ export async function viewDiscover(helpers, sec) {
 /* ---------------- premium lock (after the free days) ---------------- */
 function locked(sec) {
   const t = (SECS.find(([k]) => k === sec) || SECS[0])[1];
-  return `${H.pageHead('Discover', sec ? t : 'Discover', '<span class="k-pill warn">Premium</span>')}${subnav(sec)}
+  return `${H.pageHead('Discover', sec ? t : 'Discover', '<span class="k-pill warn">Premium</span>')}
   <section class="card dc-lock">
     <p class="eyebrow">Premium service</p>
     <h2>Your ${PREM.trial_days || 60}-day free look at Discover ended${PREM.ends ? ' on ' + H.fDate(String(PREM.ends).slice(0, 10)) : ''}.</h2>

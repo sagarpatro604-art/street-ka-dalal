@@ -21,8 +21,7 @@ const qlab = (q) => (q && q.length === 6 ? `Q${q[5]} FY${q.slice(2, 4)}` : q || 
 const lab = (l) => (l ? `<span class="chip rp-${LAB[l] || ''}">${H.esc(l)}</span>` : '');
 const p = (v, d = 1) => (v == null ? '<span class="sub inline">-</span>' : `<span class="${H.tone(v)}">${H.pct(v, d)}</span>`);
 const xr = (v) => (v == null ? '<span class="sub inline">-</span>' : `<span class="${H.tone(v)}">${v > 0 ? '+' : ''}${Number(v).toFixed(1)}x</span>`);
-const nav = (cur, q) => `<nav class="dc-nav">${SECS.map(([k, t]) => `<a href="#/resplus/${k}${q && k !== 'list' ? '/' + q : ''}" class="${k === cur ? 'on' : ''}">${t}</a>`).join('')}</nav>`;
-const head = (cur, title, extra = '') => `${H.pageHead('Results', title, extra)}${nav(cur)}`;
+const head = (cur, title, extra = '') => H.pageHead('Results', title, extra); // section tabs: top bar (app.js SUBTABS)
 const built = (s) => (s?.built ? `<span class="k-pill plain" title="When this was put together">Updated ${H.fShort(String(s.built).slice(0, 10))}</span>` : '');
 const note = '<p class="sub legend">From NSE result filings, NSE prices and the companies\' own calls. Moves compare a stock with where it closed before the result; "vs Nifty 500" takes off what Nifty 500 did over the same days. Usual daily range = the stock\'s average high-to-low swing over the 20 days before the result. Facts, not advice: please do your own research.</p>';
 
